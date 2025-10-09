@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Get a Quote - Black Pearl Coach Charters and Tours</title>
+
+  <!-- Poppins font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+main {
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+
+.quote-section {
+  max-width: 700px;
+  width: 100%;
+}
+
+.quote-section h1 {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 40px;
+}
+
+.quote-form {
+  background: var(--gray);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+  margin-bottom: 28px;
+}
+
+.form-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* === ONE-WAY TOGGLE === */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin: 12px 0;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--silver);
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--white);
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--bg-black);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  margin: 10px 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 20px 0;
+}
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  background: var(--bg-black);
+  color: var(--white);
+  border: none;
+  padding: 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.submit-btn:hover {
+  background: var(--silver);
+}
+
+@media (max-width: 600px) {
+  .quote-section h1 {
+    font-size: 26px;
+  }
+  .quote-form {
+    padding: 16px;
+  }
+  .row {
+    flex-direction: column;
+  }
+}
+  </style>
+</head>
+<body>
+
+  <!-- Header Section -->
+<header>
+  <div class="header-container">
+    <!-- Logo -->
+    <div class="logo">BLACK PEARL <span>TOURS</span></div>
+
+    <!-- Desktop Navigation -->
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="fleet.html">Our Fleet</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="quote.html" class="active">Quote</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="signin.html">Sign In</a></li>
+      </ul>
+    </nav>
+
+    <!-- Navigation Actions -->
+    <div class="nav-actions">
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="index.html">HOME</a>
+    <a href="about.html">ABOUT US</a>
+    <a href="fleet.html">OUR FLEET</a>
+    <a href="gallery.html">GALLERY</a>
+    <a href="quote.html" class="active">QUOTE</a>
+    <a href="contact.html">CONTACT US</a>
+    <hr />
+    <a href="signin.html" class="btn-sign">SIGN IN</a>
+  </div>
+</header>
+
+  <!-- Main content -->
+  <main class="quote-page">
+    <section class="quote-section" style="margin-top: 60px;">
+      <div class="section-title">
+      <h1>GET A QUOTE</h1>
+      <p class="subtitle">
+        Fast, tailored quotes for private coach charters and shuttle services.
+      </p>
+      </div>
+
+      <form id="quoteForm" class="quote-form" novalidate>
+        <!-- Trip Details -->
+        <div class="form-section">
+          <h3>Trip Details</h3>
+
+          <div class="input-group">
+            <label for="tripType">Trip Type</label>
+            <br>
+            <select id="tripType" name="tripType" required>
+              <option>Airport Transfers</option>
+              <option>Conference Shuttles</option>
+              <option>Sports Travel</option>
+              <option>Events & Leisure</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <input type="text" placeholder="Pickup Location" required>
+            <input type="text" placeholder="Drop-off Location" required>
+          </div>
+
+          <!-- One-Way Toggle -->
+          <div class="toggle-container">
+            <span>One-Way</span>
+            <label class="switch">
+              <input type="checkbox" id="oneWay">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="row">
+            <input type="date" required>
+            <input type="time" required>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Vehicle & Budget -->
+        <div class="form-section">
+          <h3>Vehicle & Budget</h3>
+          <div class="input-group">
+            <label for="vehicleType">Vehicle Type</label>
+            <br>
+            <select id="vehicleType" required>
+              <option>4 Seater Sedan</option>
+              <option>Mini Bus Mercedes Viano</option>
+              <option>15 Seater Quantum</option>
+              <option>17 Seater Luxury Sprinter</option>
+              <option>22 Seater Luxury Coach</option>
+              <option>28 Seater Luxury Coach</option>
+              <option>39 Seater Luxury Coach</option>
+              <option>60 Seater Semi Luxury</option>
+              <option>70 Seater Semi Luxury</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <input type="text" placeholder="ZAR" required>
+            <input type="text" placeholder="Budget (optional)">
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Contact Info -->
+        <div class="form-section">
+          <h3>Contact Info & Details</h3>
+          <div class="row">
+            <input type="text" placeholder="Name" required>
+            <input type="email" placeholder="Email" required>
+            <input type="tel" placeholder="Phone (required)" required>
+            <input type="text" placeholder="Company">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">REQUEST QUOTE</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Floating chat icon -->
+  <div class="chat-fab" title="Chat with us">
+    <!-- simple SVG robot face -->
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
+      <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
+      <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
+      <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
+    </svg>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="footer-block">
+        <div class="logo-sm">BLACK PEARCL COACH CHARTERS AND TOURS</div>
+      </div>
+
+      <div class="footer-block">
+        <h3>QUICK LINKS</h3>
+        <a href="quote.html">Get A Quote</a>
+        <a href="contact.html">Contact Us</a>
+      </div>
+
+      <div class="footer-block">
+        <h3>OUR SERVICES</h3>
+        <a href="#">Airport Transfers</a>
+        <a href="#">Conference Shuttle Hire</a>
+        <a href="#">Sports Tours</a>
+        <a href="#">Events & Leisure Travel</a>
+      </div>
+    </div>
+
+    <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
+  </footer>
+
+<script>
+  (function() {
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mainNav = document.getElementById('mainNav') || document.querySelector('nav');
+    const navLinks = document.querySelectorAll('nav ul li a, .mobile-menu a');
+    const currentPath = window.location.pathname;
+
+    // =====================
+    // RESPONSIVE NAV DISPLAY
+    // =====================
+    function applyNavDisplay() {
+      if (window.innerWidth >= 720) {
+        mainNav.style.display = 'flex';
+        mobileMenu.classList.remove('active');
+        hamburger.classList.remove('active');
+      } else {
+        mainNav.style.display = 'none';
+      }
+    }
+
+    applyNavDisplay();
+    window.addEventListener('resize', applyNavDisplay);
+
+    // =====================
+    // TOGGLE MOBILE MENU
+    // =====================
+    hamburger.addEventListener('click', function() {
+      const isActive = mobileMenu.classList.toggle('active');
+      hamburger.classList.toggle('active', isActive);
+      mobileMenu.setAttribute('aria-hidden', !isActive);
+    });
+
+    // =====================
+    // HIGHLIGHT CURRENT PAGE
+    // =====================
+    navLinks.forEach(link => {
+      // Normalize trailing slashes for comparison
+      const linkPath = new URL(link.href).pathname.replace(/\/$/, '');
+      const pagePath = currentPath.replace(/\/$/, '');
+      if (linkPath === pagePath) {
+        link.classList.add('active');
+      }
+    });
+
+    // =====================
+    // CLOSE MENU WHEN CLICKING OUTSIDE
+    // =====================
+    document.addEventListener('click', function(e) {
+      if (
+        !mobileMenu.contains(e.target) &&
+        !hamburger.contains(e.target) &&
+        window.innerWidth < 720
+      ) {
+        mobileMenu.classList.remove('active');
+        hamburger.classList.remove('active');
+      }
+    });
+
+    // =====================
+    // SMOOTH SCROLL FOR ANCHOR LINKS
+    // =====================
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', function(ev) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          ev.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (window.innerWidth < 720) {
+            mobileMenu.classList.remove('active');
+            hamburger.classList.remove('active');
+          }
+        }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
