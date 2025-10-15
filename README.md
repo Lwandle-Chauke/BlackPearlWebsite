@@ -13,15 +13,7 @@ I have successfully added the frontend files for the **Admin Dashboard**. This i
 
 ***
 
-## Known Issues / Immediate Next Steps
-
-**The frontend is not yet perfect.** We need to finalize minor CSS adjustments for alignment and responsiveness across all pages, particularly the complex tables in `admin-bookings.html` and `admin-tours.html`.
-
-***
-
-## Backend Integration Instructions (Important for Developers)
-
-Please note the following regarding data handling:
+## Backend Integration
 
 * **Dummy Data:** The tables and fields currently display **dummy inputs**. No data is being stored or processed yet.
 * **Data Reflection:** When developing the backend logic for the customer-facing pages (e.g., Quote requests, User registration, Contact form submissions), **all data operations MUST reflect on the corresponding Admin pages.**
