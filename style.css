@@ -257,8 +257,217 @@ nav ul li a.active::after,
   }
 }
 
+/*----------------------------------------------------------------------------------------------
+----------------------------------------------SIGN IN-------------------------------------------
+-----------------------------------------------------------------------------------------------*/
+/* ============================= */
+/* AUTH OVERLAY (SIGN IN / REGISTER) */
+/* ============================= */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow-y: auto; /* allow scrolling if content is long */
+  padding: 40px 15px;
+  animation: fadeIn 0.3s ease;
+}
 
-    /* FOOTER */
+/* Modal Container */
+.auth-modal {
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  position: relative;
+  overflow-y: auto;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+/* Scrollbar styling (optional but neat) */
+.auth-modal::-webkit-scrollbar {
+  width: 8px;
+}
+.auth-modal::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 8px;
+}
+.auth-modal::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 25px;
+}
+
+.auth-tabs .tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #eee;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-tabs .tab.active {
+  background: black;
+  color: white;
+}
+
+/* Forms */
+.auth-form {
+  display: none;
+}
+
+.auth-form.active {
+  display: block;
+}
+
+/* Headings */
+.auth-form h2 {
+  text-align: center;
+  color: black;
+  margin-bottom: 20px;
+}
+
+/* Inputs & Labels */
+.auth-form .form-group {
+  margin-bottom: 15px;
+}
+
+.auth-form label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 600;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  font-size: 15px;
+}
+
+/* Submit Buttons */
+.btn-auth {
+  display: block;
+  width: 100%;
+  background: black;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.btn-auth:hover {
+  background: gray;
+}
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  font-size: 26px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #333;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: red;
+}
+
+/* ============================= */
+/* HEADER SIGN-IN BUTTON */
+/* ============================= */
+.btn-header-signin {
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 400;
+  font-family: "Poppins", sans-serif;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-header-signin:hover {
+  background: gray;
+  transform: translateY(-1px);
+}
+
+.btn-header-signin:active {
+  transform: scale(0.97);
+}
+
+
+/* ============================= */
+/* ANIMATIONS */
+/* ============================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ============================= */
+/* RESPONSIVE DESIGN */
+/* ============================= */
+@media (max-width: 480px) {
+  .auth-modal {
+    width: 95%;
+    padding: 25px 20px;
+  }
+
+  .auth-tabs .tab {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .btn-auth {
+    font-size: 15px;
+  }
+}
+
+
+/*-------------------------------------------------------------------------------------------
+--------------------------------------FOOTER-------------------------------------------------
+------------------------------------------------------------------------------------------------ */
     footer{
       margin-top:30px;
       background:linear-gradient(180deg,#333,#2d2d2d);

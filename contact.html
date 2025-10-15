@@ -7,6 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="quote.css" />
   <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
 
 body {
@@ -54,7 +57,7 @@ main {
 /* LEFT SIDE (blue background) */
 .contact-info {
     flex: 1;
-    min-width: 300px;
+    min-width: 500px;
     background: var(--bg-black);
     color: white;
     padding: 50px;
@@ -108,7 +111,7 @@ main {
 /* RIGHT SIDE (white background with overlay + white text) */
 .contact-form {
     flex: 1;
-    min-width: 300px;
+    min-width: 500px;
     background: white;
     padding: 50px;
     color: white;
@@ -136,7 +139,7 @@ main {
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: var(--silver);
+    color: var(--accent);
     font-size: large;
 }
 
@@ -211,16 +214,16 @@ main {
 
     <!-- Desktop Navigation -->
     <nav>
-      <ul>
-        <li><a href="index.html" class="active">Home</a></li>
-        <li><a href="about.html">About Us</a></li>
-        <li><a href="fleet.html">Our Fleet</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="quote.html">Quote</a></li>
-        <li><a href="contact.html" class="active">Contact Us</a></li>
-        <li><a href="signin.html">Sign In</a></li>
-      </ul>
-    </nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="fleet.html">Our Fleet</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="quote.html">Quote</a></li>
+          <li><a href="contact.html" class="active">Contact Us</a></li>
+          <li><button id="signInBtn" class="btn-header-signin">Sign In</button></li>
+        </ul>
+      </nav>
 
     <!-- Navigation Actions -->
     <div class="nav-actions">
@@ -239,9 +242,47 @@ main {
     <a href="quote.html">QUOTE</a>
     <a href="contact.html" class="active">CONTACT US</a>
     <hr />
-    <a href="signin.html" class="btn-sign">SIGN IN</a>
+    <a a href="#" id="signInBtn" class="btn-sign">SIGN IN</a>
   </div>
 </header>
+
+<!-- Sign In / Register Popup Overlay -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-modal">
+      <button class="close-btn" id="closeAuth">&times;</button>
+      <br>
+      <div class="auth-tabs">
+        <button id="signinTab" class="tab active">Sign In</button>
+        <button id="registerTab" class="tab">Register</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="signinForm" class="auth-form active">
+        <h2>Sign In</h2>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn-auth">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form">
+        <h2>Register</h2>
+        <div class="form-group"><label>Name</label><input type="text" placeholder="Enter your name" required></div>
+        <div class="form-group"><label>Surname</label><input type="text" placeholder="Enter your surname" required></div>
+        <div class="form-group"><label>Email Address</label><input type="email" placeholder="Enter your email" required></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="Enter your phone number" required></div>
+        <div class="form-group"><label>Password</label><input type="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="Confirm password" required></div>
+        <button type="submit" class="btn-auth">Register</button>
+      </form>
+    </div>
+  </div>
 
   <main class="quote-page">
     <!-- Contact Section -->
@@ -256,13 +297,13 @@ main {
             <div class="contact-info">
                 <h2>GET IN TOUCH</h2>
                 <div class="contact-details">
-                    <p><i class="fas fa-mobile-alt"></i> <a href="tel:011 762 1858">011 762 1858</a></p>
+                    <p><i class="fas fa-mobile-alt" style="font-size: 20px;"></i> <a href="tel:011 762 1858">011 762 1858</a></p>
                     <br>
-                    <p><i class="fas fa-envelope"></i> 
+                    <p><i class="fas fa-envelope" style="font-size: 19px;"></i> 
                         <a href="mailto:mathapelom@blackpearltours.co.za">mathapelom@blackpearltours.co.za</a>
                     </p>
                     <br>
-                    <p><i class="fas fa-map-marker-alt"></i>Meurant Street, Witpoortjie, 1724</p>
+                    <p><i class="fas fa-map-marker-alt" style="font-size: 20px;"></i>Meurant Street, Witpoortjie, 1724</p>
                 </div>
 
                 <!-- Google Map -->
@@ -280,22 +321,22 @@ main {
 
                     <div class="form-group">
                         <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" placeholder="Your name" required>
+                        <input type="text" id="name" name="name" placeholder="Enter your name" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="Your email" required>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="subject">Subject</label>
-                        <input type="text" id="subject" name="subject" placeholder="Subject" required>
+                        <input type="text" id="subject" name="subject" placeholder="Enter the subject" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="message">Message</label>
-                        <textarea id="message" name="message" placeholder="Your message" required></textarea>
+                        <textarea id="message" name="message" placeholder="Enter your message" required></textarea>
                     </div>
 
                     <div style="text-align: center;">
@@ -341,8 +382,5 @@ main {
 
     <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
   </footer>
-  <script>
-    
-  </script>
 </body>
 </html>
