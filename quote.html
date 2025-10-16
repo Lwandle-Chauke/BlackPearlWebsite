@@ -282,6 +282,7 @@ hr {
             <label for="tripType">Trip Type</label>
             <br>
             <select id="tripType" name="tripType" required>
+              <option value="">Select Trip Type</option>
               <option>Airport Transfers</option>
               <option>Conference Shuttles</option>
               <option>Sports Travel</option>
@@ -290,15 +291,16 @@ hr {
           </div>
 
           <div class="row">
-            <input type="text" placeholder="Pickup Location" required>
-            <input type="text" placeholder="Drop-off Location" required>
+            <input type="text" id="pickupLocation" placeholder="Pickup Location" required>
+            <input type="text" id="dropoffLocation" placeholder="Drop-off Location" required>
           </div>
 
           <br>
           <div class="input-group">
             <label for="vehicleType">Vehicle Type</label>
             <br>
-            <select id="vehicleType" required>
+            <select id="vehicleType" name="vehicleType" required>
+              <option value="">Select Vehicle Type</option>
               <option>4 Seater Sedan</option>
               <option>Mini Bus Mercedes Viano</option>
               <option>15 Seater Quantum</option>
@@ -322,8 +324,8 @@ hr {
           </div>
 
           <div class="row">
-            <input type="date" required>
-            <input type="time" required>
+            <input type="date" id="tripDate" required>
+            <input type="time" id="tripTime" required>
           </div>
         </div>
 
@@ -333,10 +335,10 @@ hr {
         <div class="form-section">
           <h3>Contact Info & Details</h3>
           <div class="row">
-            <input type="text" placeholder="Name" required>
-            <input type="email" placeholder="Email" required>
-            <input type="tel" placeholder="Phone (required)" required>
-            <input type="text" placeholder="Company">
+            <input type="text" id="customerName" placeholder="Name" required>
+            <input type="email" id="customerEmail" placeholder="Email" required>
+            <input type="tel" id="customerPhone" placeholder="Phone (required)" required>
+            <input type="text" id="customerCompany" placeholder="Company">
           </div>
         </div>
 
@@ -360,7 +362,7 @@ hr {
   <footer class="footer">
     <div class="wrap footer-inner">
       <div class="footer-block">
-        <div class="logo-sm">BLACK PEARCL COACH CHARTERS AND TOURS</div>
+        <div class="logo-sm">BLACK PEARL COACH CHARTERS AND TOURS</div>
       </div>
 
       <div class="footer-block">
@@ -381,5 +383,79 @@ hr {
     <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
   </footer>
 
+  <script>
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      const results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Set vehicle type from URL parameter
+    document.addEventListener('DOMContentLoaded', function() {
+      const vehicleType = getUrlParameter('vehicle');
+      if (vehicleType) {
+        const vehicleSelect = document.getElementById('vehicleType');
+        if (vehicleSelect) {
+          // Try to find the option that matches the vehicle type
+          for (let i = 0; i < vehicleSelect.options.length; i++) {
+            if (vehicleSelect.options[i].text === vehicleType) {
+              vehicleSelect.selectedIndex = i;
+              
+              // Show a success message to indicate the vehicle was pre-selected
+              const subtitle = document.querySelector('.subtitle');
+              if (subtitle) {
+                subtitle.innerHTML += ` <br><small style="color: green; font-weight: 600;">✓ ${vehicleType} pre-selected</small>`;
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      const dateInput = document.getElementById('tripDate');
+      if (dateInput) {
+        dateInput.min = today;
+      }
+
+      // Form submission handler
+      const quoteForm = document.getElementById('quoteForm');
+      if (quoteForm) {
+        quoteForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Basic form validation
+          const requiredFields = quoteForm.querySelectorAll('[required]');
+          let isValid = true;
+          
+          requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+              isValid = false;
+              field.style.borderColor = 'red';
+            } else {
+              field.style.borderColor = '#ccc';
+            }
+          });
+
+          if (isValid) {
+            // Show success message
+            alert('Thank you for your quote request! We will contact you shortly with your customized quote.');
+            quoteForm.reset();
+            
+            // Reset the vehicle type if it was pre-selected
+            const vehicleSelect = document.getElementById('vehicleType');
+            if (vehicleSelect) {
+              vehicleSelect.selectedIndex = 0;
+            }
+          } else {
+            alert('Please fill in all required fields.');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
