@@ -8,6 +8,103 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
+  <style>
+    .about-container {
+      margin-top: 80px;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .about-panel {
+      background: var(--white);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .about-panel h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 30px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--silver);
+      padding-bottom: 8px;
+    }
+
+    .about-panel p {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    .about-panel ul {
+      margin-left: 20px;
+      margin-bottom: 20px;
+    }
+
+    .about-panel li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .about-panel a {
+      color: var(--bg-black);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .about-panel a:hover {
+      text-decoration: underline;
+    }
+
+    .promises {
+      list-style-type: none;
+      margin-left: 0;
+    }
+
+    .promises li {
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .promises li:before {
+      content: "✓";
+      color: var(--bg-black);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+    }
+
+    @media (max-width: 768px) {
+      .about-container {
+        padding: 20px 15px;
+      }
+
+      .about-panel {
+        padding: 25px;
+      }
+
+      .about-panel h1 {
+        font-size: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Header Section -->
@@ -64,31 +161,51 @@
       <form id="signinForm" class="auth-form active">
         <h2>Sign In</h2>
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" placeholder="Enter your email" required>
+          <label for="signinEmail">Email Address</label>
+          <input type="email" id="signinEmail" name="email" placeholder="Enter your email" required>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" placeholder="Enter your password" required>
+          <label for="signinPassword">Password</label>
+          <input type="password" id="signinPassword" name="password" placeholder="Enter your password" required>
         </div>
         <button type="submit" class="btn-auth">Sign In</button>
+        <p id="signInMessage" class="error-message"></p>
       </form>
 
       <!-- Register Form -->
       <form id="registerForm" class="auth-form">
         <h2>Register</h2>
-        <div class="form-group"><label>Name</label><input type="text" placeholder="Enter your name" required></div>
-        <div class="form-group"><label>Surname</label><input type="text" placeholder="Enter your surname" required></div>
-        <div class="form-group"><label>Email Address</label><input type="email" placeholder="Enter your email" required></div>
-        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="Enter your phone number" required></div>
-        <div class="form-group"><label>Password</label><input type="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required></div>
-        <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="Confirm password" required></div>
+        <div class="form-group">
+          <label for="registerName">Name</label>
+          <input type="text" id="registerName" name="name" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+          <label for="registerSurname">Surname</label>
+          <input type="text" id="registerSurname" name="surname" placeholder="Enter your surname" required>
+        </div>
+        <div class="form-group">
+          <label for="registerEmail">Email Address</label>
+          <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="registerPhone">Phone Number</label>
+          <input type="tel" id="registerPhone" name="phone" placeholder="Enter your phone number" required>
+        </div>
+        <div class="form-group">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" name="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required>
+        </div>
+        <div class="form-group">
+          <label for="registerConfirmPassword">Confirm Password</label>
+          <input type="password" id="registerConfirmPassword" name="confirm_password" placeholder="Confirm password" required>
+        </div>
         <button type="submit" class="btn-auth">Register</button>
+        <p id="registerMessage" class="error-message"></p>
       </form>
     </div>
   </div>
 
-  <main class="wrap" style="margin-top: 80px;">
+  <div class="about-container">
     <article class="about-panel">
       <h1>About Us — Black Pearl Coach Charters and Tours</h1>
 
@@ -127,7 +244,7 @@
         <p>Ready to experience reliable and luxurious transport? <a href="quote.html">Get a Free Quote</a> or <a href="contact.html">Contact Us</a> today to discuss your needs.</p>
       </section>
     </article>
-  </main>
+  </div>
 
   <!-- Floating chat icon -->
   <div class="chat-fab" title="Chat with us">
@@ -144,7 +261,7 @@
   <footer class="footer">
     <div class="wrap footer-inner">
       <div class="footer-block">
-        <div class="logo-sm">BLACK PEARCL COACH CHARTERS AND TOURS</div>
+        <div class="logo-sm">BLACK PEARL COACH CHARTERS AND TOURS</div>
       </div>
 
       <div class="footer-block">
