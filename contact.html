@@ -260,27 +260,47 @@ main {
       <form id="signinForm" class="auth-form active">
         <h2>Sign In</h2>
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" placeholder="Enter your email" required>
+          <label for="signinEmail">Email Address</label>
+          <input type="email" id="signinEmail" name="email" placeholder="Enter your email" required>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" placeholder="Enter your password" required>
+          <label for="signinPassword">Password</label>
+          <input type="password" id="signinPassword" name="password" placeholder="Enter your password" required>
         </div>
         <button type="submit" class="btn-auth">Sign In</button>
+        <p id="signInMessage" class="error-message"></p>
       </form>
 
       <!-- Register Form -->
       <form id="registerForm" class="auth-form">
-        <h2>Register</h2>
-        <div class="form-group"><label>Name</label><input type="text" placeholder="Enter your name" required></div>
-        <div class="form-group"><label>Surname</label><input type="text" placeholder="Enter your surname" required></div>
-        <div class="form-group"><label>Email Address</label><input type="email" placeholder="Enter your email" required></div>
-        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="Enter your phone number" required></div>
-        <div class="form-group"><label>Password</label><input type="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required></div>
-        <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="Confirm password" required></div>
-        <button type="submit" class="btn-auth">Register</button>
-      </form>
+    <h2>Register</h2>
+    <div class="form-group">
+        <label for="registerName">Name</label>
+        <input type="text" id="registerName" name="name" placeholder="Enter your name" required>
+    </div>
+    <div class="form-group">
+        <label for="registerSurname">Surname</label>
+        <input type="text" id="registerSurname" name="surname" placeholder="Enter your surname" required>
+    </div>
+    <div class="form-group">
+        <label for="registerEmail">Email Address</label>
+        <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
+    </div>
+    <div class="form-group">
+        <label for="registerPhone">Phone Number</label>
+        <input type="tel" id="registerPhone" name="phone" placeholder="Enter your phone number" required>
+    </div>
+    <div class="form-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" name="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required>
+    </div>
+    <div class="form-group">
+        <label for="registerConfirmPassword">Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" name="confirm_password" placeholder="Confirm password" required>
+    </div>
+    <button type="submit" class="btn-auth">Register</button>
+    <p id="registerMessage" class="error-message"></p>
+</form>
     </div>
   </div>
 
@@ -308,7 +328,7 @@ main {
 
                 <!-- Google Map -->
                 <div class="map">
-                   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3580.8990555631062!2d28.1418414!3d-26.167416799999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e951224a961f54d%3A0xe657105aea015c6a!2s84%20Concorde%20E%20Rd%2C%20Bedfordview%2C%20Germiston%2C%202008!5e0!3m2!1sen!2sza!4v1759010333292!5m2!1sen!2sza" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3581.169832118304!2d27.823949000000002!3d-26.158597899999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1e95a2074a069ce3%3A0x151524c062bf4ca1!2sBlack%20Pearl%20Coach%20Charters%20%26%20Tours!5e0!3m2!1sen!2sza!4v1760640105059!5m2!1sen!2sza" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
 

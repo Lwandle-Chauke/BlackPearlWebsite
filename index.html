@@ -240,27 +240,47 @@
       <form id="signinForm" class="auth-form active">
         <h2>Sign In</h2>
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" placeholder="Enter your email" required>
+          <label for="signinEmail">Email Address</label>
+          <input type="email" id="signinEmail" name="email" placeholder="Enter your email" required>
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" placeholder="Enter your password" required>
+          <label for="signinPassword">Password</label>
+          <input type="password" id="signinPassword" name="password" placeholder="Enter your password" required>
         </div>
         <button type="submit" class="btn-auth">Sign In</button>
+        <p id="signInMessage" class="error-message"></p>
       </form>
 
       <!-- Register Form -->
       <form id="registerForm" class="auth-form">
-        <h2>Register</h2>
-        <div class="form-group"><label>Name</label><input type="text" placeholder="Enter your name" required></div>
-        <div class="form-group"><label>Surname</label><input type="text" placeholder="Enter your surname" required></div>
-        <div class="form-group"><label>Email Address</label><input type="email" placeholder="Enter your email" required></div>
-        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="Enter your phone number" required></div>
-        <div class="form-group"><label>Password</label><input type="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required></div>
-        <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="Confirm password" required></div>
-        <button type="submit" class="btn-auth">Register</button>
-      </form>
+    <h2>Register</h2>
+    <div class="form-group">
+        <label for="registerName">Name</label>
+        <input type="text" id="registerName" name="name" placeholder="Enter your name" required>
+    </div>
+    <div class="form-group">
+        <label for="registerSurname">Surname</label>
+        <input type="text" id="registerSurname" name="surname" placeholder="Enter your surname" required>
+    </div>
+    <div class="form-group">
+        <label for="registerEmail">Email Address</label>
+        <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
+    </div>
+    <div class="form-group">
+        <label for="registerPhone">Phone Number</label>
+        <input type="tel" id="registerPhone" name="phone" placeholder="Enter your phone number" required>
+    </div>
+    <div class="form-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" name="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required>
+    </div>
+    <div class="form-group">
+        <label for="registerConfirmPassword">Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" name="confirm_password" placeholder="Confirm password" required>
+    </div>
+    <button type="submit" class="btn-auth">Register</button>
+    <p id="registerMessage" class="error-message"></p>
+</form>
     </div>
   </div>
 
