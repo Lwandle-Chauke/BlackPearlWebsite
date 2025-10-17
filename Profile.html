@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile | Black Pearl Tours</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        /* Profile Page Specific Styling */
+        .profile-container {
+            max-width: 900px;
+            margin: 120px auto 60px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-header h2 {
+            font-size: 1.8rem;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .profile-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .profile-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-form label {
+            font-weight: 600;
+            color: #000;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .profile-form input,
+        .profile-form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            font-size: 1rem;
+        }
+
+        .profile-form input:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .save-btn {
+            display: inline-block;
+            background: black;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #444;
+        }
+
+        /* Loyalty stats */
+        .stats-section {
+            margin-top: 40px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-card {
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            margin: 10px;
+        }
+
+        .stat-card h3 {
+            color: black;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .stat-card p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        /* Toast popup */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        @media(max-width: 768px) {
+            .profile-form {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Existing Navigation Bar -->
+    <!-- Include your actual navbar code here -->
+    <header>
+        <nav>
+            <ul class="navbar">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="tours.html">Tours</a></li>
+                <li><a href="bookings.html">Bookings</a></li>
+                <li><a href="profile.html" class="active">Profile</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Profile Section -->
+    <div class="profile-container">
+        <div class="profile-header">
+            <h2>My Profile</h2>
+            <p>Manage your personal information and travel preferences</p>
+        </div>
+
+        <form class="profile-form" id="profileForm">
+            <div>
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" value="Ntokozo">
+            </div>
+
+            <div>
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" value="Mhlanga">
+            </div>
+
+            <div>
+                <label for="email">Email</label>
+                <input type="email" id="email" value="ntokozo@example.com">
+            </div>
+
+            <div>
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" value="+27 82 123 4567">
+            </div>
+
+            <div class="full-width">
+                <label for="preferences">Travel Preferences</label>
+                <input type="text" id="preferences" placeholder="e.g., Airport Transfers, Sports Tours">
+            </div>
+
+            <div class="full-width">
+                <label for="password">Change Password</label>
+                <input type="password" id="password" placeholder="Enter new password">
+            </div>
+
+            <button type="button" class="save-btn" onclick="saveProfile()">Save Changes</button>
+        </form>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <h3>12</h3>
+                <p>Trips Completed</p>
+            </div>
+            <div class="stat-card">
+                <h3>Gold</h3>
+                <p>Membership Level</p>
+            </div>
+            <div class="stat-card">
+                <h3>Jan 2024</h3>
+                <p>Member Since</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="toast" class="toast">Profile updated successfully!</div>
+
+    <!-- Existing Footer -->
+    <!-- Include your footer HTML here -->
+    <footer>
+        <p style="text-align:center; color:#555;">© 2025 Black Pearl Coach Charters & Tours | All Rights Reserved</p>
+    </footer>
+
+    <script>
+        function saveProfile() {
+            const toast = document.getElementById("toast");
+            toast.className = "toast show";
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
