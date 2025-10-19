@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gallery — Black Pearl Coach Charters & Tours</title>
+<style>
+:root{
+  --black:#0b0b0b;
+  --dark-gray:#1f1f1f;
+  --mid-gray:#bfbfbf;
+  --light-gray:#efefef;
+  --white:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Arial,sans-serif;}
+body{background:var(--light-gray);color:#222;line-height:1.4;}
+/* NAVBAR */
+.navbar{display:flex;justify-content:space-between;align-items:center;background:var(--black);color:var(--white);padding:14px 22px;position:sticky;top:0;z-index:30;}
+.nav-left{display:flex;align-items:center;gap:14px;}
+.logo{font-weight:800;font-size:14px;letter-spacing:0.6px;}
+.nav-links{display:flex;gap:18px;align-items:center;}
+.nav-links a{color:var(--mid-gray);text-decoration:none;font-size:13px;padding:8px 10px;border-radius:4px;}
+.nav-links a.active,.nav-links a:hover{color:var(--white);border-bottom:2px solid var(--mid-gray);}
+/* GALLERY SECTION */
+.gallery-section{padding:50px 5%;min-height:100vh;}
+.gallery-section h1{margin-bottom:30px;font-size:32px;text-align:center;color:var(--black);}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px;}
+.card{background:var(--white);border-radius:8px;overflow:hidden;box-shadow:0 4px 8px rgba(0,0,0,0.1);transition:transform 0.3s;}
+.card:hover{transform:translateY(-5px);}
+.card img{width:100%;height:200px;object-fit:cover;}
+.card p{padding:15px;background:var(--black);color:var(--white);font-size:14px;min-height:60px;}
+
+/* FOOTER */
+footer{background:var(--dark-gray);color:var(--white);padding:2rem;}
+.footer-inner{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;align-items:flex-start;gap:20px;}
+.footer-left{display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+.footer-logo{width:64px;height:64px;background:#fff url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=60') center/cover;}
+.social-icons{display:flex;gap:8px;margin-top:6px;}
+.social-icons span{width:14px;height:14px;border-radius:50%;background:var(--mid-gray);display:inline-block;}
+.footer-links{display:flex;gap:3rem;}
+.footer-links h4{margin-bottom:8px;color:var(--white);}
+.footer-links ul{list-style:none;}
+.footer-links li{margin-bottom:6px;color:#d0d0d0;}
+.footer-links a{color:#d0d0d0;text-decoration:none;}
+.footer-links a:hover{text-decoration:underline;}
+.footer-bottom{text-align:center;padding-top:1rem;border-top:1px solid #333;font-size:12px;color:#bdbdbd;}
+/* SEARCH BAR */
+.search-bar{display:flex;align-items:center;background:#eee;padding:10px 15px;border-radius:10px;max-width:400px;margin:0 auto 40px;}
+.search-bar input{flex:1;border:none;background:transparent;font-size:16px;}
+.search-bar .close-btn{font-size:20px;cursor:pointer;color:#777;}
+/* RESPONSIVE */
+@media(max-width:768px){
+  .navbar{flex-direction:column;padding:1rem;}
+  .nav-links{margin-top:1rem;flex-wrap:wrap;justify-content:center;}
+  .nav-links a{margin:0.5rem;}
+  .footer-inner{flex-direction:column;align-items:center;text-align:center;}
+  .footer-links{flex-direction:column;gap:1.5rem;}
+  .gallery-section{padding:30px 3%;}
+  .card img{height:180px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="navbar" role="banner">
+  <div class="nav-left">
+    <div class="logo">BLACK PEARL COACH CHARTERS TOURS</div>
+  </div>
+  <nav aria-label="Main navigation">
+    <div class="nav-links">
+      <a href="index.html">HOME</a>
+      <a href="about.html">ABOUT US</a>
+      <a href="fleet.html">OUR FLEET</a>
+      <a href="gallery.html" class="active">GALLERY</a>
+      <a href="quote.html">QUOTE</a>
+      <a href="contact.html">CONTACT US</a>
+      <a href="signin.html">SIGN IN</a>
+    </div>
+  </nav>
+</header>
+
+<!-- Gallery Section -->
+<main class="gallery-section">
+  <h1>Gallery</h1>
+  <div class="search-bar">
+    <input type="text" placeholder="Search" disabled />
+    <span class="close-btn">×</span>
+  </div>
+  <div class="gallery-grid">
+    <div class="card"><img src="images/vacation1.jpg" alt="Holiday group"><p>"Made our holiday stress-free from start to finish." – Lerato M</p></div>
+    <div class="card"><img src="images/vacation2.jpg" alt="Group adventure"><p>"Turned our group trip into a real adventure." – Priya S.</p></div>
+    <div class="card"><img src="images/vacation3.jpg" alt="Sightseeing"><p>"Made sightseeing in Johannesburg so easy." – David N.</p></div>
+    <div class="card"><img src="images/vacation4.jpg" alt="Bus to the game"><p>"Traveling to the game was half the fun!" – Jason L.</p></div>
+    <div class="card"><img src="images/vacation5.jpg" alt="Beach trip"><p>"Relaxing by the ocean never felt this good!" – Amara P.</p></div>
+    <div class="card"><img src="images/vacation6.jpg" alt="Mountain hike"><p>"The mountain views were breathtaking. Highly recommend!" – Sipho K.</p></div>
+    <div class="card"><img src="images/vacation7.jpg" alt="City tour"><p>"Exploring the city was effortless and fun." – Thandi R.</p></div>
+    <div class="card"><img src="images/vacation8.jpg" alt="Family trip"><p>"Our kids loved every moment of the trip!" – Johan D.</p></div>
+    <div class="card"><img src="images/vacation9.jpg" alt="Safari adventure"><p>"Seeing wildlife up close was an unforgettable experience." – Lebo M.</p></div>
+    <div class="card"><img src="images/vacation10.jpg" alt="Sunset cruise"><p>"Sunset on the water made the evening magical." – Aisha T.</p></div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="footer-logo" aria-hidden="true"></div>
+      <div class="social-icons">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="footer-links">
+      <div>
+        <h4>QUICK LINKS</h4>
+        <ul>
+          <li><a href="#">Get A Quote</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>OUR SERVICES</h4>
+        <ul>
+          <li>Airport Transfers</li>
+          <li>Conference Shuttle Hire</li>
+          <li>Sports Tours</li>
+          <li>Events & Leisure Travel</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
+</footer>
+
+</body>
+</html>
