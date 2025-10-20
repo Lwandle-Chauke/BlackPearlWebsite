@@ -1,8 +1,14 @@
 /* =======================
-   About Us Page Styles
-   ======================= */
+    About Us Page Styles
+    ======================= */
 
-   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+/* Remove the @import here. Fonts are handled by the main HTML file and style.css. */
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); */
+
+/* Define a fallback/local variable if not in global style.css */
+:root {
+    --text-dark: var(--accent); /* Assuming you want the text to be the dark accent color */
+}
 
 /* Container for the About page content */
 .about-container {
@@ -30,6 +36,11 @@
     color: var(--accent);
 }
 
+/* FIX: Convert inline style from JSX to CSS */
+.about-panel h1.main-title {
+    margin-top: -30px;
+}
+
 .section-title {
     font-size: 1.5rem;
     font-weight: 600;
@@ -43,7 +54,7 @@
 .about-panel p {
     font-size: 1rem;
     line-height: 1.6;
-    color: var(--text-dark);
+    color: var(--text-dark); /* Uses the corrected variable */
     margin-bottom: 20px;
 }
 
@@ -80,43 +91,34 @@
 }
 
 .promises li::before {
-    content: "✔"; /* You can replace with custom icon or image */
+    content: "✓"; /* Matches HTML entity for Checkmark */
+    color: var(--bg-black); /* Set color to match original HTML logic */
+    font-weight: bold;
     position: absolute;
     left: 0;
-    color: var(--accent);
 }
 
-/* Floating Chat Icon */
+/* Floating Chat Icon - Use global styles or ensure consistency */
 .chat-fab {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 50px;
-    height: 50px;
-    background: var(--bg-black);
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background 0.3s;
-    z-index: 999;
-}
-
-.chat-fab:hover {
-    background: var(--accent);
+    /* Use the same positioning from your global style.css to maintain consistency across all pages */
+    right: 14px;
+    bottom: 92px; 
+    z-index: 70;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .about-container {
         padding: 20px 15px;
-        margin-top: 60px;
+        /* margin-top will be handled by the header height/global CSS */
     }
 
     .about-panel {
         padding: 25px;
+    }
+
+    .about-panel h1 {
+        font-size: 2rem;
     }
 
     .section-title {

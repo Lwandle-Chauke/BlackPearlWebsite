@@ -1,314 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import AuthModal from '../components/AuthModal';
+import '../styles/style.css';
+import '../styles/profile.css';
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Profile | Black Pearl Coach Charters & Tours</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
+const Profile = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
-    <!-- Favicon setup -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon_16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon_32x32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon_48x48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon_64x64.png">
-<link rel="icon" type="image/png" sizes="128x128" href="/favicon_128x128.png">
-<link rel="icon" type="image/png" sizes="256x256" href="/favicon_256x256.png">
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
-    <style>
-        /* Profile Page Specific Styling */
-        .profile-container {
-            max-width: 900px;
-            margin: 120px auto 60px auto;
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
-        
+  const saveProfile = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
-        .profile-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+  return (
+    <>
+      <Header onSignInClick={openAuthModal} />
+      
+      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
-        .profile-header h2 {
-            font-size: 1.8rem;
-            color: #000;
-            margin-bottom: 10px;
-        }
-
-        .profile-header p {
-            color: #666;
-            font-size: 1rem;
-        }
-
-        .profile-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .profile-form label {
-            font-weight: 600;
-            color: #000;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .profile-form input,
-        .profile-form select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background: #f9f9f9;
-            font-size: 1rem;
-        }
-
-        .profile-form input:focus {
-            outline: none;
-            border-color: #000;
-        }
-
-        .full-width {
-            grid-column: span 2;
-        }
-
-        .save-btn {
-            display: inline-block;
-            background: black;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .save-btn:hover {
-            background: #444;
-        }
-
-        /* Loyalty stats */
-        .stats-section {
-            margin-top: 40px;
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            text-align: center;
-        }
-
-        .stat-card {
-            background: #f8f8f8;
-            border-radius: 10px;
-            padding: 20px;
-            width: 200px;
-            margin: 10px;
-        }
-
-        .stat-card h3 {
-            color: black;
-            margin: 0;
-            font-size: 1.4rem;
-        }
-
-        .stat-card p {
-            color: #555;
-            font-size: 0.9rem;
-        }
-
-        /* Toast popup */
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            margin-left: -125px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1;
-            left: 50%;
-            bottom: 30px;
-            font-size: 17px;
-            opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s;
-        }
-
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 50px;
-        }
-
-        @media(max-width: 768px) {
-            .profile-form {
-                grid-template-columns: 1fr;
-            }
-
-            .full-width {
-                grid-column: span 1;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Header Section -->
-  <header>
-    <div class="header-container">
-      <!-- Logo -->
-      <div class="logo">BLACK PEARL <span>TOURS</span></div>
-
-      <!-- Desktop Navigation -->
-      <nav>
-          <ul>
-            <li><a href="travel-Dashboard.html">Dashboard</a></li>
-            <li><a href="fleet.html">Our Fleet</a></li>
-            <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="bookings.html">Bookings</a></li>
-            <li><a href="profile.html" class="active">Profile</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-          </ul>
-        </nav>
-
-      <!-- Navigation Actions -->
-      <div class="nav-actions">
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-          <span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Dropdown Menu -->
-    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-      <a href="travel-Dashboard.html">DASHBOARD</a>
-      <a href="fleet.html">OUR FLEET</a>
-      <li><a href="gallery.html">GALLERY</a></li>
-      <li><a href="bookings.html">BOOKINGS</a></li>
-      <li><a href="profile.html" class="active">PROFILE</a></li>
-      <a href="contact.html">CONTACT US</a>
-      <hr />
-    </div>
-  </header>
-
-    <!-- Profile Section -->
-    <div class="profile-container">
-        <div class="profile-header">
-            <h2>My Profile</h2>
-            <p>Manage your personal information and travel preferences</p>
+      {/* Profile Section */}
+      <div className="profile-container">
+        <div className="profile-header">
+          <h2>My Profile</h2>
+          <p>Manage your personal information and travel preferences</p>
         </div>
 
-        <form class="profile-form" id="profileForm">
-            <div>
-                <label for="firstName">First Name</label>
-                <input type="text" id="firstName" value="Ntokozo">
-            </div>
+        <form className="profile-form" id="profileForm">
+          <div>
+            <label htmlFor="firstName">First Name</label>
+            <input type="text" id="firstName" defaultValue="Ntokozo" />
+          </div>
 
-            <div>
-                <label for="lastName">Last Name</label>
-                <input type="text" id="lastName" value="Mhlanga">
-            </div>
+          <div>
+            <label htmlFor="lastName">Last Name</label>
+            <input type="text" id="lastName" defaultValue="Mhlanga" />
+          </div>
 
-            <div>
-                <label for="email">Email</label>
-                <input type="email" id="email" value="ntokozo@example.com">
-            </div>
+          <div>
+            <label htmlFor="email">Email</label>
+            <input type="email" id="email" defaultValue="ntokozo@example.com" />
+          </div>
 
-            <div>
-                <label for="phone">Phone</label>
-                <input type="text" id="phone" value="+27 82 123 4567">
-            </div>
+          <div>
+            <label htmlFor="phone">Phone</label>
+            <input type="text" id="phone" defaultValue="+27 82 123 4567" />
+          </div>
 
-            <div class="full-width">
-                <label for="preferences">Travel Preferences</label>
-                <input type="text" id="preferences" placeholder="e.g., Airport Transfers, Sports Tours">
-            </div>
+          <div className="full-width">
+            <label htmlFor="preferences">Travel Preferences</label>
+            <input type="text" id="preferences" placeholder="e.g., Airport Transfers, Sports Tours" />
+          </div>
 
-            <div class="full-width">
-                <label for="password">Change Password</label>
-                <input type="password" id="password" placeholder="Enter new password">
-            </div>
+          <div className="full-width">
+            <label htmlFor="password">Change Password</label>
+            <input type="password" id="password" placeholder="Enter new password" />
+          </div>
 
-            <button type="button" class="save-btn" onclick="saveProfile()">Save Changes</button>
+          <button type="button" className="save-btn" onClick={saveProfile}>
+            Save Changes
+          </button>
         </form>
 
-        <div class="stats-section">
-            <div class="stat-card">
-                <h3>12</h3>
-                <p>Trips Completed</p>
-            </div>
-            <div class="stat-card">
-                <h3>Gold</h3>
-                <p>Membership Level</p>
-            </div>
-            <div class="stat-card">
-                <h3>Jan 2024</h3>
-                <p>Member Since</p>
-            </div>
+        <div className="stats-section">
+          <div className="stat-card">
+            <h3>12</h3>
+            <p>Trips Completed</p>
+          </div>
+          <div className="stat-card">
+            <h3>Gold</h3>
+            <p>Membership Level</p>
+          </div>
+          <div className="stat-card">
+            <h3>Jan 2024</h3>
+            <p>Member Since</p>
+          </div>
         </div>
-    </div>
-
-    <!-- Toast Message -->
-    <div id="toast" class="toast">Profile updated successfully!</div>
-
-    <!-- Floating chat icon -->
-  <div class="chat-fab" title="Chat with us">
-    <!-- simple SVG robot face -->
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-      <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-      <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-      <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-    </svg>
-  </div>
-
-    <!-- Footer -->
-  <footer class="footer">
-    <div class="wrap footer-inner">
-      <div class="footer-block">
-        <div class="logo-sm">BLACK PEARL COACH CHARTERS AND TOURS</div>
       </div>
 
-      <div class="footer-block">
-        <h3>QUICK LINKS</h3>
-        <a href="fleet.html">View Our Fleet</a>
-        <a href="gallery.html">Browse Gallery</a>
-        <a href="quote.html">Get A Quote</a>
-        <a href="contact.html">Contact Us</a>
+      {/* Toast Message */}
+      {showToast && (
+        <div id="toast" className="toast show">
+          Profile updated successfully!
+        </div>
+      )}
+
+      {/* Floating chat icon */}
+      <div className="chat-fab" title="Chat with us">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
+          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
+          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
+          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
+        </svg>
       </div>
 
-      <div class="footer-block">
-        <h3>OUR SERVICES</h3>
-        <a href="#">Airport Transfers</a>
-        <a href="#">Conference Shuttle Hire</a>
-        <a href="#">Sports Tours</a>
-        <a href="#">Events & Leisure Travel</a>
-      </div>
-    </div>
+      <Footer />
+    </>
+  );
+};
 
-    <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
-  </footer>
-
-    <script>
-        function saveProfile() {
-            const toast = document.getElementById("toast");
-            toast.className = "toast show";
-            setTimeout(() => {
-                toast.className = toast.className.replace("show", "");
-            }, 3000);
-        }
-    </script>
-</body>
-
-</html>
+export default Profile;

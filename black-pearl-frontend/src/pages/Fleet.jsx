@@ -1,548 +1,115 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Our Fleet | Black Pearl Coach Charters & Tours</title>
-  <!-- Poppins font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+// components/pages/Fleet.jsx
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import AuthModal from '../components/AuthModal';
+import '../styles/style.css';
+import '../styles/fleet.css';
 
-  <!-- Favicon setup -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon_16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon_32x32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon_48x48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon_64x64.png">
-<link rel="icon" type="image/png" sizes="128x128" href="/favicon_128x128.png">
-<link rel="icon" type="image/png" sizes="256x256" href="/favicon_256x256.png">
+const Fleet = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState({});
 
-  <style>
-    /* Fleet Page Specific Styles */
-    .fleet-container {
-      margin-top: 80px;
-      padding: 40px 20px;
-    }
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
-    .center-title {
-      text-align: center;
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 40px;
-      color: var(--accent);
-    }
+  const openModal = (name, desc, img) => {
+    setModalData({ name, desc, img, vehicleUrl: `/quote?vehicle=${encodeURIComponent(name)}` });
+    setIsModalOpen(true);
+  };
 
-    .fleet-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalData({});
+  };
 
-    .vehicle-card {
-      background: var(--white);
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border: 1px solid var(--silver);
-    }
+  const vehicles = [
+    { id: 1, name: "4 Seater Sedan", image: "/_images/4 seater sedan.jpeg", description: "Compact and affordable option for small groups or individuals", fullDesc: "Our compact 4-seater sedan is perfect for airport transfers, business meetings, or small group travel. Featuring comfortable seating, air conditioning, and professional driver service." },
+    { id: 2, name: "Minibus Mercedes Viano", image: "/_images/minibus mercedes viano.jpeg", description: "Ideal for smaller groups with luxury comfort", fullDesc: "The Mercedes Viano offers luxury and comfort for smaller groups. Perfect for corporate transfers, family trips, or small tour groups with premium amenities." },
+    { id: 3, name: "15 Seater Quantum", image: "/_images/15 seater quantum.jpeg", description: "Versatile for group and family use", fullDesc: "Our 15-seater Quantum is perfect for medium-sized groups, family outings, or corporate teams. Spacious interior with comfortable seating and ample luggage space." },
+    { id: 4, name: "17 Seater Luxury Sprinter", image: "/_images/17 seater luxury sprinter.jpeg", description: "Perfect for airport transfers & small groups", fullDesc: "The luxury Sprinter offers premium comfort for up to 17 passengers. Ideal for airport transfers, corporate shuttles, and small group tours with business-class amenities." },
+    { id: 5, name: "22 Seater Luxury Coach", image: "/_images/22 seater luxury coach.jpeg", description: "Ideal for corporate shuttle hire", fullDesc: "Perfect for corporate events, conference shuttles, and medium group travel. Features comfortable seating, air conditioning, and professional presentation." },
+    { id: 6, name: "28 Seater Semi Luxury", image: "/_images/28 seater semi luxury.jpeg", description: "Great for sports tours & team transport", fullDesc: "Designed for sports teams and larger groups. Ample space for equipment and comfortable travel for extended journeys." },
+    { id: 7, name: "39 Seater Luxury Coach", image: "/_images/39 seater luxury coach.jpeg", description: "Balanced choice for medium groups", fullDesc: "The perfect balance of capacity and comfort. Ideal for school trips, corporate events, and large family gatherings with premium amenities." },
+    { id: 8, name: "60 Seater Semi Luxury", image: "/_images/60 seater semi luxury.jpeg", description: "Cost-effective solution for bigger groups", fullDesc: "Our cost-effective solution for large groups without compromising on comfort. Perfect for school tours, large events, and corporate transfers." },
+    { id: 9, name: "70 Seater Semi Luxury", image: "/_images/70 Seater semi luxury.jpeg", description: "Spacious travel for schools & tours", fullDesc: "Maximum capacity with comfortable seating. Ideal for large school groups, church outings, and major events requiring substantial passenger transport." }
+  ];
 
-    .vehicle-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    }
+  return (
+    <>
+      <Header onSignInClick={openAuthModal} />
+      
+      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
-    .vehicle-card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-bottom: 3px solid var(--bg-black);
-    }
+      <div className="fleet-container">
+        {/* Class added to h1 to remove inline style */}
+        <h1 className="center-title fleet-title">OUR FLEET</h1>
 
-    .vehicle-body {
-      padding: 20px;
-    }
-
-    .vehicle-body h3 {
-      margin: 0 0 10px 0;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .vehicle-body .muted {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .card-actions .btn {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-
-    .view-details {
-      background: var(--bg-black);
-      color: var(--white);
-    }
-
-    .view-details:hover {
-      background: var(--silver);
-      color: var(--accent);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--bg-black);
-      border: 2px solid var(--bg-black);
-    }
-
-    .btn-ghost:hover {
-      background: var(--bg-black);
-      color: var(--white);
-    }
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-dialog {
-      background: var(--white);
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 500px;
-      width: 90%;
-      position: relative;
-      text-align: center;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--accent);
-    }
-
-    #modalImg {
-      width: 100%;
-      max-height: 250px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    #modalTitle {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--accent);
-    }
-
-    #modalDesc {
-      color: var(--muted);
-      margin-bottom: 25px;
-      line-height: 1.6;
-    }
-
-    .modal-actions .btn {
-      background: var(--bg-black);
-      color: var(--white);
-      padding: 12px 30px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: background 0.3s ease;
-    }
-
-    .modal-actions .btn:hover {
-      background: var(--silver);
-      color: var(--accent);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .fleet-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 10px;
-      }
-
-      .center-title {
-        font-size: 2rem;
-      }
-
-      .card-actions {
-        flex-direction: column;
-      }
-
-      .card-actions .btn {
-        min-width: auto;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .fleet-container {
-        padding: 20px 10px;
-      }
-
-      .vehicle-body {
-        padding: 15px;
-      }
-
-      .vehicle-body h3 {
-        font-size: 1.2rem;
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- Header Section -->
-  <header>
-    <div class="header-container">
-      <!-- Logo -->
-      <div class="logo">BLACK PEARL <span>TOURS</span></div>
-
-      <!-- Desktop Navigation -->
-      <nav>
-          <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About Us</a></li>
-            <li><a href="fleet.html" class="active">Our Fleet</a></li>
-            <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="quote.html">Quote</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-            <li><button id="signInBtn" class="btn-header-signin">Sign In</button></li>
-          </ul>
-        </nav>
-
-      <!-- Navigation Actions -->
-      <div class="nav-actions">
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-          <span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Dropdown Menu -->
-    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-      <a href="index.html">HOME</a>
-      <a href="about.html">ABOUT US</a>
-      <a href="fleet.html" class="active">OUR FLEET</a>
-      <a href="gallery.html">GALLERY</a>
-      <a href="quote.html">QUOTE</a>
-      <a href="contact.html">CONTACT US</a>
-      <hr />
-      <a href="#" id="signInBtn" class="btn-sign">SIGN IN</a>
-    </div>
-  </header>
-
-  <!-- Sign In / Register Popup Overlay -->
-  <div id="authOverlay" class="auth-overlay">
-    <div class="auth-modal">
-      <button class="close-btn" id="closeAuth">&times;</button>
-      <br>
-      <div class="auth-tabs">
-        <button id="signinTab" class="tab active">Sign In</button>
-        <button id="registerTab" class="tab">Register</button>
+        <section className="fleet-grid">
+          {vehicles.map(vehicle => (
+            <article key={vehicle.id} className="vehicle-card">
+              <img src={vehicle.image} alt={vehicle.name} />
+              <div className="vehicle-body">
+                <h3>{vehicle.name}</h3>
+                <p className="muted">{vehicle.description}</p>
+                <div className="card-actions">
+                  <button 
+                    className="btn view-details" 
+                    onClick={() => openModal(vehicle.name, vehicle.fullDesc, vehicle.image)}
+                  >
+                    View Details
+                  </button>
+                  <Link 
+                    to={`/quote?vehicle=${encodeURIComponent(vehicle.name)}`} 
+                    className="btn btn-ghost"
+                  >
+                    Book Vehicle
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
       </div>
 
-      <!-- Sign In Form -->
-      <form id="signinForm" class="auth-form active">
-        <h2>Sign In</h2>
-        <div class="form-group">
-          <label for="signinEmail">Email Address</label>
-          <input type="email" id="signinEmail" name="email" placeholder="Enter your email" required>
-        </div>
-        <div class="form-group">
-          <label for="signinPassword">Password</label>
-          <input type="password" id="signinPassword" name="password" placeholder="Enter your password" required>
-        </div>
-        <button type="submit" class="btn-auth">Sign In</button>
-        <p id="signInMessage" class="error-message"></p>
-      </form>
-
-      <!-- Register Form -->
-      <form id="registerForm" class="auth-form">
-        <h2>Register</h2>
-        <div class="form-group">
-          <label for="registerName">Name</label>
-          <input type="text" id="registerName" name="name" placeholder="Enter your name" required>
-        </div>
-        <div class="form-group">
-          <label for="registerSurname">Surname</label>
-          <input type="text" id="registerSurname" name="surname" placeholder="Enter your surname" required>
-        </div>
-        <div class="form-group">
-          <label for="registerEmail">Email Address</label>
-          <input type="email" id="registerEmail" name="email" placeholder="Enter your email" required>
-        </div>
-        <div class="form-group">
-          <label for="registerPhone">Phone Number</label>
-          <input type="tel" id="registerPhone" name="phone" placeholder="Enter your phone number" required>
-        </div>
-        <div class="form-group">
-          <label for="registerPassword">Password</label>
-          <input type="password" id="registerPassword" name="password" placeholder="Enter a password (min. 8 chars)" minlength="8" required>
-        </div>
-        <div class="form-group">
-          <label for="registerConfirmPassword">Confirm Password</label>
-          <input type="password" id="registerConfirmPassword" name="confirm_password" placeholder="Confirm password" required>
-        </div>
-        <button type="submit" class="btn-auth">Register</button>
-        <p id="registerMessage" class="error-message"></p>
-      </form>
-    </div>
-  </div>
-
-  <div class="fleet-container">
-    <h1 class="center-title" style="margin-top: -10px;">OUR FLEET</h1>
-
-    <section class="fleet-grid">
-      <!-- 4 Seater Sedan -->
-      <article class="vehicle-card">
-        <img src="_images/4 seater sedan.jpeg" alt="4 Seater Sedan">
-        <div class="vehicle-body">
-          <h3>4 Seater Sedan</h3>
-          <p class="muted">Compact and affordable option for small groups or individuals</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="4 Seater Sedan" data-desc="Our compact 4-seater sedan is perfect for airport transfers, business meetings, or small group travel. Featuring comfortable seating, air conditioning, and professional driver service." data-img="_images/4 seater sedan.jpg">View Details</button>
-            <a href="quote.html?vehicle=4 Seater Sedan" class="btn btn-ghost">Book Vehicle</a>
+      {/* Modal - Rendered conditionally */}
+      {isModalOpen && (
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeModal} aria-label="Close modal">
+              ✕
+            </button>
+            <img src={modalData.img} alt={modalData.name} id="modalImg" />
+            <h3 id="modalTitle">{modalData.name}</h3>
+            <p id="modalDesc">{modalData.desc}</p>
+            <div className="modal-actions">
+              <Link 
+                to={modalData.vehicleUrl} 
+                className="btn"
+                onClick={closeModal}
+              >
+                Book this vehicle
+              </Link>
+            </div>
           </div>
         </div>
-      </article>
+      )}
 
-      <!-- Minibus Mercedes Viano -->
-      <article class="vehicle-card">
-        <img src="_images/minibus mercedes viano.jpeg" alt="Minibus Mercedes Viano">
-        <div class="vehicle-body">
-          <h3>Minibus Mercedes Viano</h3>
-          <p class="muted">Ideal for smaller groups with luxury comfort</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="Minibus Mercedes Viano" data-desc="The Mercedes Viano offers luxury and comfort for smaller groups. Perfect for corporate transfers, family trips, or small tour groups with premium amenities." data-img="_images/minibus mercedes viano.jpg">View Details</button>
-            <a href="quote.html?vehicle=Mini Bus Mercedes Viano" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 15 Seater Quantum -->
-      <article class="vehicle-card">
-        <img src="_images/15 seater quantum.jpeg" alt="15 Seater Quantum">
-        <div class="vehicle-body">
-          <h3>15 Seater Quantum</h3>
-          <p class="muted">Versatile for group and family use</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="15 Seater Quantum" data-desc="Our 15-seater Quantum is perfect for medium-sized groups, family outings, or corporate teams. Spacious interior with comfortable seating and ample luggage space." data-img="_images/15 seater quantum.jpg">View Details</button>
-            <a href="quote.html?vehicle=15 Seater Quantum" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 17 Seater Luxury Sprinter -->
-      <article class="vehicle-card">
-        <img src="_images/17 seater luxury sprinter.jpeg" alt="17 Seater Luxury Sprinter">
-        <div class="vehicle-body">
-          <h3>17 Seater Luxury Sprinter</h3>
-          <p class="muted">Perfect for airport transfers & small groups</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="17 Seater Luxury Sprinter" data-desc="The luxury Sprinter offers premium comfort for up to 17 passengers. Ideal for airport transfers, corporate shuttles, and small group tours with business-class amenities." data-img="_images/17 seater luxury sprinter.jpg">View Details</button>
-            <a href="quote.html?vehicle=17 Seater Luxury Sprinter" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 22 Seater Luxury Coach -->
-      <article class="vehicle-card">
-        <img src="_images/22 seater luxury coach.jpeg" alt="22 Seater Luxury Coach">
-        <div class="vehicle-body">
-          <h3>22 Seater Luxury Coach</h3>
-          <p class="muted">Ideal for corporate shuttle hire</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="22 Seater Luxury Coach" data-desc="Perfect for corporate events, conference shuttles, and medium group travel. Features comfortable seating, air conditioning, and professional presentation." data-img="_images/22 seater luxury coach.jpg">View Details</button>
-            <a href="quote.html?vehicle=22 Seater Luxury Coach" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 28 Seater Semi Luxury -->
-      <article class="vehicle-card">
-        <img src="_images/28 seater semi luxury.jpeg" alt="28 Seater Semi Luxury">
-        <div class="vehicle-body">
-          <h3>28 Seater Semi Luxury</h3>
-          <p class="muted">Great for sports tours & team transport</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="28 Seater Semi Luxury" data-desc="Designed for sports teams and larger groups. Ample space for equipment and comfortable travel for extended journeys." data-img="_images/28 seater semi luxury.jpg">View Details</button>
-            <a href="quote.html?vehicle=28 Seater Luxury Coach" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 39 Seater Luxury Coach -->
-      <article class="vehicle-card">
-        <img src="_images/39 seater luxury coach.jpeg" alt="39 Seater Luxury Coach">
-        <div class="vehicle-body">
-          <h3>39 Seater Luxury Coach</h3>
-          <p class="muted">Balanced choice for medium groups</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="39 Seater Luxury Coach" data-desc="The perfect balance of capacity and comfort. Ideal for school trips, corporate events, and large family gatherings with premium amenities." data-img="_images/39 seater luxury coach.jpg">View Details</button>
-            <a href="quote.html?vehicle=39 Seater Luxury Coach" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 60 Seater Semi Luxury -->
-      <article class="vehicle-card">
-        <img src="_images/60 seater semi luxury.jpeg" alt="60 Seater Semi Luxury">
-        <div class="vehicle-body">
-          <h3>60 Seater Semi Luxury</h3>
-          <p class="muted">Cost-effective solution for bigger groups</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="60 Seater Semi Luxury" data-desc="Our cost-effective solution for large groups without compromising on comfort. Perfect for school tours, large events, and corporate transfers." data-img="_images/60 seater semi luxury.jpg">View Details</button>
-            <a href="quote.html?vehicle=60 Seater Semi Luxury" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- 70 Seater Semi Luxury -->
-      <article class="vehicle-card">
-        <img src="_images/70 Seater semi luxury.jpeg" alt="70 Seater Semi Luxury">
-        <div class="vehicle-body">
-          <h3>70 Seater Semi Luxury</h3>
-          <p class="muted">Spacious travel for schools & tours</p>
-          <div class="card-actions">
-            <button class="btn view-details" data-name="70 Seater Semi Luxury" data-desc="Maximum capacity with comfortable seating. Ideal for large school groups, church outings, and major events requiring substantial passenger transport." data-img="_images/70 Seater semi luxury.jpg">View Details</button>
-            <a href="quote.html?vehicle=70 Seater Semi Luxury" class="btn btn-ghost">Book Vehicle</a>
-          </div>
-        </div>
-      </article>
-    </section>
-  </div>
-
-  <!-- Modal detail -->
-  <div id="vehicleModal" class="modal" aria-hidden="true">
-    <div class="modal-dialog">
-      <button class="modal-close" aria-label="Close modal">✕</button>
-      <img src="" alt="" id="modalImg" />
-      <h3 id="modalTitle"></h3>
-      <p id="modalDesc"></p>
-      <div class="modal-actions">
-        <a href="#" id="modalBook" class="btn">Book this vehicle</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Floating chat icon -->
-  <div class="chat-fab" title="Chat with us">
-    <!-- simple SVG robot face -->
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-      <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-      <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-      <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-    </svg>
-  </div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="wrap footer-inner">
-      <div class="footer-block">
-        <div class="logo-sm">BLACK PEARL COACH CHARTERS AND TOURS</div>
+      {/* Floating chat icon */}
+      <div className="chat-fab" title="Chat with us">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
+          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
+          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
+          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
+        </svg>
       </div>
 
-      <div class="footer-block">
-        <h3>QUICK LINKS</h3>
-        <a href="fleet.html">View Our Fleet</a>
-        <a href="gallery.html">Browse Gallery</a>
-        <a href="quote.html">Get A Quote</a>
-        <a href="contact.html">Contact Us</a>
-      </div>
+      <Footer />
+    </>
+  );
+};
 
-      <div class="footer-block">
-        <h3>OUR SERVICES</h3>
-        <a href="#">Airport Transfers</a>
-        <a href="#">Conference Shuttle Hire</a>
-        <a href="#">Sports Tours</a>
-        <a href="#">Events & Leisure Travel</a>
-      </div>
-    </div>
-
-    <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
-  </footer>
-
-  <script>
-    // Modal functionality for vehicle details
-    document.addEventListener('DOMContentLoaded', function() {
-      const viewDetailsButtons = document.querySelectorAll('.view-details');
-      const modal = document.getElementById('vehicleModal');
-      const modalImg = document.getElementById('modalImg');
-      const modalTitle = document.getElementById('modalTitle');
-      const modalDesc = document.getElementById('modalDesc');
-      const modalBook = document.getElementById('modalBook');
-      const modalClose = document.querySelector('.modal-close');
-
-      viewDetailsButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const name = this.getAttribute('data-name');
-          const desc = this.getAttribute('data-desc');
-          const img = this.getAttribute('data-img');
-          const vehicleUrl = this.closest('.vehicle-card').querySelector('.btn-ghost').getAttribute('href');
-
-          modalImg.src = img;
-          modalImg.alt = name;
-          modalTitle.textContent = name;
-          modalDesc.textContent = desc;
-          modalBook.href = vehicleUrl;
-
-          modal.style.display = 'flex';
-        });
-      });
-
-      modalClose.addEventListener('click', function() {
-        modal.style.display = 'none';
-      });
-
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          modal.style.display = 'none';
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+export default Fleet;

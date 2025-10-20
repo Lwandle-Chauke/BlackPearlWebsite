@@ -19,10 +19,10 @@ const Footer = () => {
 
         <div className="footer-block">
           <h3>OUR SERVICES</h3>
-          <Link to="#">Airport Transfers</Link>
-          <Link to="#">Conference Shuttle Hire</Link>
-          <Link to="#">Sports Tours</Link>
-          <Link to="#">Events & Leisure Travel</Link>
+          <a href="#airport">Airport Transfers</a>
+          <a href="#conference">Conference Shuttle Hire</a>
+          <a href="#sports">Sports Tours</a>
+          <a href="#events">Events & Leisure Travel</a>
         </div>
       </div>
 

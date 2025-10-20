@@ -1,0 +1,98 @@
+/* Gallery Page Styles */
+
+/* Remove :root and universal reset here. It should be in style.css */
+
+/* GALLERY SECTION */
+.gallery-section {
+  padding: 50px 5%;
+  min-height: 100vh;
+  margin-top: 80px; /* Space below fixed header */
+}
+
+.gallery-section h1 {
+  margin-bottom: 30px;
+  font-size: 32px;
+  text-align: center;
+  color: var(--black); /* Ensure this variable is defined in style.css */
+}
+
+/* New class to replace inline style: margin-top: 50px */
+.gallery-section .gallery-title {
+    margin-top: 50px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 1200px; /* Use var(--max-w) if defined in style.css */
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card p {
+  padding: 15px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 14px;
+  min-height: 60px;
+  margin: 0;
+}
+
+/* SEARCH BAR */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #eee;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: 0 auto 40px;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+}
+
+.search-bar .close-btn {
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .gallery-section {
+    padding: 30px 3%;
+  }
+  
+  .card img {
+    height: 180px;
+  }
+  
+  .gallery-grid {
+    /* Using 200px min-width here from your media query */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+}

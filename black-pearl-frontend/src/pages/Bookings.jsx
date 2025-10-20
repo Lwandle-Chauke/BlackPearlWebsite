@@ -1,429 +1,173 @@
-<!DOCTYPE html>
-<html lang="en">
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import AuthModal from '../components/AuthModal';
+import '../styles/style.css';
+import '../styles/bookings.css';
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Bookings | Black Pearl Coach Charters & Tours</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
+const Bookings = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
-    <!-- Favicon setup -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon_16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon_32x32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon_48x48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon_64x64.png">
-<link rel="icon" type="image/png" sizes="128x128" href="/favicon_128x128.png">
-<link rel="icon" type="image/png" sizes="256x256" href="/favicon_256x256.png">
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
-    <style>
-        body {
-            background: #f4f4f4;
-            margin: 0;
-        }
+  const showToastMessage = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
-        .bookings-container {
-            max-width: 1000px;
-            margin: 120px auto 60px auto;
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
+  const bookings = [
+    {
+      id: 1,
+      title: "Airport Transfer",
+      status: "confirmed",
+      date: "22 Oct 2025",
+      pickup: "OR Tambo Airport",
+      dropoff: "Sandton Hotel",
+      passengers: 3,
+      price: "R850"
+    },
+    {
+      id: 2,
+      title: "Conference Shuttle",
+      status: "pending",
+      date: "25 Oct 2025",
+      pickup: "Pretoria CBD",
+      dropoff: "Gallagher Convention Centre",
+      passengers: 6,
+      price: "R1,400"
+    },
+    {
+      id: 3,
+      title: "Sports Tour",
+      status: "cancelled",
+      date: "5 Sep 2025",
+      pickup: "Johannesburg Stadium",
+      dropoff: "Durban Beachfront",
+      passengers: 10,
+      price: "R3,500"
+    }
+  ];
 
-        .bookings-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+  const filteredBookings = bookings.filter(booking => {
+    const matchesStatus = filter === 'all' || booking.status === filter;
+    const matchesSearch = booking.title.toLowerCase().includes(search.toLowerCase()) ||
+                         booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
+                         booking.dropoff.toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
-        .bookings-header h2 {
-            font-size: 1.8rem;
-            color: #000;
-        }
+  return (
+    <>
+      <Header onSignInClick={openAuthModal} />
+      
+      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
-        .bookings-header p {
-            color: #666;
-            font-size: 1rem;
-        }
-        
-
-        /* Upcoming booking summary */
-        .upcoming-card {
-            background: linear-gradient(90deg, #000 0%, #555 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 25px 30px;
-            margin-bottom: 40px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .upcoming-card h3 {
-            margin: 0;
-            font-size: 1.4rem;
-        }
-
-        .upcoming-card p {
-            margin: 8px 0;
-            font-size: 1rem;
-        }
-
-        .search-bar {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-            gap: 10px;
-        }
-
-        .search-bar input,
-        .search-bar select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            width: 48%;
-            font-size: 1rem;
-        }
-
-        .booking-card {
-            border: 1px solid #ddd;
-            border-left: 6px solid black;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background: #fafafa;
-            transition: 0.3s;
-        }
-
-        .booking-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .booking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .booking-header h3 {
-            color: #000;
-            font-size: 1.3rem;
-            margin: 0;
-        }
-
-        .status {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-transform: capitalize;
-        }
-
-        .status.pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status.confirmed {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status.cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .booking-details {
-            color: #555;
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-
-        .booking-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .booking-actions button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: 0.3s;
-        }
-
-        .btn-cancel {
-            background: #ff4d4d;
-            color: white;
-        }
-
-        .btn-cancel:hover {
-            background: #e60000;
-        }
-
-        .btn-rebook {
-            background: black;
-            color: white;
-        }
-
-        .btn-rebook:hover {
-            background: #444;
-        }
-
-        .btn-feedback {
-            background: #ccc;
-        }
-
-        .btn-feedback:hover {
-            background: #999;
-        }
-
-        /* Toast popup */
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            margin-left: -125px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1;
-            left: 50%;
-            bottom: 30px;
-            font-size: 17px;
-            opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s;
-        }
-
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 50px;
-        }
-
-        @media (max-width: 768px) {
-
-            .search-bar input,
-            .search-bar select {
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Header Section -->
-  <header>
-    <div class="header-container">
-      <!-- Logo -->
-      <div class="logo">BLACK PEARL <span>TOURS</span></div>
-
-      <!-- Desktop Navigation -->
-      <nav>
-          <ul>
-            <li><a href="travel-Dashboard.html">Dashboard</a></li>
-            <li><a href="fleet.html">Our Fleet</a></li>
-            <li><a href="gallery.html">Gallery</a></li>
-            <li><a href="bookings.html" class="active">Bookings</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="contact.html">Contact Us</a></li>
-          </ul>
-        </nav>
-
-      <!-- Navigation Actions -->
-      <div class="nav-actions">
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-          <span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Dropdown Menu -->
-    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-      <a href="travel-Dashboard.html">DASHBOARD</a>
-      <a href="fleet.html">OUR FLEET</a>
-      <li><a href="gallery.html">GALLERY</a></li>
-      <li><a href="bookings.html" class="active">BOOKINGS</a></li>
-      <li><a href="profile.html">PROFILE</a></li>
-      <a href="contact.html">CONTACT US</a>
-      <hr />
-    </div>
-  </header>
-
-    <!-- Bookings Content -->
-    <div class="bookings-container">
-        <div class="bookings-header">
-            <h2>My Bookings</h2>
-            <p>View and manage your past and upcoming trips</p>
+      {/* Bookings Content */}
+      <div className="bookings-container">
+        <div className="bookings-header">
+          <h2>My Bookings</h2>
+          <p>View and manage your past and upcoming trips</p>
         </div>
 
-        <!-- Upcoming Booking Summary -->
-        <div class="upcoming-card">
-            <h3>Next Upcoming Trip</h3>
-            <p><strong>Service:</strong> Airport Transfer</p>
-            <p><strong>Date:</strong> 22 Oct 2025</p>
-            <p><strong>Pickup:</strong> OR Tambo Airport → Sandton Hotel</p>
-            <p><strong>Status:</strong> Confirmed ✅</p>
+        {/* Upcoming Booking Summary */}
+        <div className="upcoming-card">
+          <h3>Next Upcoming Trip</h3>
+          <p><strong>Service:</strong> Airport Transfer</p>
+          <p><strong>Date:</strong> 22 Oct 2025</p>
+          <p><strong>Pickup:</strong> OR Tambo Airport → Sandton Hotel</p>
+          <p><strong>Status:</strong> Confirmed ✅</p>
         </div>
 
-        <!-- Search and Filter -->
-        <div class="search-bar">
-            <input type="text" id="search" placeholder="Search by destination or date..." />
-            <select id="filter">
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
+        {/* Search and Filter */}
+        <div className="search-bar">
+          <input 
+            type="text" 
+            placeholder="Search by destination or date..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select 
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
         </div>
 
-        <!-- Booking Cards -->
+        {/* Booking Cards */}
         <div id="bookings-list">
-
-            <div class="booking-card" data-status="confirmed">
-                <div class="booking-header">
-                    <h3>Airport Transfer</h3>
-                    <span class="status confirmed">Confirmed</span>
-                </div>
-                <div class="booking-details">
-                    <p><strong>Date:</strong> 22 Oct 2025</p>
-                    <p><strong>Pickup:</strong> OR Tambo Airport</p>
-                    <p><strong>Drop-off:</strong> Sandton Hotel</p>
-                    <p><strong>Passengers:</strong> 3</p>
-                    <p><strong>Price:</strong> R850</p>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-cancel" onclick="showToast('Booking cancelled successfully!')">Cancel</button>
-                    <button class="btn-rebook" onclick="showToast('Trip rebooked!')">Rebook</button>
-                    <button class="btn-feedback" onclick="showToast('Thank you for your feedback!')">Give
-                        Feedback</button>
-                </div>
+          {filteredBookings.map(booking => (
+            <div key={booking.id} className="booking-card" data-status={booking.status}>
+              <div className="booking-header">
+                <h3>{booking.title}</h3>
+                <span className={`status ${booking.status}`}>
+                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                </span>
+              </div>
+              <div className="booking-details">
+                <p><strong>Date:</strong> {booking.date}</p>
+                <p><strong>Pickup:</strong> {booking.pickup}</p>
+                <p><strong>Drop-off:</strong> {booking.dropoff}</p>
+                <p><strong>Passengers:</strong> {booking.passengers}</p>
+                <p><strong>Price:</strong> {booking.price}</p>
+              </div>
+              <div className="booking-actions">
+                {booking.status !== 'cancelled' && (
+                  <button 
+                    className="btn-cancel" 
+                    onClick={() => showToastMessage('Booking cancelled successfully!')}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button 
+                  className="btn-rebook" 
+                  onClick={() => showToastMessage('Trip rebooked!')}
+                >
+                  Rebook
+                </button>
+                <button 
+                  className="btn-feedback" 
+                  onClick={() => showToastMessage('Thank you for your feedback!')}
+                >
+                  Give Feedback
+                </button>
+              </div>
             </div>
-
-            <div class="booking-card" data-status="pending">
-                <div class="booking-header">
-                    <h3>Conference Shuttle</h3>
-                    <span class="status pending">Pending</span>
-                </div>
-                <div class="booking-details">
-                    <p><strong>Date:</strong> 25 Oct 2025</p>
-                    <p><strong>Pickup:</strong> Pretoria CBD</p>
-                    <p><strong>Drop-off:</strong> Gallagher Convention Centre</p>
-                    <p><strong>Passengers:</strong> 6</p>
-                    <p><strong>Price:</strong> R1,400</p>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-cancel" onclick="showToast('Booking request cancelled!')">Cancel</button>
-                    <button class="btn-rebook" onclick="showToast('Trip rebooked!')">Rebook</button>
-                    <button class="btn-feedback" onclick="showToast('Thank you for your feedback!')">Give
-                        Feedback</button>
-                </div>
-            </div>
-
-            <div class="booking-card" data-status="cancelled">
-                <div class="booking-header">
-                    <h3>Sports Tour</h3>
-                    <span class="status cancelled">Cancelled</span>
-                </div>
-                <div class="booking-details">
-                    <p><strong>Date:</strong> 5 Sep 2025</p>
-                    <p><strong>Pickup:</strong> Johannesburg Stadium</p>
-                    <p><strong>Drop-off:</strong> Durban Beachfront</p>
-                    <p><strong>Passengers:</strong> 10</p>
-                    <p><strong>Price:</strong> R3,500</p>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-rebook" onclick="showToast('Trip rebooked!')">Rebook</button>
-                    <button class="btn-feedback" onclick="showToast('Thank you for your feedback!')">Give
-                        Feedback</button>
-                </div>
-            </div>
-
+          ))}
         </div>
-    </div>
-
-    <!-- Toast Message -->
-    <div id="toast" class="toast"></div>
-
-     <!-- Floating chat icon -->
-  <div class="chat-fab" title="Chat with us">
-    <!-- simple SVG robot face -->
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-      <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-      <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-      <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-    </svg>
-  </div>
-
-    <!-- Footer -->
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="wrap footer-inner">
-      <div class="footer-block">
-        <div class="logo-sm">BLACK PEARL COACH CHARTERS AND TOURS</div>
       </div>
 
-      <div class="footer-block">
-        <h3>QUICK LINKS</h3>
-        <a href="fleet.html">View Our Fleet</a>
-        <a href="gallery.html">Browse Gallery</a>
-        <a href="quote.html">Get A Quote</a>
-        <a href="contact.html">Contact Us</a>
+      {/* Toast Message */}
+      {showToast && (
+        <div id="toast" className="toast show">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Floating chat icon */}
+      <div className="chat-fab" title="Chat with us">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
+          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
+          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
+          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
+        </svg>
       </div>
 
-      <div class="footer-block">
-        <h3>OUR SERVICES</h3>
-        <a href="#">Airport Transfers</a>
-        <a href="#">Conference Shuttle Hire</a>
-        <a href="#">Sports Tours</a>
-        <a href="#">Events & Leisure Travel</a>
-      </div>
-    </div>
+      <Footer />
+    </>
+  );
+};
 
-    <div class="bottom-bar">2025 Black Pearl Coach Charters and Tours | All Rights Reserved</div>
-  </footer>
-
-    <script>
-        // Toast popup
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            toast.textContent = message;
-            toast.className = "toast show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
-
-        // Filter + Search
-        const filterSelect = document.getElementById("filter");
-        const searchInput = document.getElementById("search");
-        const bookingsList = document.getElementById("bookings-list").children;
-
-        filterSelect.addEventListener("change", filterBookings);
-        searchInput.addEventListener("input", filterBookings);
-
-        function filterBookings() {
-            const filterValue = filterSelect.value.toLowerCase();
-            const searchValue = searchInput.value.toLowerCase();
-
-            for (let booking of bookingsList) {
-                const status = booking.getAttribute("data-status").toLowerCase();
-                const text = booking.textContent.toLowerCase();
-                const matchesStatus = filterValue === "all" || status === filterValue;
-                const matchesSearch = text.includes(searchValue);
-                booking.style.display = matchesStatus && matchesSearch ? "block" : "none";
-            }
-        }
-    </script>
-</body>
-
-</html>
+export default Bookings;

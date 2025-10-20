@@ -1,84 +1,80 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import "../styles/quote.css";
-import "../styles/style.css"; // Move all your styles from <style> to this file
+import "../styles/style.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
 
-
 const Quote = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [vehicleType, setVehicleType] = useState("");
+  const [isOneWay, setIsOneWay] = useState(false);
 
-  // Helper to get URL parameter
-  const getUrlParameter = (name) => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(name) || "";
-  };
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   useEffect(() => {
-    // Pre-select vehicle type if provided in URL
-    const vehicleType = getUrlParameter("vehicle");
-    if (vehicleType) {
-      const vehicleSelect = document.getElementById("vehicleType");
-      if (vehicleSelect) {
-        Array.from(vehicleSelect.options).forEach((opt, idx) => {
-          if (opt.text === vehicleType) {
-            vehicleSelect.selectedIndex = idx;
-            const subtitle = document.querySelector(".subtitle");
-            if (subtitle) {
-              subtitle.innerHTML += ` <br><small style="color: green; font-weight: 600;">✓ ${vehicleType} pre-selected</small>`;
-            }
-          }
-        });
-      }
+    // Get vehicle type from URL parameters
+    const vehicleFromUrl = searchParams.get("vehicle");
+    if (vehicleFromUrl) {
+      setVehicleType(vehicleFromUrl);
     }
 
     // Set minimum date to today
     const today = new Date().toISOString().split("T")[0];
     const dateInput = document.getElementById("tripDate");
     if (dateInput) dateInput.min = today;
+  }, [searchParams]);
 
-    // Form submission handler
-    const quoteForm = document.getElementById("quoteForm");
-    if (quoteForm) {
-      quoteForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        let isValid = true;
-        quoteForm.querySelectorAll("[required]").forEach((field) => {
-          if (!field.value.trim()) {
-            isValid = false;
-            field.style.borderColor = "red";
-          } else {
-            field.style.borderColor = "#ccc";
-          }
-        });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let isValid = true;
+    
+    // Simple validation
+    const requiredFields = e.target.querySelectorAll("[required]");
+    requiredFields.forEach((field) => {
+      if (!field.value.trim()) {
+        isValid = false;
+        field.style.borderColor = "red";
+      } else {
+        field.style.borderColor = "#ccc";
+      }
+    });
 
-        if (isValid) {
-          alert("Thank you for your quote request! We will contact you shortly.");
-          quoteForm.reset();
-          const vehicleSelect = document.getElementById("vehicleType");
-          if (vehicleSelect) vehicleSelect.selectedIndex = 0;
-        } else {
-          alert("Please fill in all required fields.");
-        }
-      });
+    if (isValid) {
+      alert("Thank you for your quote request! We will contact you shortly.");
+      e.target.reset();
+      setVehicleType("");
+      setIsOneWay(false);
+    } else {
+      alert("Please fill in all required fields.");
     }
-  }, []);
+  };
 
   return (
     <>
-      <Header />
-      <AuthModal />
+      <Header onSignInClick={openAuthModal} />
+      
+      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
       <main className="quote-page">
         <section className="quote-section" style={{ marginTop: "60px" }}>
-          <div className="section-title">
-            <h1>GET A QUOTE</h1>
-            <p className="subtitle">
-              Fast, tailored quotes for private coach charters and shuttle services.
-            </p>
-          </div>
+          <h1>GET A QUOTE</h1>
+          <p className="subtitle">
+            Fast, tailored quotes for private coach charters and shuttle services.
+            {vehicleType && (
+              <>
+                <br />
+                <small style={{ color: "green", fontWeight: "600" }}>
+                  ✓ {vehicleType} pre-selected
+                </small>
+              </>
+            )}
+          </p>
 
-          <form id="quoteForm" className="quote-form" noValidate>
+          <form id="quoteForm" className="quote-form" onSubmit={handleSubmit} noValidate>
             {/* Trip Details */}
             <div className="form-section">
               <h3>Trip Details</h3>
@@ -101,7 +97,13 @@ const Quote = () => {
 
               <div className="input-group">
                 <label htmlFor="vehicleType">Vehicle Type</label>
-                <select id="vehicleType" name="vehicleType" required>
+                <select 
+                  id="vehicleType" 
+                  name="vehicleType" 
+                  required
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                >
                   <option value="">Select Vehicle Type</option>
                   <option>4 Seater Sedan</option>
                   <option>Mini Bus Mercedes Viano</option>
@@ -118,7 +120,12 @@ const Quote = () => {
               <div className="toggle-container">
                 <span>One-Way</span>
                 <label className="switch">
-                  <input type="checkbox" id="oneWay" />
+                  <input 
+                    type="checkbox" 
+                    id="oneWay" 
+                    checked={isOneWay}
+                    onChange={(e) => setIsOneWay(e.target.checked)}
+                  />
                   <span className="slider"></span>
                 </label>
               </div>
