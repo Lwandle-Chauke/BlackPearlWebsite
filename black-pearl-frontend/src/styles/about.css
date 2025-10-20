@@ -1,0 +1,127 @@
+/* =======================
+   About Us Page Styles
+   ======================= */
+
+   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* Container for the About page content */
+.about-container {
+    margin-top: 80px;
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Individual panels for sections */
+.about-panel {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Section titles inside panels */
+.about-panel h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: var(--accent);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 30px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--silver);
+    padding-bottom: 8px;
+}
+
+.about-panel p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+}
+
+.about-panel ul {
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.about-panel li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.about-panel a {
+    color: var(--bg-black);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.about-panel a:hover {
+    text-decoration: underline;
+}
+
+/* Our Promises List */
+.promises {
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.promises li {
+    padding-left: 20px;
+    position: relative;
+}
+
+.promises li::before {
+    content: "✔"; /* You can replace with custom icon or image */
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+
+/* Floating Chat Icon */
+.chat-fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 50px;
+    height: 50px;
+    background: var(--bg-black);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s;
+    z-index: 999;
+}
+
+.chat-fab:hover {
+    background: var(--accent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .about-container {
+        padding: 20px 15px;
+        margin-top: 60px;
+    }
+
+    .about-panel {
+        padding: 25px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+}

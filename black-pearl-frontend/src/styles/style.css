@@ -13,6 +13,11 @@
       font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
+ body, html, #root {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+
     *{box-sizing: border-box}
     html,body{height:100%}
     body{
