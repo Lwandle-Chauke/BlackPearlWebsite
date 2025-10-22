@@ -13,21 +13,68 @@ const Gallery = () => {
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  // NOTE: Your original HTML header links suggest a logged-in dashboard view (Dashboard, Bookings, Profile).
-  // I'm assuming you still want the Gallery content to render for now, but ensure your Header component
-  // is providing the correct navigation links based on user state (logged in vs. logged out).
-
+  // Replaced local paths with royalty-free image URLs from Unsplash
   const galleryItems = [
-    { id: 1, image: "/images/vacation1.jpg", alt: "Holiday group", text: '"Made our holiday stress-free from start to finish." – Lerato M' },
-    { id: 2, image: "/images/vacation2.jpg", alt: "Group adventure", text: '"Turned our group trip into a real adventure." – Priya S.' },
-    { id: 3, image: "/images/vacation3.jpg", alt: "Sightseeing", text: '"Made sightseeing in Johannesburg so easy." – David N.' },
-    { id: 4, image: "/images/vacation4.jpg", alt: "Bus to the game", text: '"Traveling to the game was half the fun!" – Jason L.' },
-    { id: 5, image: "/images/vacation5.jpg", alt: "Beach trip", text: '"Relaxing by the ocean never felt this good!" – Amara P.' },
-    { id: 6, image: "/images/vacation6.jpg", alt: "Mountain hike", text: '"The mountain views were breathtaking. Highly recommend!" – Sipho K.' },
-    { id: 7, image: "/images/vacation7.jpg", alt: "City tour", text: '"Exploring the city was effortless and fun." – Thandi R.' },
-    { id: 8, image: "/images/vacation8.jpg", alt: "Family trip", text: '"Our kids loved every moment of the trip!" – Johan D.' },
-    { id: 9, image: "/images/vacation9.jpg", alt: "Safari adventure", text: '"Seeing wildlife up close was an unforgettable experience." – Lebo M.' },
-    { id: 10, image: "/images/vacation10.jpg", alt: "Sunset cruise", text: '"Sunset on the water made the evening magical." – Aisha T.' }
+    { 
+      id: 1, 
+      image: "https://images.unsplash.com/photo-1510257321683-1628d05542a9?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Large tourist bus parked on road", 
+      text: '"Made our holiday stress-free from start to finish." – Lerato M' 
+    },
+    { 
+      id: 2, 
+      image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Modern charter bus at sunset", 
+      text: '"Turned our group trip into a real adventure." – Priya S.' 
+    },
+    { 
+      id: 3, 
+      image: "https://images.unsplash.com/photo-1590494056286-904c600f1359?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Group tour looking at city sights", 
+      text: '"Made sightseeing in Johannesburg so easy." – David N.' 
+    },
+    { 
+      id: 4, 
+      image: "https://images.unsplash.com/photo-1598501235123-53d9e7284f22?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "People loading luggage onto a coach bus", 
+      text: '"Traveling to the game was half the fun!" – Jason L.' 
+    },
+    { 
+      id: 5, 
+      image: "https://images.unsplash.com/photo-1595034606137-9750d512a849?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Bus interior with comfortable seats", 
+      text: '"Relaxing by the ocean never felt this good!" – Amara P.' 
+    },
+    { 
+      id: 6, 
+      image: "https://images.unsplash.com/photo-1620898516104-51b666710471?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Modern white tour bus on a coastal highway", 
+      text: '"The mountain views were breathtaking. Highly recommend!" – Sipho K.' 
+    },
+    { 
+      id: 7, 
+      image: "https://images.unsplash.com/photo-1577777174668-3e582be6c043?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Overhead view of a charter bus", 
+      text: '"Exploring the city was effortless and fun." – Thandi R.' 
+    },
+    { 
+      id: 8, 
+      image: "https://images.unsplash.com/photo-1620898516147-380d39e31ffb?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Luxury coach interior with tray tables", 
+      text: '"Our kids loved every moment of the trip!" – Johan D.' 
+    },
+    { 
+      id: 9, 
+      image: "https://images.unsplash.com/photo-1502444330042-cdc735711680?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Bus driving on a wide open road during a safari", 
+      text: '"Seeing wildlife up close was an unforgettable experience." – Lebo M.' 
+    },
+    { 
+      id: 10, 
+      image: "https://images.unsplash.com/photo-1620898516244-c7ec073b6473?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+      alt: "Bus parked with a view of a sunset", 
+      text: '"Sunset on the water made the evening magical." – Aisha T.' 
+    }
   ];
 
   return (

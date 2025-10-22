@@ -24,22 +24,22 @@ main {
 
 .quote-section h1 {
     text-align: center;
-    font-size: 32px;
+    font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
 .subtitle {
     text-align: center;
-    color: var(--muted, #666);
-    font-size: 16px;
+    color: #666;
+    font-size: 1.5rem;
     margin-bottom: 40px;
 }
 
 .quote-form {
-    background: var(--gray, #f5f5f5);
+    background: #f5f5f5;
     padding: 24px;
-    border-radius: var(--radius, 12px);
+    border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -48,7 +48,7 @@ main {
 }
 
 .form-section h3 {
-    margin: 0 0 10px 0;
+    margin-bottom: 14px;
     font-size: 18px;
     font-weight: 600;
 }
@@ -69,23 +69,15 @@ input, select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ccc;
-    border-radius: var(--radius, 8px);
+    border-radius: 8px;
     font-size: 14px;
     outline: none;
     background: #fff;
+    transition: border-color 0.3s;
 }
 
 input:focus, select:focus {
-    border-color: var(--accent, #222);
-}
-
-.checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--muted, #666);
-    margin: 10px 0;
+    border-color: #222;
 }
 
 hr {
@@ -97,8 +89,8 @@ hr {
 .submit-btn {
     display: block;
     width: 100%;
-    background: var(--bg-black, #000);
-    color: var(--white, #fff);
+    background: #000;
+    color: #fff;
     border: none;
     padding: 14px;
     border-radius: 999px;
@@ -109,15 +101,17 @@ hr {
 }
 
 .submit-btn:hover {
-    background: var(--silver, #bbb);
+    background: #444;
 }
 
-/* === ONE-WAY TOGGLE === */
+/* =========================
+   Trip Direction Toggle
+   ========================= */
+/* === ONE-WAY / BOTH-WAYS TOGGLE === */
 .toggle-container {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
+    gap: 12px;
     margin: 12px 0;
     font-weight: 500;
 }
@@ -125,8 +119,8 @@ hr {
 .switch {
     position: relative;
     display: inline-block;
-    width: 46px;
-    height: 24px;
+    width: 50px;
+    height: 26px;
 }
 
 .switch input {
@@ -142,7 +136,7 @@ hr {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--silver, #ccc);
+    background-color: #ccc;
     transition: 0.3s;
     border-radius: 34px;
 }
@@ -150,31 +144,41 @@ hr {
 .slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 20px;
+    width: 20px;
     left: 3px;
     bottom: 3px;
-    background-color: var(--white, #fff);
+    background-color: #fff;
     transition: 0.3s;
     border-radius: 50%;
 }
 
 .switch input:checked + .slider {
-    background-color: var(--bg-black, #000);
+    background-color: #000;
 }
 
 .switch input:checked + .slider:before {
-    transform: translateX(22px);
+    transform: translateX(24px);
 }
 
-/* Floating Chat Icon */
+
+/* =========================
+   Custom Destination Input
+   ========================= */
+#customDestination {
+    margin-bottom: 14px;
+}
+
+/* =========================
+   Floating Chat Icon
+   ========================= */
 .chat-fab {
     position: fixed;
     bottom: 25px;
     right: 25px;
     width: 50px;
     height: 50px;
-    background: var(--bg-black, #000);
+    background: #000;
     border-radius: 50%;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     cursor: pointer;
@@ -186,18 +190,26 @@ hr {
 }
 
 .chat-fab:hover {
-    background: var(--accent, #222);
+    background: #222;
 }
 
-/* Responsive adjustments */
+/* =========================
+   Responsive adjustments
+   ========================= */
 @media (max-width: 600px) {
     .quote-section h1 {
         font-size: 26px;
     }
+
     .quote-form {
         padding: 16px;
     }
+
     .row {
+        flex-direction: column;
+    }
+
+    .toggle-options {
         flex-direction: column;
     }
 }

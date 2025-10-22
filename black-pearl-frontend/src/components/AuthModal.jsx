@@ -1,30 +1,35 @@
 // components/AuthModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AuthModal = ({ onClose }) => {
   const [tab, setTab] = useState("signin");
-  // State for form data (basic example) - Not used for functionality here, but common in React
-  const [formData, setFormData] = useState({}); 
+  const [formData, setFormData] = useState({});
 
-  // Function to handle changes to form fields (standard for controlled inputs)
   const handleChange = (e) => {
     setFormData(prev => ({
-        ...prev,
-        [e.target.name]: e.target.value
+      ...prev,
+      [e.target.name]: e.target.value
     }));
   };
 
+  // 1. MANAGE BODY SCROLL LOCK
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    // Cleanup function runs on unmount
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []); 
+
   // Add a click handler for the overlay to close the modal if clicked outside
   const handleOverlayClick = (e) => {
-      // Check if the click occurred directly on the overlay div itself
-      if (e.target.id === 'authOverlay') {
-          onClose();
-      }
+    if (e.target.id === 'authOverlay') {
+      onClose();
+    }
   };
 
   return (
-    // The conditional rendering in Home.jsx means this div is only in the DOM when open.
-    // Set display: flex/block in CSS for .auth-overlay to ensure visibility.
     <div id="authOverlay" className="auth-overlay" onClick={handleOverlayClick}>
       <div className="auth-modal">
         <button className="close-btn" onClick={onClose}>
@@ -46,9 +51,9 @@ const AuthModal = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Sign In Form - Only render the active form */}
+        {/* Sign In Form */}
         {tab === "signin" && (
-          <form id="signinForm" className="auth-form"> {/* Removed .active class, conditional rendering handles it */}
+          <form id="signinForm" className="auth-form active">
             <h2>Sign In</h2>
             <div className="form-group">
               <label htmlFor="signinEmail">Email Address</label>
@@ -77,9 +82,9 @@ const AuthModal = ({ onClose }) => {
           </form>
         )}
 
-        {/* Register Form - Only render the active form */}
+        {/* Register Form */}
         {tab === "register" && (
-          <form id="registerForm" className="auth-form"> {/* Removed .active class */}
+          <form id="registerForm" className="auth-form active">
             <h2>Register</h2>
             <div className="form-group">
               <label htmlFor="registerName">Name</label>

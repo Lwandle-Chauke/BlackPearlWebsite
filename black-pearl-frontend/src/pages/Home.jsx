@@ -38,7 +38,6 @@ const Home = () => {
         <section className="about-section">
           <div className="section-title">
             <h2>ABOUT US</h2>
-            <hr />
           </div>
           
           {/* Paragraph 1: Replaces inline style: font-weight:700;margin:0 0 8px 0; */}
@@ -64,7 +63,6 @@ const Home = () => {
           <div className="tours">
             <div className="section-title">
               <h2>TOURS</h2>
-              <hr />
             </div>
 
             <p>
@@ -79,6 +77,7 @@ const Home = () => {
             <Link className="cta-read" to="/fleet" aria-label="View our fleet">
               VIEW OUR FLEET
             </Link>
+            <br />
           </div>
         </section> {/* </section> now closes the entire content block */}
 

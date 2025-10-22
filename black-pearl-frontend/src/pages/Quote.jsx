@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import "../styles/quote.css";
 import "../styles/style.css";
 import Header from "../components/Header";
@@ -11,28 +11,33 @@ const Quote = () => {
   const [searchParams] = useSearchParams();
   const [vehicleType, setVehicleType] = useState("");
   const [isOneWay, setIsOneWay] = useState(false);
+  const [destination, setDestination] = useState("");
+  const [showCustomDestination, setShowCustomDestination] = useState(false);
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   useEffect(() => {
-    // Get vehicle type from URL parameters
     const vehicleFromUrl = searchParams.get("vehicle");
     if (vehicleFromUrl) {
       setVehicleType(vehicleFromUrl);
     }
 
-    // Set minimum date to today
+    // Minimum date today
     const today = new Date().toISOString().split("T")[0];
     const dateInput = document.getElementById("tripDate");
     if (dateInput) dateInput.min = today;
   }, [searchParams]);
 
+  const handleDestinationChange = (e) => {
+    setDestination(e.target.value);
+    setShowCustomDestination(e.target.value === "Other (Specify Below)");
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     let isValid = true;
-    
-    // Simple validation
+
     const requiredFields = e.target.querySelectorAll("[required]");
     requiredFields.forEach((field) => {
       if (!field.value.trim()) {
@@ -48,6 +53,8 @@ const Quote = () => {
       e.target.reset();
       setVehicleType("");
       setIsOneWay(false);
+      setDestination("");
+      setShowCustomDestination(false);
     } else {
       alert("Please fill in all required fields.");
     }
@@ -56,7 +63,6 @@ const Quote = () => {
   return (
     <>
       <Header onSignInClick={openAuthModal} />
-      
       {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
       <main className="quote-page">
@@ -79,6 +85,21 @@ const Quote = () => {
             <div className="form-section">
               <h3>Trip Details</h3>
 
+              {/* Purpose of Trip */}
+              <div className="input-group">
+                <label htmlFor="tripPurpose">Purpose of Trip</label>
+                <select id="tripPurpose" name="tripPurpose" required>
+                  <option value="">Select Purpose</option>
+                  <option>Personal Use</option>
+                  <option>Business / Corporate</option>
+                  <option>School or University Trip</option>
+                  <option>Event / Wedding</option>
+                  <option>Tourism or Sightseeing</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              {/* Trip Type */}
               <div className="input-group">
                 <label htmlFor="tripType">Trip Type</label>
                 <select id="tripType" name="tripType" required>
@@ -87,19 +108,54 @@ const Quote = () => {
                   <option>Conference Shuttles</option>
                   <option>Sports Travel</option>
                   <option>Events & Leisure</option>
+                  <option>Custom Trip</option>
                 </select>
               </div>
 
+              {/* Destination */}
+              <div className="input-group">
+                <label htmlFor="destination">Destination</label>
+                <select
+                  id="destination"
+                  name="destination"
+                  value={destination}
+                  onChange={handleDestinationChange}
+                  required
+                >
+                  <option value="">Select Destination</option>
+                  <option>Johannesburg</option>
+                  <option>Cape Town</option>
+                  <option>Durban</option>
+                  <option>Bloemfontein</option>
+                  <option>Port Elizabeth</option>
+                  <option>Pretoria</option>
+                  <option>Other (Specify Below)</option>
+                </select>
+              </div>
+
+              {/* Custom Destination */}
+              {showCustomDestination && (
+                <input
+                  type="text"
+                  id="customDestination"
+                  placeholder="If 'Other', please specify your destination"
+                  style={{ marginBottom: "14px" }}
+                  required
+                />
+              )}
+
+              {/* Pickup & Drop-off */}
               <div className="row">
                 <input type="text" id="pickupLocation" placeholder="Pickup Location" required />
                 <input type="text" id="dropoffLocation" placeholder="Drop-off Location" required />
               </div>
 
+              {/* Vehicle Type */}
               <div className="input-group">
                 <label htmlFor="vehicleType">Vehicle Type</label>
-                <select 
-                  id="vehicleType" 
-                  name="vehicleType" 
+                <select
+                  id="vehicleType"
+                  name="vehicleType"
                   required
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
@@ -117,19 +173,21 @@ const Quote = () => {
                 </select>
               </div>
 
-              <div className="toggle-container">
-                <span>One-Way</span>
-                <label className="switch">
-                  <input 
-                    type="checkbox" 
-                    id="oneWay" 
-                    checked={isOneWay}
-                    onChange={(e) => setIsOneWay(e.target.checked)}
-                  />
-                  <span className="slider"></span>
-                </label>
-              </div>
+              {/* Trip Direction Toggle */}
+<div className="toggle-container">
+  <span>{isOneWay ? "Both Ways" : "One Way"}</span>
+  <label className="switch">
+    <input
+      type="checkbox"
+      checked={isOneWay}
+      onChange={() => setIsOneWay(!isOneWay)}
+    />
+    <span className="slider"></span>
+  </label>
+</div>
 
+
+              {/* Date & Time */}
               <div className="row">
                 <input type="date" id="tripDate" required />
                 <input type="time" id="tripTime" required />
@@ -156,7 +214,7 @@ const Quote = () => {
 
       {/* Floating Chat Icon */}
       <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff" />
           <circle cx="8.5" cy="10.3" r="1.1" fill="#666" />
           <circle cx="15.5" cy="10.3" r="1.1" fill="#666" />

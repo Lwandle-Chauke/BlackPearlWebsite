@@ -1,40 +1,102 @@
-/* Gallery Page Styles */
+/* --- FIXED & CLEANED CSS --- */
 
-/* Remove :root and universal reset here. It should be in style.css */
+/* ROOT VARIABLES */
+:root {
+  --black: #0b0b0b;
+  --dark-gray: #1f1f1f;
+  --mid-gray: #bfbfbf;
+  --light-gray: #efefef;
+  --white: #ffffff;
+}
 
-/* GALLERY SECTION */
+/* BASE STYLES */
+body {
+  background: var(--light-gray);
+  color: #222;
+  line-height: 1.4;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- GALLERY LAYOUT FIX --- */
+
+/* Ensures the gallery is centered and well-structured */
 .gallery-section {
-  padding: 50px 5%;
-  min-height: 100vh;
-  margin-top: 80px; /* Space below fixed header */
-}
-
-.gallery-section h1 {
-  margin-bottom: 30px;
-  font-size: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   text-align: center;
-  color: var(--black); /* Ensure this variable is defined in style.css */
+  padding: 100px 5% 50px; /* Space from header */
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--light-gray);
 }
 
-/* New class to replace inline style: margin-top: 50px */
-.gallery-section .gallery-title {
-    margin-top: 50px;
+/* Centers heading */
+.gallery-section h1.gallery-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--black);
+  margin: 20px 0 30px;
+  letter-spacing: 1.5px;
 }
 
+/* Centers search bar under heading */
+.search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  margin-bottom: 40px;
+  transition: all 0.3s ease;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 5px;
+  outline: none;
+  color: #333;
+}
+
+.search-bar .close-btn {
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+  margin-left: 10px;
+  transition: color 0.2s;
+}
+
+.search-bar .close-btn:hover {
+  color: #000;
+}
+
+/* GALLERY GRID - images below */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 30px;
-  max-width: 1200px; /* Use var(--max-w) if defined in style.css */
-  margin: 0 auto;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 20px;
 }
 
+/* CARD STYLE */
 .card {
   background: var(--white);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
 }
 
 .card:hover {
@@ -45,53 +107,35 @@
   width: 100%;
   height: 200px;
   object-fit: cover;
+  display: block;
 }
 
 .card p {
-  padding: 15px;
   background: var(--black);
   color: var(--white);
   font-size: 14px;
-  min-height: 60px;
+  padding: 15px;
   margin: 0;
+  min-height: 60px;
 }
 
-/* SEARCH BAR */
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: #eee;
-  padding: 10px 15px;
-  border-radius: 10px;
-  max-width: 400px;
-  margin: 0 auto 40px;
-}
-
-.search-bar input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 16px;
-}
-
-.search-bar .close-btn {
-  font-size: 20px;
-  cursor: pointer;
-  color: #777;
-}
-
-/* RESPONSIVE */
+/* RESPONSIVE DESIGN */
 @media (max-width: 768px) {
   .gallery-section {
-    padding: 30px 3%;
+    padding: 80px 3% 30px;
   }
-  
-  .card img {
-    height: 180px;
+
+  .gallery-section h1.gallery-title {
+     font-size: 26px;
+    margin-bottom: 20px;
   }
-  
+
+  .search-bar {
+    max-width: 90%;
+    margin-bottom: 30px;
+  }
+
   .gallery-grid {
-    /* Using 200px min-width here from your media query */
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
   }

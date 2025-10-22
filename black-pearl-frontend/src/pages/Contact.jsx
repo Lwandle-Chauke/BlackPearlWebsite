@@ -28,9 +28,10 @@ const Contact = () => {
       <main className="quote-page">
         {/* Contact Section */}
         <section className="contact" id="contact">
-          <div className="section-title">
-            <h2>CONTACT US</h2>
-          </div>
+          <div class="section-title">
+    <h2>CONTACT US</h2>
+</div>
+<br />
 
           <div className="contact-container">
             {/* Contact Information */}

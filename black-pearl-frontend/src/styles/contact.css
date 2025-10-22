@@ -1,198 +1,194 @@
-/* Contact Page Styles */
+/* Contact Page Styles (contact.css) */
+
 .contact {
- padding: 60px 5%;
-  background: var(--white);
- margin-top: 80px;
+    padding: 60px 5%;
+    background: var(--white);
+    margin-top: 30px;
 }
 
+/* Section Title */
 .section-title {
- text-align: center;
- margin-bottom: 20px;
-  color: var(--bg-black);
+    text-align: center; /* center the heading */
+    margin-bottom: 20px;
+    color: var(--bg-black);
+    border-bottom: none; /* remove any line */
+    width: 100%; /* full width */
+    margin: 0 auto 20px auto; /* top 0, bottom 20px, auto left/right */
+    display: block; /* ensure it's a block element */
 }
 
 .section-title h2 {
-font-size: 2.5rem;
-color: var(--bg-black);
-font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    color: var(--bg-black);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    margin: 0; /* remove extra spacing */
+    display: inline-block; /* shrink to content width */
+    margin: 0; /* remove default margins */
 }
 
-/* Main contact container */
+/* Main container */
 .contact-container {
-display: flex;
-flex-wrap: wrap;
-max-width: 1200px;
-margin: 0 auto;
-border-radius: 10px;
-overflow: hidden;
-box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 1400px;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
 }
 
 /* LEFT SIDE (black background) */
 .contact-info {
-flex: 1;
-min-width: 500px; 
-background: var(--bg-black);
-color: white;
-padding: 50px;
+    flex: 1;
+    min-width: 550px;
+    background: var(--bg-black);
+    color: white;
+    padding: 50px;
+    box-sizing: border-box;
 }
 
 .contact-info h2 {
-margin-bottom: 30px;
-font-weight: 700;
-color: white;
-text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
 }
 
 .contact-info a {
-color: #f0f0f0;
-text-decoration: none;
-transition: 0.3s;
+    color: #f0f0f0;
+    text-decoration: none;
+    transition: 0.3s;
 }
 
 .contact-info a:hover {
-text-decoration: underline;
+    text-decoration: underline;
 }
 
 .contact-details {
-margin-bottom: 40px;
+    margin-bottom: 40px;
 }
 
 .contact-details p {
-margin-bottom: 15px;
-display: flex;
-align-items: flex-start;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: flex-start;
 }
 
-/* Base icon styling for spacing */
 .contact-details i {
-margin-right: 15px;
-margin-top: 0px;
+    margin-right: 15px;
+    font-size: 20px;
+    margin-top: 0px;
 }
 
-/* Specific icon sizes (Replacing inline styles) */
-.contact-details .mobile-icon { 
-    font-size: 20px; 
-}
-.contact-details .envelope-icon { 
-    font-size: 19px; 
-}
-.contact-details .map-icon { 
-    font-size: 20px; 
-}
-
-
+/* Map styling */
 .contact-info .map {
-margin-top: 20px;
-border-radius: 10px;
-overflow: hidden;
+    margin-top: 20px;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 .map iframe {
-width: 100%;
-height: 450px; /* Restored to 450px as per your HTML */
-border: none;
+    width: 100%;
+    height: 450px; /* exact height as HTML */
+    border: none;
 }
 
 /* RIGHT SIDE (white background) */
 .contact-form {
-flex: 1;
-min-width: 500px; 
-background: white;
-padding: 50px;
-color: var(--accent);
-position: relative;
-overflow: hidden;
-}
-
-.contact-form * {
-position: relative;
-z-index: 1;
+    flex: 1;
+    min-width: 550px;
+    background: white;
+    padding: 50px;
+    color: var(--accent);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .contact-form h2 {
-margin-bottom: 30px;
-font-weight: 700;
-color: var(--bg-black);
-text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+    color: var(--bg-black);
+    text-align: center;
 }
 
 .form-group {
-     margin-bottom: 25px;
+    margin-bottom: 25px;
 }
 
 .form-group label {
-display: block;
-margin-bottom: 8px;
-font-weight: 600;
-color: var(--accent);
-font-size: large;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: large;
 }
 
 .form-group input,
 .form-group textarea {
-width: 100%;
-padding: 12px 15px;
-border: 1px solid var(--accent);
-border-radius: 5px;
-font-family: 'Poppins', sans-serif;
-font-size: large;
-background: transparent;
-color: var(--accent);
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: large;
+    background: transparent;
+    color: var(--accent);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-color: #ccc;
+    color: #ccc;
 }
 
 .form-group textarea {
-min-height: 150px;
-resize: vertical;
+    min-height: 150px;
+    resize: vertical;
 }
 
 .btn-contact {
-background: var(--bg-black);
-color: var(--white);
-border: none;
-padding: 12px 30px;
-border-radius: 5px;
-cursor: pointer;
-font-weight: 500;
-font-family: 'Poppins', sans-serif;
-transition: background 0.3s;
+    background: var(--bg-black);
+    color: var(--white);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.3s, color 0.3s;
 }
 
 .btn-contact:hover {
-background: var(--silver);
-color: var(--accent);
+    background: var(--silver);
+    color: var(--accent);
 }
 
-/* Responsive */
-@media (max-width: 1000px) { 
-.contact-info, 
-.contact-form {
-min-width: 100%;
-}
+/* Responsive for tablets */
+@media (max-width: 1000px) {
+    .contact-info, 
+    .contact-form {
+        min-width: 100%;
+    }
 }
 
+/* Mobile responsiveness */
 @media (max-width: 768px) {
-.contact {
-margin-top: 80px;
-padding: 20px;
-}
+    .contact {
+        padding: 20px;
+    }
 
-.contact-container {
-flex-direction: column;
-}
+    .contact-container {
+        flex-direction: column;
+    }
 
-.contact-info, 
-.contact-form {
-width: 100%;
-padding: 30px 20px;
-}
+    .contact-info, 
+    .contact-form {
+        width: 100%;
+        padding: 30px 20px;
+    }
 
-.section-title h2 {
-    font-size: 2rem;
-}
+    .section-title h2 {
+         font-size: 26px;
+    }
 }
