@@ -1,11 +1,11 @@
-/* Profile Page Styles */
 .profile-container {
   max-width: 900px;
-  margin: 120px auto 60px auto;
+  margin: 100px auto 60px auto;
   background: #fff;
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  font-family: 'Poppins', sans-serif;
 }
 
 .profile-header {
@@ -14,42 +14,97 @@
 }
 
 .profile-header h2 {
-  font-size: 1.8rem;
-  color: #000;
-  margin-bottom: 10px;
+  font-size: 2rem;
+  color: #111;
+  margin-bottom: 5px;
 }
 
 .profile-header p {
-  color: #666;
+  color: #555;
   font-size: 1rem;
 }
 
+/* Profile Picture Section */
+.profile-pic-section {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin-bottom: 30px;
+}
+
+.profile-pic {
+width: 120px;
+height: 120px;
+border-radius: 50%;
+object-fit: cover;
+margin-bottom: 15px; /* Increased margin /
+  border: 3px solid black;
+cursor: pointer; / Indicate it's clickable */
+transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect for the profile picture */
+.profile-pic:hover {
+transform: scale(1.03);
+box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-pic-section input[type="file"] {
+display: none; /* Hide the default file input */
+}
+
+/* Style for the 'Change Picture' button */
+.upload-btn {
+background: #f1f1f1;
+color: #333;
+padding: 8px 18px;
+border: 1px solid #ddd;
+border-radius: 20px;
+cursor: pointer;
+font-size: 0.9rem;
+font-weight: 600;
+transition: 0.3s;
+}
+
+.upload-btn:hover {
+background: #e5e5e5;
+border-color: #ccc;
+}
+
+/* Form */
 .profile-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
+.profile-form .input-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .profile-form label {
   font-weight: 600;
-  color: #000;
-  display: block;
-  margin-bottom: 5px;
+  color: #111;
+  margin-bottom: 6px;
 }
 
 .profile-form input,
 .profile-form select {
   width: 100%;
-  padding: 10px;
+  padding: 12px 15px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f9f9f9;
+  border-radius: 10px;
   font-size: 1rem;
+  background: #f9f9f9;
+  transition: 0.3s;
 }
 
-.profile-form input:focus {
+.profile-form input:focus,
+.profile-form select:focus {
   outline: none;
   border-color: #000;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
 }
 
 .full-width {
@@ -57,88 +112,72 @@
 }
 
 .save-btn {
-  display: inline-block;
+  grid-column: span 2;
   background: black;
   color: white;
   padding: 12px 25px;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
-  margin-top: 20px;
   cursor: pointer;
-  transition: background 0.3s;
+  margin-top: 20px;
+  transition: 0.3s;
 }
 
 .save-btn:hover {
-  background: #444;
+  background: #333;
 }
 
-/* Loyalty stats */
+/* Stats Section */
 .stats-section {
-  margin-top: 40px;
-  border-top: 1px solid #ddd;
-  padding-top: 20px;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-around;
-  text-align: center;
+  flex-wrap: wrap;
+  margin-top: 50px;
 }
 
 .stat-card {
   background: #f8f8f8;
-  border-radius: 10px;
-  padding: 20px;
-  width: 200px;
+  border-radius: 12px;
+  padding: 25px;
   margin: 10px;
+  width: 220px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
 }
 
 .stat-card h3 {
-  color: black;
-  margin: 0;
   font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: #111;
 }
 
 .stat-card p {
+  font-size: 0.95rem;
   color: #555;
-  font-size: 0.9rem;
 }
 
-/* Toast popup */
-.toast {
-  visibility: hidden;
-  min-width: 250px;
-  margin-left: -125px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  border-radius: 8px;
-  padding: 16px;
-  position: fixed;
-  z-index: 1;
-  left: 50%;
-  bottom: 30px;
-  font-size: 17px;
-  opacity: 0;
-  transition: opacity 0.5s, bottom 0.5s;
-}
-
-.toast.show {
-  visibility: visible;
-  opacity: 1;
-  bottom: 50px;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
   .profile-form {
     grid-template-columns: 1fr;
   }
 
-  .full-width {
+  .save-btn {
     grid-column: span 1;
   }
 
+  .stats-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
   .stat-card {
-    width: 100%;
-    margin: 10px 0;
+    width: 90%;
   }
 }

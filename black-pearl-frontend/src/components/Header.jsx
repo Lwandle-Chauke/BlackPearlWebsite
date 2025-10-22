@@ -1,8 +1,10 @@
+// components/components/Header.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const Header = ({ onSignInClick }) => {
-  // We only need state to control the visibility of the mobile *dropdown* menu
+// Added isLoggedIn prop
+const Header = ({ isLoggedIn, onAuthClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -10,7 +12,7 @@ const Header = ({ onSignInClick }) => {
   const isActive = (path) => {
     // Correctly handle the root path ("/")
     if (path === "/") {
-        return location.pathname === "/";
+      return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
@@ -18,7 +20,7 @@ const Header = ({ onSignInClick }) => {
   // Use a click handler that closes the menu after navigation/action
   const handleLinkClick = () => setMenuOpen(false);
 
-  // Close the menu if the screen resizes to desktop size (768px for consistency)
+  // Close the menu if the screen resizes to desktop size
   useEffect(() => {
     const handleResize = () => {
         if (window.innerWidth >= 768 && menuOpen) {
@@ -29,26 +31,70 @@ const Header = ({ onSignInClick }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, [menuOpen]);
 
+  // Define Navigation Links based on login status
+  // ----------------------------------------------
+
+  // GUEST VIEW: home, about, gallery, fleet, quote, contact
+  const guestNavLinks = [
+    { path: "/", label: "Home" },
+    { path: "/about", label: "About Us" },
+    { path: "/gallery", label: "Gallery" }, // Shared
+    { path: "/fleet", label: "Our Fleet" }, // Shared
+    { path: "/quote", label: "Quote" }, // Shared
+    { path: "/contact", label: "Contact Us" }
+  ];
+
+  // CUSTOMER VIEW: dashboard, quote, contact, gallery, fleet, bookings, profile
+  const customerNavLinks = [
+    { path: "/dashboard", label: "Dashboard" },
+    { path: "/bookings", label: "Bookings" },
+    { path: "/quote", label: "Quote" }, // Shared
+    { path: "/gallery", label: "Gallery" }, // Shared
+    { path: "/fleet", label: "Our Fleet" }, // Shared
+    { path: "/profile", label: "Profile" }
+  ];
+
+  // Use the appropriate set of links
+  const navLinks = isLoggedIn ? customerNavLinks : guestNavLinks;
+  
+  // Text for the primary action button
+  const authButtonText = isLoggedIn ? "Sign Out" : "Sign In";
+
+  // The link path for the logo when logged in should probably be the dashboard
+  const logoLinkPath = isLoggedIn ? "/dashboard" : "/";
+  // ----------------------------------------------
+
+
   return (
     <header>
       <div className="header-container">
         <div className="logo">
           {/* LOGO FIX: Using Link makes it clickable */}
-          <Link to="/">BLACK PEARL <span>TOURS</span></Link>
+          <Link to={logoLinkPath}>BLACK PEARL <span>TOURS</span></Link>
         </div>
 
         {/* Desktop navigation - Rendered unconditionally, hidden by CSS on mobile */}
         <nav>
           <ul>
-            <li><Link to="/" className={isActive("/") ? "active" : ""}>Home</Link></li>
-            <li><Link to="/about" className={isActive("/about") ? "active" : ""}>About Us</Link></li>
-            <li><Link to="/fleet" className={isActive("/fleet") ? "active" : ""}>Our Fleet</Link></li>
-            <li><Link to="/gallery" className={isActive("/gallery") ? "active" : ""}>Gallery</Link></li>
-            <li><Link to="/quote" className={isActive("/quote") ? "active" : ""}>Quote</Link></li>
-            <li><Link to="/contact" className={isActive("/contact") ? "active" : ""}>Contact Us</Link></li>
+            {/* Render dynamic links */}
+            {navLinks.map((link) => (
+              <li key={link.path}>
+                <Link 
+                  to={link.path} 
+                  className={isActive(link.path) ? "active" : ""}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            
+            {/* Sign In/Out button */}
             <li>
-              <button className="btn-header-signin" onClick={onSignInClick}>
-                Sign In
+              <button 
+                className="btn-header-signin" 
+                onClick={onAuthClick} // Now handles both Sign In and Sign Out
+              >
+                {authButtonText}
               </button>
             </li>
           </ul>
@@ -56,15 +102,15 @@ const Header = ({ onSignInClick }) => {
         
         {/* Navigation Actions container, needed for hamburger alignment */}
         <div className="nav-actions">
-            {/* Mobile hamburger - Rendered unconditionally, hidden by CSS on desktop */}
-            <button
-              id="hamburger"
-              className={`hamburger ${menuOpen ? "active" : ""}`}
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label="Toggle menu"
-            >
-              <span></span>
-            </button>
+          {/* Mobile hamburger - Rendered unconditionally, hidden by CSS on desktop */}
+          <button
+            id="hamburger"
+            className={`hamburger ${menuOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+          </button>
         </div>
       </div>
 
@@ -72,17 +118,27 @@ const Header = ({ onSignInClick }) => {
       {menuOpen && (
         // The .active class is critical for CSS to display the menu
         <div className="mobile-menu active" id="mobileMenu" aria-hidden="false">
-          <Link to="/" className={isActive("/") ? "active" : ""} onClick={handleLinkClick}>HOME</Link>
-          <Link to="/about" className={isActive("/about") ? "active" : ""} onClick={handleLinkClick}>ABOUT US</Link>
-          <Link to="/fleet" className={isActive("/fleet") ? "active" : ""} onClick={handleLinkClick}>OUR FLEET</Link>
-          <Link to="/gallery" className={isActive("/gallery") ? "active" : ""} onClick={handleLinkClick}>GALLERY</Link>
-          <Link to="/quote" className={isActive("/quote") ? "active" : ""} onClick={handleLinkClick}>QUOTE</Link>
-          <Link to="/contact" className={isActive("/contact") ? "active" : ""} onClick={handleLinkClick}>CONTACT US</Link>
+          {/* Render dynamic links for mobile */}
+          {navLinks.map((link) => (
+            <Link 
+              key={`mobile-${link.path}`}
+              to={link.path} 
+              className={isActive(link.path) ? "active" : ""} 
+              onClick={handleLinkClick}
+            >
+              {link.label.toUpperCase()}
+            </Link>
+          ))}
+          
           <hr />
+          
+          {/* Sign In/Out button for mobile */}
           <button className="btn-sign" onClick={() => {
-            onSignInClick();
+            onAuthClick(); // Now handles both Sign In and Sign Out
             handleLinkClick();
-          }}>SIGN IN</button>
+          }}>
+            {authButtonText.toUpperCase()}
+          </button>
         </div>
       )}
     </header>

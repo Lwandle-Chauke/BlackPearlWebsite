@@ -1,21 +1,31 @@
-// components/pages/Dashboard.jsx
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-// Assuming AuthModal is a reusable component for sign-in/register
 import AuthModal from '../components/AuthModal'; 
 import '../styles/style.css'; 
-import '../styles/dashboard.css'; // New CSS file
+import '../styles/dashboard.css';
 
 const Dashboard = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
+  const navigate = useNavigate();
+  const [isAuthModalOpen, setIsAuthModal] = useState(false);
 
-  // --- Dynamic Data (Replaces the inline <script> in HTML) ---
-  const [userData, setUserData] = useState({
+  // Simulate logged-in user
+  const isLoggedIn = true; 
+
+  const openAuthModal = () => setIsAuthModal(true);
+  const closeAuthModal = () => setIsAuthModal(false);
+
+  const handleAuthClick = () => {
+    if (isLoggedIn) {
+      alert("You have been signed out. Redirecting to the home page.");
+      navigate('/');
+    } else {
+      openAuthModal();
+    }
+  };
+
+  const [userData] = useState({
     name: "Rae",
     nextBooking: {
       title: "Cape Town Tours",
@@ -30,8 +40,7 @@ const Dashboard = () => {
 
   const handleRequestQuote = () => {
     const name = prompt("Enter your name to request a quote:", userData.name || "");
-    if(name) alert(`Thanks ${name}! We'll contact you about a quote.`);
-    // In a real app, you would redirect to the quote page: navigate('/quote');
+    if (name) alert(`Thanks ${name}! We'll contact you about a quote.`);
   };
 
   const handleReviewSubmit = (e) => {
@@ -39,7 +48,7 @@ const Dashboard = () => {
     const rating = e.target.rating.value;
     const text = e.target.testimonial.value.trim();
     
-    if(!rating){ 
+    if (!rating) {
       alert("Please choose a rating."); 
       return; 
     }
@@ -57,11 +66,10 @@ const Dashboard = () => {
 
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
-      
+      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
       {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <section className="hero-wrap">
         <div className="hero-overlay">
           <div className="container">
@@ -69,14 +77,15 @@ const Dashboard = () => {
               <div className="hero-title">Welcome Back, {userData.name}</div>
               <div className="hero-sub">Ready for your next adventure?</div>
 
-              {/* Booking card (dynamic placeholders) */}
               <div className="booking-card-wrap">
-                <div className="booking-card" role="region" aria-label="Your next booking">
-                  <div className="booking-info">
+                <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
+                  <div className="booking-info card-body">
                     <div className="booking-label">Your Next Booking:</div>
                     <div className="booking-title">{userData.nextBooking.title}</div>
-                    <div className="booking-date">{userData.nextBooking.date}</div>
-                    <div className="booking-status">{userData.nextBooking.status}</div>
+                    <div className="booking-meta">
+                      <span className="booking-date">{userData.nextBooking.date}</span>
+                      <span className="booking-status status-confirmed">{userData.nextBooking.status}</span>
+                    </div>
                   </div>
                   <button className="view-btn" onClick={handleViewDetails}>VIEW DETAILS</button>
                 </div>
@@ -86,25 +95,44 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* SERVICES */}
+     {/* SERVICES */}
+
       <section className="services-area">
+
         <div className="services-row container">
+
           <div className="service-card">
+
             <h4>Airport Transfers</h4>
+
             <p>Enjoy hassle-free airport pick-ups and drop-offs with professional drivers and reliable, comfortable rides.</p>
+
           </div>
+
           <div className="service-card">
+
             <h4>Conference Shuttle Hire</h4>
+
             <p>Keep events running smoothly with daily shuttle services between venues and hotels — on time and comfortable.</p>
+
           </div>
+
           <div className="service-card">
+
             <h4>Sports Tours</h4>
+
             <p>Travel stress-free with transport for teams and supporters to stadiums and events. Safe and coordinated.</p>
+
           </div>
+
           <div className="service-card">
+
             <h4>Events & Leisure Travel</h4>
+
             <p>Whether weddings or private functions, we arrange travel that combines comfort, style and safety.</p>
+
           </div>
+
         </div>
 
         <div className="quote-cta-wrap">
@@ -114,7 +142,7 @@ const Dashboard = () => {
 
       {/* PERSONAL HIGHLIGHTS */}
       <section className="highlights">
-        <div className="section-title">PERSONAL HIGHLIGHTS</div>
+        <div className="section-title">Personal Highlights</div>
         <table className="highlights-table" aria-describedby="highlights-desc">
           <thead>
             <tr>
@@ -138,7 +166,7 @@ const Dashboard = () => {
       {/* REVIEWS */}
       <section className="reviews-wrap" aria-labelledby="reviewsTitle">
         <div className="container">
-          <div id="reviewsTitle" className="section-title review-section-title">REVIEWS</div>
+          <div id="reviewsTitle" className="section-title review-section-title">Leave us a review</div>
           <p className="reviews-sub">How was your last trip?</p>
           <form className="review-form" onSubmit={handleReviewSubmit}>
             <select name="rating" required>
@@ -155,7 +183,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Floating chat icon (Assuming it is defined in Header/Footer or globally) */}
+      {/* Floating chat icon */}
       <div className="chat-fab" title="Chat with us">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>

@@ -1,5 +1,7 @@
+// components/pages/Bookings.jsx
+
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AuthModal from '../components/AuthModal';
@@ -7,14 +9,29 @@ import '../styles/style.css';
 import '../styles/bookings.css';
 
 const Bookings = () => {
+  const navigate = useNavigate(); // Hook for navigation
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
+  // 🔑 Assume the user is logged in on the Bookings page
+  const isLoggedIn = true; 
+
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
+  
+  // New logic to handle Sign In/Out click
+  const handleAuthClick = () => {
+    if (isLoggedIn) {
+      // Logic for signing out (In a real app: clear tokens, reset global state)
+      alert("You have been signed out. Redirecting to the home page.");
+      navigate('/'); 
+    } else {
+      openAuthModal();
+    }
+  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -58,14 +75,15 @@ const Bookings = () => {
   const filteredBookings = bookings.filter(booking => {
     const matchesStatus = filter === 'all' || booking.status === filter;
     const matchesSearch = booking.title.toLowerCase().includes(search.toLowerCase()) ||
-                         booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
-                         booking.dropoff.toLowerCase().includes(search.toLowerCase());
+                          booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
+                          booking.dropoff.toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
+      {/* 🔄 Pass isLoggedIn and the new handler to Header */}
+      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
       
       {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
