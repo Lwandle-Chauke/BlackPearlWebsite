@@ -1,0 +1,102 @@
+/* ==========================================================
+   COLOR VARIABLES (Specific to Messages)
+   ========================================================== */
+:root {
+    --unread: #e74c3c; /* Red for UNREAD */
+    --read: #2ecc71; /* Green for READ */
+    /* Inherit other colors from Admin.css */
+}
+
+/* ==========================================================
+   MESSAGES CONTENT STYLES
+   ========================================================== */
+.messages-page-content {
+    width: 100%;
+}
+
+.main-content {
+    /* Using the standard layout box shared across pages */
+    width: 100%;
+    background: var(--white);
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.main-content h2 { 
+    font-size: 1.5rem; 
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    color: var(--dark-gray); 
+}
+
+/* Table Styles - Ensure horizontal scroll on mobile */
+.data-table-container {
+    overflow-x: auto;
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px; /* Minimum width to enable horizontal scrolling on small screens */
+}
+.data-table th, .data-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+.data-table th {
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+}
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+.status-unread { 
+    background: var(--unread); 
+    color: var(--white); 
+}
+.status-read { 
+    background: var(--read); 
+    color: var(--white); 
+}
+
+/* Action Icons */
+.action-icons i {
+    cursor: pointer;
+    margin-right: 5px;
+    color: var(--dark-gray);
+    transition: color 0.2s;
+}
+.action-icons i:hover { 
+    color: var(--primary-blue); 
+}
+
+/* ==========================================================
+   RESPONSIVE (Mobile Adaptation)
+   ========================================================== */
+@media (max-width: 768px) {
+    /* Tighten table spacing further on small screens */
+    .data-table th, .data-table td {
+        padding: 8px 5px;
+        font-size: 0.75rem;
+        white-space: nowrap; /* Prevent content in table cells from wrapping */
+    }
+    
+    /* Make the Subject column take up less space if possible, or wrap the subject */
+    .data-table td:nth-child(4) { 
+        min-width: 150px; 
+        white-space: normal; /* Allow subject to wrap */
+    }
+}
