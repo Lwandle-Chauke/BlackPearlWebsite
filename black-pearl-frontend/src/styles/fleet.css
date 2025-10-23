@@ -1,0 +1,219 @@
+/* Fleet Page Specific Styles */
+.fleet-container {
+  margin-top: 80px;
+  padding: 40px 20px;
+}
+
+.center-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: var(--accent);
+}
+
+/* New class to replace inline style: margin-top: -10px */
+.center-title.fleet-title {
+  margin-top: -10px;
+}
+
+.fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.vehicle-card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--silver);
+}
+
+.vehicle-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.vehicle-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 3px solid var(--bg-black);
+}
+
+.vehicle-body {
+  padding: 20px;
+}
+
+.vehicle-body h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.vehicle-body .muted {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-actions .btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.view-details {
+  background: var(--bg-black);
+  color: var(--white);
+}
+
+.view-details:hover {
+  background: var(--silver);
+  color: var(--accent);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--bg-black);
+  border: 2px solid var(--bg-black);
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-black);
+  color: var(--white);
+  text-decoration: none;
+}
+
+/* Modal Styles - display: flex is crucial for React conditional rendering */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex; /* Crucial for visibility when conditionally rendered */
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-dialog {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  text-align: center;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--accent);
+}
+
+#modalImg {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+#modalTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--accent);
+}
+
+#modalDesc {
+  color: var(--muted);
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.modal-actions .btn {
+  background: var(--bg-black);
+  color: var(--white);
+  padding: 12px 30px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.3s ease;
+}
+
+.modal-actions .btn:hover {
+  background: var(--silver);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fleet-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 10px;
+  }
+
+  .center-title {
+     font-size: 26px;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .card-actions .btn {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .fleet-container {
+    padding: 20px 10px;
+  }
+
+  .vehicle-body {
+    padding: 15px;
+  }
+
+  .vehicle-body h3 {
+    font-size: 1.2rem;
+  }
+}

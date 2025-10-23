@@ -1,0 +1,183 @@
+.profile-container {
+  max-width: 900px;
+  margin: 100px auto 60px auto;
+  background: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-header h2 {
+  font-size: 2rem;
+  color: #111;
+  margin-bottom: 5px;
+}
+
+.profile-header p {
+  color: #555;
+  font-size: 1rem;
+}
+
+/* Profile Picture Section */
+.profile-pic-section {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin-bottom: 30px;
+}
+
+.profile-pic {
+width: 120px;
+height: 120px;
+border-radius: 50%;
+object-fit: cover;
+margin-bottom: 15px; /* Increased margin /
+  border: 3px solid black;
+cursor: pointer; / Indicate it's clickable */
+transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect for the profile picture */
+.profile-pic:hover {
+transform: scale(1.03);
+box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-pic-section input[type="file"] {
+display: none; /* Hide the default file input */
+}
+
+/* Style for the 'Change Picture' button */
+.upload-btn {
+background: #f1f1f1;
+color: #333;
+padding: 8px 18px;
+border: 1px solid #ddd;
+border-radius: 20px;
+cursor: pointer;
+font-size: 0.9rem;
+font-weight: 600;
+transition: 0.3s;
+}
+
+.upload-btn:hover {
+background: #e5e5e5;
+border-color: #ccc;
+}
+
+/* Form */
+.profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.profile-form .input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-form label {
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.profile-form input,
+.profile-form select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: #f9f9f9;
+  transition: 0.3s;
+}
+
+.profile-form input:focus,
+.profile-form select:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+.save-btn {
+  grid-column: span 2;
+  background: black;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: 0.3s;
+}
+
+.save-btn:hover {
+  background: #333;
+}
+
+/* Stats Section */
+.stats-section {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin-top: 50px;
+}
+
+.stat-card {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 25px;
+  margin: 10px;
+  width: 220px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.stat-card p {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .save-btn {
+    grid-column: span 1;
+  }
+
+  .stats-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-card {
+    width: 90%;
+  }
+}

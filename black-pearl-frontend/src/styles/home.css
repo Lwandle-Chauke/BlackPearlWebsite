@@ -1,0 +1,192 @@
+/*
+ * home.css
+ * Styles extracted from the original HTML's <style> block for
+ * the hero, about, and tours sections.
+ */
+
+/* HERO */
+.hero {
+  margin-top: 72px; /* leave space for fixed header */
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.06)),
+    url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;
+  color: var(--white);
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.hero-inner {
+  padding: 36px 18px;
+  width: 100%;
+  max-width: var(--max-w);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  font-size: 30px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 6px;
+  opacity: 0.95;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+.hero h1 b {
+  font-weight: 800;
+}
+
+.hero .cta {
+  margin-top: 6px;
+  display: inline-block;
+  background: var(--cta-bg);
+  color: var(--cta-text);
+  padding: 10px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.hero .cta:hover { /* Corresponds to .hero .cta-read:hover in original HTML */
+  background: var(--silver);
+}
+
+/* CONTENT SECTIONS */
+main {
+background: var(--white);
+padding: 18px;
+}
+
+.about-section {
+margin-top: 18px;
+display: flex;
+flex-direction: column;
+gap: 18px;
+}
+
+/* STYLES TO REPLACE INLINE STYLES IN JSX */
+.about-section .about-intro { 
+font-weight: 700; /* Replaces style="font-weight:700" */
+margin: 0 0 8px 0; /* Replaces style="margin:0 0 8px 0" */
+}
+
+.about-section .about-body {
+margin-top: 10px; /* Replaces style="margin-top:10px" */
+}
+
+.tours .tours-callout {
+  font-weight: 600; /* Replaces style="font-weight:600" */
+}
+/* END INLINE STYLE REPLACEMENTS */
+
+
+/* Section Title: RESTORE FLEXBOX to match index.html */
+.section-title {
+/* REVERTED from display: block; */
+display: flex; 
+/* REVERTED from text-align: center; */
+justify-content: space-between; /* Added to spread h2 and hr/div */
+align-items: left;
+gap:5px; /* Re-added gap */
+/* REVERTED from margin-bottom: 18px; */
+}
+
+.section-title h2 {
+margin: 0;
+font-size: 30px;
+font-weight: 700;
+color: var(--accent);
+}
+
+.section-title hr {
+/* REVERTED margin: 0 auto; */
+flex: 1; /* Allows it to take up remaining space */
+height: 2px;
+background: linear-gradient(90deg, transparent, var(--muted));
+border: 0;
+margin-left: 12px; /* Restored from HTML <style> */
+margin-right: 6px; /* Restored from HTML <style> */
+opacity: 0.8;
+}
+
+/* Common CTA-read style for About and Tours sections (This section looks correct) */
+.cta-read {
+display: inline-block; 
+align-self: flex-start;
+width: auto; 
+background: #000;
+color: #fff;
+padding: 8px 12px;
+border-radius: 999px;
+font-weight: 700;
+font-size: 14px;
+text-decoration: none;
+transition: background 0.3s ease;
+}
+
+.cta-read:hover {
+  background: var(--silver);
+  color: #000;
+}
+
+
+/* Tours small section */
+.tours {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tours p {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+/* Floating chat icon */
+.chat-fab {
+  position: fixed;
+  right: 14px;
+  bottom: 92px; /* Set to match the style.css footer padding */
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,#f9f9f9,#e6e6e6); /* Matched to style.css footer */
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 70; /* Matched to style.css */
+}
+
+/* Responsive and layout tweaks for larger screens */
+@media(min-width: 720px){
+  .hero{ min-height: 320px; }
+  .hero-inner{ padding: 46px 18px }
+  .hero h1{ font-size: 36px }
+  .hero .cta{ padding: 12px 26px }
+
+  /* Using the global .wrap styles defined in style.css */
+  main{ padding: 26px }
+}
+
+@media(min-width: 1000px){
+  .hero{
+    min-height: 420px;
+    background-position: center right;
+  }
+  .hero h1{ font-size: 44px }
+  .hero-inner{ align-items: flex-start }
+}
