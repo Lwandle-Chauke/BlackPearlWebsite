@@ -1,252 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gallery - Black Pearl Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="quote.css" />
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+import React, { useState } from 'react';
+import AdminSidebar from '../components/AdminSidebar';
+import AdminTopBar from '../components/AdminTopBar';
+// Import the shared admin CSS (for base layout/hamburger logic) and the gallery-specific CSS
+import '../styles/admin.css'; 
+import '../styles/admin-gallery.css'; 
 
-   <!-- Favicon setup -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon_16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon_32x32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/favicon_48x48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/favicon_64x64.png">
-<link rel="icon" type="image/png" sizes="128x128" href="/favicon_128x128.png">
-<link rel="icon" type="image/png" sizes="256x256" href="/favicon_256x256.png">
-
-  <style>
-/* ... (All common CSS from previous pages) ... */
-:root {
-    --white: #ffffff; 
-    --dark-gray: #4a4a4a; 
-    --light-gray: #f8f8f8; 
-    --primary-blue: #3498db; 
-    --text-dark: #333;
-    --silver: #aaa; 
-    --success: #2ecc71;
-}
-
-/* Base Layout and Shared Styles (Duplicated for completeness) */
-body { font-family: "Poppins", sans-serif; margin: 0; background: var(--light-gray); color: var(--text-dark); display: flex; min-height: 100vh; }
-header nav, .nav-actions, .mobile-menu { display: none !important; }
-
-/* Main Content Area */
-#content-wrapper {
-    flex-grow: 1; 
-    padding: 20px;
-    margin-left: 250px; 
-    padding-top: 80px; 
-    transition: margin-left 0.3s;
-    display: flex;
-    gap: 20px;
-}
-
-/* ==========================================================
-   SIDEBAR NAVIGATION & TOP BAR (Copied from admin.html)
-   ========================================================== */
-.sidebar { width: 250px; position: fixed; top: 0; left: 0; bottom: 0; background: var(--dark-gray); color: white; padding-top: 20px; z-index: 1000; }
-.sidebar-header { display: flex; align-items: center; padding: 0 20px 20px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
-.sidebar-logo { width: 100%; text-align: center; }
-.sidebar-logo img { max-width: 100%; height: auto; filter: grayscale(100%) brightness(150%); }
-.sidebar ul { list-style: none; padding: 0; margin: 0; }
-.sidebar ul li a { display: flex; align-items: center; padding: 15px 20px; color: #ccc; text-decoration: none; font-weight: 500; transition: background 0.2s, color 0.2s; }
-.sidebar ul li a i { font-size: 1.2rem; margin-right: 15px; }
-.sidebar ul li a:hover { background: #3c3c3c; color: white; }
-.sidebar ul li a.active { background: white; color: var(--text-dark); font-weight: 600; border-right: 4px solid var(--primary-blue); }
-
-.top-bar { position: fixed; top: 0; right: 0; left: 250px; height: 60px; background: var(--white); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 999; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-.page-title h1 { margin: 0; font-size: 1.8rem; font-weight: 600; color: var(--text-dark); }
-.admin-info { display: flex; align-items: center; font-size: 1rem; color: var(--text-dark); }
-.admin-info i { margin-left: 10px; font-size: 1.2rem; }
-
-/* Main Content Styles */
-.main-content {
-    width: 100%;
-    background: white;
-    padding: 20px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.main-content h2 { font-size: 1.5rem; margin-top: 0; margin-bottom: 20px; color: var(--dark-gray); }
-
-/* Gallery Card Styles (New) */
-.gallery-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 20px 0;
-    border-bottom: 1px solid #eee;
-}
-.gallery-item:last-child { border-bottom: none; }
-
-.image-container {
-    width: 250px;
-    margin-right: 20px;
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.image-container img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
-
-.gallery-info {
-    flex-grow: 1;
-}
-
-.gallery-info h3 {
-    font-size: 1.2rem;
-    margin-top: 0;
-    color: var(--dark-gray);
-}
-
-.gallery-actions {
-    margin-top: 10px;
-}
-.gallery-actions i {
-    font-size: 1.2rem;
-    margin-right: 15px;
-    cursor: pointer;
-    color: var(--dark-gray);
-    transition: color 0.2s;
-}
-.gallery-actions i:hover { color: var(--primary-blue); }
-
-.current-stats {
-    width: 300px;
-    text-align: right;
-    border-left: 1px solid #eee;
-    padding-left: 20px;
-}
-.current-stats h4 {
-    font-size: 1rem;
-    margin-top: 0;
-    margin-bottom: 5px;
-    color: #666;
-}
-.current-stats p {
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    margin-bottom: 5px;
-}
-
-/* Simplified Footer Styles */
-.footer { padding: 0; background: var(--light-gray); color: var(--silver); margin-left: 250px; }
-.footer-inner { display: none; }
-.bottom-bar { width: auto; text-align: center; background: var(--light-gray); padding: 20px 0; color: var(--silver); font-size: 0.8rem; }
-/* ... (End of common CSS) ... */
-  </style>
-</head>
-<body>
-
-<div class="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <img src="https://i.imgur.com/your-black-pearl-logo.png" alt="Black Pearl Tours Admin" style="max-width: 150px; filter: grayscale(100%) brightness(150%);">
-        </div>
-    </div>
-    <ul>
-        <li><a href="admin.html"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
-        <li><a href="admin-messages.html"><i class="fas fa-envelope"></i> <span>Messages</span></a></li>
-        <li><a href="admin-bookings.html"><i class="fas fa-calendar-alt"></i> <span>Bookings</span></a></li>
-        <li><a href="admin-tours.html"><i class="fas fa-route"></i> <span>Tours</span></a></li>
-        <li><a href="admin-gallery.html" class="active"><i class="fas fa-images"></i> <span>Gallery</span></a></li>
-        <li><a href="admin-settings.html"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
-        <li><a href="index.html" onclick="alert('Logged out.');"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
-    </ul>
-</div>
-
-<div id="content-wrapper">
-
-    <div class="top-bar">
-        <div class="page-title">
-            <h1>Gallery</h1>
-        </div>
-        <div class="admin-info">
-            Admin <i class="fas fa-user-circle"></i>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <h2>Manage Gallery :</h2>
+// Component for an individual gallery item card
+const GalleryItem = ({ item, handleAction }) => (
+    <div className="gallery-item">
         
-        <div class="gallery-list">
-            
-            <div class="gallery-item">
-                <div class="image-container">
-                    <img src="https://via.placeholder.com/250x150/4a4a4a/ffffff?text=Events+Tour" alt="Events and Leisure Tour">
-                </div>
-                <div class="gallery-info">
-                    <h3>Events and Leisure Tour</h3>
-                    <p style="font-size: 0.9rem; color: #666;">Total Images: 43</p>
-                    <div class="gallery-actions">
-                        <i class="fas fa-search" title="View Images"></i>
-                        <i class="fas fa-trash-alt" title="Delete Album"></i>
-                        <i class="fas fa-pencil-alt" title="Edit Album Name"></i>
-                        <i class="fas fa-upload" title="Upload New Images"></i>
-                    </div>
-                </div>
-                <div class="current-stats">
-                    <h4>Current Tours: 43</h4>
-                    <p>15 Sept 2025 | 14:30</p>
-                    <p>Passengers: 6</p>
-                    <p>Status: <span style="color: var(--success); font-weight: 600;">Confirmed</span></p>
-                </div>
-            </div>
+        {/* Image Container */}
+        <div className="image-container">
+            <img 
+                src={item.imageUrl} 
+                alt={item.albumName} 
+            />
+        </div>
 
-            <div class="gallery-item">
-                <div class="image-container">
-                    <img src="https://via.placeholder.com/250x150/4a4a4a/ffffff?text=Cape+Point" alt="Cape Point Tour">
-                </div>
-                <div class="gallery-info">
-                    <h3>Cape Point Tour</h3>
-                    <p style="font-size: 0.9rem; color: #666;">Total Images: 32</p>
-                    <div class="gallery-actions">
-                        <i class="fas fa-search" title="View Images"></i>
-                        <i class="fas fa-trash-alt" title="Delete Album"></i>
-                        <i class="fas fa-pencil-alt" title="Edit Album Name"></i>
-                        <i class="fas fa-upload" title="Upload New Images"></i>
-                    </div>
-                </div>
-                <div class="current-stats">
-                    <h4>Current Tours: 32</h4>
-                    <p>15 Sept 2025 | 08:30</p>
-                    <p>Passengers: 6</p>
-                    <p>Status: <span style="color: var(--success); font-weight: 600;">Confirmed</span></p>
-                </div>
+        {/* Gallery Info & Actions (Main Column) */}
+        <div className="gallery-info">
+            <h3>{item.albumName}</h3>
+            <p className="total-images">Total Images: {item.totalImages}</p>
+            <div className="gallery-actions">
+                <i 
+                    className="fas fa-search" 
+                    title="View Images" 
+                    onClick={() => handleAction('View', item.id)}
+                ></i>
+                <i 
+                    className="fas fa-trash-alt" 
+                    title="Delete Album" 
+                    onClick={() => handleAction('Delete', item.id)}
+                ></i>
+                <i 
+                    className="fas fa-pencil-alt" 
+                    title="Edit Album Name" 
+                    onClick={() => handleAction('Edit', item.id)}
+                ></i>
+                <i 
+                    className="fas fa-upload" 
+                    title="Upload New Images" 
+                    onClick={() => handleAction('Upload', item.id)}
+                ></i>
             </div>
-            
-            <div class="gallery-item">
-                <div class="image-container">
-                    <img src="https://via.placeholder.com/250x150/4a4a4a/ffffff?text=Table+Mountain" alt="Table Mountain">
-                </div>
-                <div class="gallery-info">
-                    <h3>Table Mountain</h3>
-                    <p style="font-size: 0.9rem; color: #666;">Total Images: 13</p>
-                    <div class="gallery-actions">
-                        <i class="fas fa-search" title="View Images"></i>
-                        <i class="fas fa-trash-alt" title="Delete Album"></i>
-                        <i class="fas fa-pencil-alt" title="Edit Album Name"></i>
-                        <i class="fas fa-upload" title="Upload New Images"></i>
-                    </div>
-                </div>
-                <div class="current-stats">
-                    <h4>Current Tours: 13</h4>
-                    <p>15 Sept 2025 | 15:30</p>
-                    <p>Passengers: 6</p>
-                    <p>Status: <span style="color: var(--success); font-weight: 600;">Confirmed</span></p>
-                </div>
-            </div>
-
+        </div>
+        
+        {/* Current Stats (Right Column, stacks on mobile) */}
+        <div className="current-stats">
+            <h4>Latest Tour Data</h4>
+            <p>Tours: {item.totalImages}</p>
+            <p className="stat-detail">{item.lastTourDate} | {item.lastTourTime}</p>
+            <p className="stat-detail">Passengers: {item.lastTourPassengers}</p>
+            <p className="stat-status">
+                Status: <span className="status-confirmed">{item.lastTourStatus}</span>
+            </p>
         </div>
     </div>
+);
 
-</div> 
-</body>
-</html>
+
+const AdminGallery = () => {
+    // State to manage the visibility of the sidebar on mobile
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Toggle function for the hamburger menu
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    // Data Array for the Gallery Albums
+    const galleryAlbums = [
+        { 
+            id: 1, 
+            albumName: 'Events and Leisure Tour', 
+            imageUrl: 'https://media.istockphoto.com/id/1384618716/photo/group-of-happy-friends-taking-selfie-pic-outside-happy-different-young-people-having-fun.webp?a=1&b=1&s=612x612&w=0&k=20&c=spTrAeU228i_64ikxrAsEs0HhN9Or88fQE7snJ8OfSw=', 
+            totalImages: 43,
+            lastTourDate: '15 Sept 2025',
+            lastTourTime: '14:30',
+            lastTourPassengers: 6,
+            lastTourStatus: 'Confirmed'
+        },
+        { 
+            id: 2, 
+            albumName: 'Cape Point Tour', 
+            imageUrl: 'https://plus.unsplash.com/premium_photo-1754265639366-1cc360b0da06?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Q2FwZSUyMFBvaW50JTIwVG91cnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600', 
+            totalImages: 32,
+            lastTourDate: '15 Sept 2025',
+            lastTourTime: '08:30',
+            lastTourPassengers: 6,
+            lastTourStatus: 'Confirmed'
+        },
+        { 
+            id: 3, 
+            albumName: 'Table Mountain', 
+            imageUrl: 'https://images.unsplash.com/photo-1606799955515-85468ee78c26?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1932', 
+            totalImages: 13,
+            lastTourDate: '15 Sept 2025',
+            lastTourTime: '15:30',
+            lastTourPassengers: 6,
+            lastTourStatus: 'Confirmed'
+        },
+    ];
+
+    // Handler for gallery actions
+    const handleAction = (action, id) => {
+        alert(`${action} album ID: ${id}`);
+    };
+    
+    return (
+        <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            
+            <AdminSidebar 
+                isSidebarOpen={isSidebarOpen} 
+                toggleSidebar={toggleSidebar} 
+            />
+            
+            <div id="content-wrapper">
+                
+                <AdminTopBar 
+                    pageTitle="Gallery" 
+                    toggleSidebar={toggleSidebar}
+                />
+
+                <main className="gallery-page-content">
+                    <div className="main-content">
+                        <h2>Manage Gallery :</h2>
+                        
+                        {/* Optional button to add new album, hidden in original HTML but useful */}
+                        <button className="btn-add-album" onClick={() => handleAction('Add', 0)}>
+                            <i className="fas fa-plus"></i> Add New Album
+                        </button>
+                        
+                        <div className="gallery-list">
+                            {galleryAlbums.map((album) => (
+                                <GalleryItem 
+                                    key={album.id} 
+                                    item={album} 
+                                    handleAction={handleAction} 
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </main>
+                
+            </div> 
+            
+
+            {/* Overlay for mobile view when sidebar is open */}
+            <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={toggleSidebar}></div>
+        </div>
+    );
+};
+
+export default AdminGallery;

@@ -1,0 +1,181 @@
+/* ==========================================================
+   COLOR VARIABLES (Specific to Messages)
+   ========================================================== */
+:root {
+    --unread: #e74c3c; /* Red for UNREAD */
+    --read: #2ecc71; /* Green for READ */
+    /* Assuming other colors are defined in ../styles/admin.css */
+}
+
+/* ==========================================================
+   BOOKINGS PAGE LAYOUT (Default: Stacked/Mobile First)
+   ========================================================== */
+/* The main flex container for the content on the bookings page */
+.bookings-page-content {
+    /* Stacked columns by default (mobile/small screen behavior) */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+.main-content {
+    /* Main content takes full width when stacked */
+    flex: none; 
+    width: 100%;
+    background: var(--white);
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    min-width: 0; 
+    order: 2; /* Main content is second in the stack */
+}
+
+.secondary-content {
+    /* Secondary content takes full width when stacked */
+    flex: none;
+    width: 100%;
+    background: var(--light-gray);
+    padding: 20px;
+    border-radius: 6px;
+    order: 1; /* Secondary content (Recent Updates) is first in the stack */
+    /* On mobile, this will be hidden by the max-width: 768px query below */
+}
+
+.main-content h2, .secondary-content h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--dark-gray);
+}
+
+/* Table Styles (Adjusted for Bookings Page Density) */
+.data-table th, .data-table td {
+    padding: 12px 8px; /* Slightly tighter padding */
+    font-size: 0.85rem; /* Slightly smaller font */
+}
+.data-table th:last-child, .data-table td:last-child {
+    text-align: center; /* Center actions column */
+}
+
+/* Action Icons */
+.action-icons {
+    white-space: nowrap;
+}
+.action-icons i {
+    cursor: pointer;
+    margin-right: 8px;
+    color: var(--dark-gray);
+    transition: color 0.2s;
+}
+.action-icons i:hover { color: var(--primary-blue); }
+
+/* Add Booking Buttons */
+.btn-add-booking-desktop {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 15px;
+    float: right; 
+    display: none; /* Hide desktop button by default (mobile first) */
+}
+.btn-add-booking-desktop:hover { background: #2980b9; }
+
+.btn-add-booking-mobile {
+    display: block; /* Show mobile button by default */
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 15px;
+    width: 100%; 
+    text-align: center;
+}
+
+/* ==========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================== */
+
+/* 1. Mobile (Below 768px): Hide secondary content */
+@media (max-width: 768px) {
+    .secondary-content {
+        display: none; /* Hide updates on mobile to prioritize main table */
+    }
+    .main-content {
+        padding: 10px;
+    }
+    .btn-add-booking-mobile {
+        display: block;
+    }
+    /* Table overflow is handled by data-table-container in the larger shared CSS */
+    .data-table {
+        min-width: 750px;
+    }
+    .data-table th, .data-table td {
+        padding: 8px 5px;
+        font-size: 0.75rem;
+    }
+    .data-table th:nth-child(6) { 
+        width: 40px;
+        font-size: 0.7rem;
+    }
+}
+
+/* 2. Laptop/Tablet Stacked (769px to 1279px): Updates on top, full width */
+@media (min-width: 769px) and (max-width: 1279px) {
+    .bookings-page-content {
+        /* This is now the default layout (Updates on top, Table below) */
+        flex-direction: column; 
+    }
+    .secondary-content {
+        display: block; /* Show updates */
+        width: 100%;
+        order: 1;
+    }
+    .main-content {
+        width: 100%;
+        order: 2;
+    }
+    .btn-add-booking-desktop {
+        display: block; /* Show desktop button */
+    }
+    .btn-add-booking-mobile {
+        display: none;
+    }
+}
+
+
+/* 3. Large Desktop (1280px and up): Two-column layout */
+@media (min-width: 1280px) {
+    .bookings-page-content {
+        /* Revert to side-by-side layout */
+        flex-direction: row;
+        /* Ensure secondary content is on the right visually (order: 2) 
+           and main content is on the left (order: 1) */
+    }
+    
+    .secondary-content {
+        flex: 1; /* Takes 1/4 width */
+        order: 2;
+    }
+    
+    .main-content {
+        flex: 3; /* Takes 3/4 width */
+        order: 1;
+    }
+    
+    .btn-add-booking-desktop {
+        display: block;
+    }
+    .btn-add-booking-mobile {
+        display: none;
+    }
+}
