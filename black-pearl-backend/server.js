@@ -34,7 +34,10 @@ const { protect, authorize } = require('./middleware/authMiddleware');
 
 // Routes
 const authRoutes = require('./routes/auth');
+const quoteRoutes = require('./routes/quotes');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/quotes', quoteRoutes);
 
 // Basic routes
 app.get('/api', (req, res) => {
@@ -102,6 +105,11 @@ app.listen(PORT, () => {
   console.log(`   POST http://localhost:${PORT}/api/auth/register`);
   console.log(`   POST http://localhost:${PORT}/api/auth/login`);
   console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
+  console.log(`📋 Quote endpoints:`);
+  console.log(`   POST http://localhost:${PORT}/api/quotes (Public - Submit quote)`);
+  console.log(`   GET  http://localhost:${PORT}/api/quotes (Admin - Get all quotes)`);
+  console.log(`   PUT  http://localhost:${PORT}/api/quotes/:id (Admin - Update quote)`);
+  console.log(`   DELETE http://localhost:${PORT}/api/quotes/:id (Admin - Delete quote)`);
   console.log(`🔒 Admin endpoints (protected):`);
   console.log(`   GET  http://localhost:${PORT}/api/admin/test`);
   console.log(`   GET  http://localhost:${PORT}/api/admin/dashboard`);
