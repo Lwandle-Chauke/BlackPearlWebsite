@@ -34,7 +34,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
 
   const handleLogin = async (email, password) => {
     try {
-      console.log('Login attempt:', email);
+      console.log('🔐 Login attempt:', email);
       
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -44,55 +44,73 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      // First, get the raw response text to see what we're receiving
       const responseText = await response.text();
-      console.log('Raw login response:', responseText);
+      console.log('📨 Raw login response:', responseText);
       
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
+        console.error('❌ Failed to parse response as JSON:', parseError);
         return { 
           success: false, 
           error: 'Invalid response format from server' 
         };
       }
 
-      console.log('Parsed login data:', data);
-      console.log('Response status:', response.status);
+      console.log('📊 Parsed login data:', data);
+      console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
+        // More detailed error handling
+        let errorMessage = data.message || data.error || `Login failed with status ${response.status}`;
+        
+        if (response.status === 401) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+        
+        console.log('❌ Login failed:', errorMessage);
         return { 
           success: false, 
-          error: data.message || data.error || `Login failed with status ${response.status}`
+          error: errorMessage
         };
       }
 
-      // Use the response format from your backend
       if (data.success && data.token && data.user) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Log admin detection for debugging
+        if (data.user.role === 'admin') {
+          console.log('🎯 ADMIN USER DETECTED - Will redirect to admin dashboard');
+          console.log('👤 Admin user details:', data.user);
+        } else {
+          console.log('👤 Regular user detected, role:', data.user.role);
+        }
+        
         return { 
           success: true, 
           user: data.user,
           token: data.token
         };
       } else {
+        console.log('❌ No authentication token received');
         return { 
           success: false, 
           error: data.message || data.error || 'No authentication token received'
         };
       }
     } catch (error) {
-      console.error('Login network error:', error);
+      console.error('🌐 Login network error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
 
   const handleRegister = async (userData) => {
     try {
-      console.log('Sending registration data:', { 
+      console.log('📝 Sending registration data:', { 
         ...userData, 
         password: '***', // Hide password in logs
         confirmPassword: '***' 
@@ -107,37 +125,41 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
       });
 
       const responseText = await response.text();
-      console.log('Raw registration response:', responseText);
+      console.log('📨 Raw registration response:', responseText);
       
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
+        console.error('❌ Failed to parse response as JSON:', parseError);
         return { 
           success: false, 
           error: 'Invalid response format from server' 
         };
       }
 
-      console.log('Registration response:', data);
+      console.log('📊 Registration response:', data);
 
       if (!response.ok) {
+        let errorMessage = data.message || data.error || `Registration failed with status ${response.status}`;
+        console.log('❌ Registration failed:', errorMessage);
         return { 
           success: false, 
-          error: data.message || data.error || `Registration failed with status ${response.status}`
+          error: errorMessage
         };
       }
 
       if (data.success && data.token && data.user) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        console.log('✅ Registration successful for user:', data.user.email);
         return { success: true, user: data.user, token: data.token };
       } else {
+        console.log('❌ Registration failed - no user data received');
         return { success: false, error: data.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration network error:', error);
+      console.error('🌐 Registration network error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
@@ -157,6 +179,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
           return;
         }
 
+        console.log('🔄 Processing login...');
         result = await handleLogin(formData.email, formData.password);
       } else {
         if (!formData.name || !formData.surname || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
@@ -186,32 +209,41 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
           confirmPassword: formData.confirmPassword
         };
 
+        console.log('🔄 Processing registration...');
         result = await handleRegister(registerData);
       }
 
-      console.log('Authentication result:', result);
+      console.log('📋 Authentication result:', result);
 
       if (result.success) {
-        console.log('Authentication successful, calling onAuthSuccess...');
-        console.log('User data:', result.user);
+        console.log('✅ Authentication successful, calling onAuthSuccess...');
+        console.log('👤 User data:', result.user);
+        
+        // Log role-based action
+        if (result.user.role === 'admin') {
+          console.log('🔄 Redirecting admin to admin dashboard...');
+        } else {
+          console.log('👤 Regular user login successful');
+        }
         
         // Safely call onAuthSuccess if provided
         if (onAuthSuccess && typeof onAuthSuccess === 'function') {
           try {
             onAuthSuccess(result.user);
           } catch (callbackError) {
-            console.error('Error in onAuthSuccess callback:', callbackError);
+            console.error('❌ Error in onAuthSuccess callback:', callbackError);
           }
         } else {
-          console.warn('onAuthSuccess not provided or not a function');
+          console.warn('⚠️ onAuthSuccess not provided or not a function');
         }
         
         onClose();
       } else {
+        console.log('❌ Authentication failed:', result.error);
         setError(result.error || 'Authentication failed. Please try again.');
       }
     } catch (error) {
-      console.error('Unexpected error in handleSubmit:', error);
+      console.error('💥 Unexpected error in handleSubmit:', error);
       setError('An unexpected error occurred. Please check the console for details.');
     } finally {
       setLoading(false);
@@ -241,10 +273,51 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     resetForm();
   };
 
+  // Test admin credentials helper (remove in production)
+  const fillTestAdminCredentials = () => {
+    if (activeTab === 'signin') {
+      setFormData({
+        ...formData,
+        email: 'admin@blackpearl.com',
+        password: 'admin123'
+      });
+      console.log('🔧 Test admin credentials filled');
+    }
+  };
+
   return (
     <div className="auth-overlay" onClick={handleOverlayClick}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         <button className="close-btn" onClick={onClose}>&times;</button>
+        
+        {/* Development helper - remove in production */}
+        {process.env.NODE_ENV === 'development' && activeTab === 'signin' && (
+          <div style={{
+            background: '#f0f8ff',
+            padding: '8px',
+            marginBottom: '15px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            textAlign: 'center',
+            border: '1px dashed #4a90e2'
+          }}>
+            <strong>DEV HELPER:</strong>{' '}
+            <button 
+              type="button"
+              onClick={fillTestAdminCredentials}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#4a90e2',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Fill Test Admin Credentials
+            </button>
+          </div>
+        )}
         
         <div className="auth-tabs">
           <button 

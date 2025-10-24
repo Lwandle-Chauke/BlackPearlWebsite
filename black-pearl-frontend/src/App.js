@@ -73,14 +73,20 @@ function App() {
 
     // Handle successful authentication from AuthModal
     const handleAuthSuccess = (user) => {
-        console.log('Auth successful for user:', user);
-        setCurrentUser(user);
-        setUserRole(user.role || 'customer');
-        setShowAuthModal(false);
-        
-        // Show success message
-        alert(`Welcome back, ${user.name}! You have been successfully signed in.`);
-    };
+  console.log('Auth successful for user:', user);
+  setCurrentUser(user);
+  setUserRole(user.role || 'customer');
+  setShowAuthModal(false);
+  
+  // Redirect based on user role
+  if (user.role === 'admin') {
+    // Use window.location for immediate redirect to admin dashboard
+    window.location.href = '/admin/dashboard';
+  } else {
+    // Show success message for regular users
+    alert(`Welcome back, ${user.name}! You have been successfully signed in.`);
+  }
+};
 
     const handleSignOut = () => {
         // Clear local storage

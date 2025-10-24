@@ -29,6 +29,9 @@ const connectDB = async () => {
 
 connectDB();
 
+// Import middleware
+const { protect, authorize } = require('./middleware/authMiddleware');
+
 // Routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
@@ -47,6 +50,30 @@ app.get('/api/health', (req, res) => {
     status: 'OK',
     database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Protected admin test route
+app.get('/api/admin/test', protect, authorize('admin'), (req, res) => {
+  res.json({
+    success: true,
+    message: 'Admin access granted!',
+    user: req.user
+  });
+});
+
+// Protected admin dashboard data route
+app.get('/api/admin/dashboard', protect, authorize('admin'), (req, res) => {
+  res.json({
+    success: true,
+    message: 'Admin dashboard data',
+    stats: {
+      totalUsers: 150,
+      totalBookings: 45,
+      newMessages: 12,
+      revenue: 12500
+    },
+    user: req.user
   });
 });
 
@@ -75,4 +102,7 @@ app.listen(PORT, () => {
   console.log(`   POST http://localhost:${PORT}/api/auth/register`);
   console.log(`   POST http://localhost:${PORT}/api/auth/login`);
   console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
+  console.log(`🔒 Admin endpoints (protected):`);
+  console.log(`   GET  http://localhost:${PORT}/api/admin/test`);
+  console.log(`   GET  http://localhost:${PORT}/api/admin/dashboard`);
 });
