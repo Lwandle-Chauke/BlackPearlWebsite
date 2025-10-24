@@ -1,3 +1,18 @@
-// in App.jsx or index.jsx
-import '@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");';
-import '@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css");';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './styles/style.css';
+import Home from './components/pages/Home';
+import Bookings from './components/pages/Bookings';
+
+function App() {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/bookings" element={<Bookings />} />
+            </Routes>
+        </Router>
+    );
+}
+
+export default App;

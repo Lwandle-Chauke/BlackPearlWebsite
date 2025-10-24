@@ -1,7 +1,6 @@
 // components/pages/Bookings.jsx
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AuthModal from '../components/AuthModal';
@@ -9,29 +8,28 @@ import '../styles/style.css';
 import '../styles/bookings.css';
 
 const Bookings = () => {
-  const navigate = useNavigate(); // Hook for navigation
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [bookings, setBookings] = useState([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    service: '',
+    date: '',
+    pickup: '',
+    dropoff: '',
+    passengers: 1,
+    message: ''
+  });
 
-  // 🔑 Assume the user is logged in on the Bookings page
-  const isLoggedIn = true; 
+  const isLoggedIn = true; // mock login
+  const apiBase = 'http://localhost:5000/api/bookings'; // Backend URL
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
-  
-  // New logic to handle Sign In/Out click
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      // Logic for signing out (In a real app: clear tokens, reset global state)
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/'); 
-    } else {
-      openAuthModal();
-    }
-  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -39,82 +37,116 @@ const Bookings = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const bookings = [
-    {
-      id: 1,
-      title: "Airport Transfer",
-      status: "confirmed",
-      date: "22 Oct 2025",
-      pickup: "OR Tambo Airport",
-      dropoff: "Sandton Hotel",
-      passengers: 3,
-      price: "R850"
-    },
-    {
-      id: 2,
-      title: "Conference Shuttle",
-      status: "pending",
-      date: "25 Oct 2025",
-      pickup: "Pretoria CBD",
-      dropoff: "Gallagher Convention Centre",
-      passengers: 6,
-      price: "R1,400"
-    },
-    {
-      id: 3,
-      title: "Sports Tour",
-      status: "cancelled",
-      date: "5 Sep 2025",
-      pickup: "Johannesburg Stadium",
-      dropoff: "Durban Beachfront",
-      passengers: 10,
-      price: "R3,500"
+  // ✅ 1. Fetch all bookings from backend
+  const fetchBookings = async () => {
+    try {
+      const res = await fetch(apiBase);
+      const data = await res.json();
+      setBookings(data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
     }
-  ];
+  };
 
-  const filteredBookings = bookings.filter(booking => {
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  // ✅ 2. Create new booking
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(apiBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+      if (data._id) {
+        setBookings((prev) => [...prev, data]);
+        showToastMessage('Booking created successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          service: '',
+          date: '',
+          pickup: '',
+          dropoff: '',
+          passengers: 1,
+          message: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      showToastMessage('Error creating booking!');
+    }
+  };
+
+  // ✅ 3. Cancel a booking
+  const handleCancel = async (id) => {
+    try {
+      const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setBookings((prev) => prev.filter((b) => b._id !== id));
+        showToastMessage('Booking cancelled successfully!');
+      }
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+    }
+  };
+
+  const filteredBookings = bookings.filter((booking) => {
     const matchesStatus = filter === 'all' || booking.status === filter;
-    const matchesSearch = booking.title.toLowerCase().includes(search.toLowerCase()) ||
-                          booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
-                          booking.dropoff.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      booking.service?.toLowerCase().includes(search.toLowerCase()) ||
+      booking.pickup?.toLowerCase().includes(search.toLowerCase()) ||
+      booking.dropoff?.toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
   return (
     <>
-      {/* 🔄 Pass isLoggedIn and the new handler to Header */}
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      
+      <Header isLoggedIn={isLoggedIn} />
       {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
 
-      {/* Bookings Content */}
       <div className="bookings-container">
         <div className="bookings-header">
           <h2>My Bookings</h2>
           <p>View and manage your past and upcoming trips</p>
         </div>
 
-        {/* Upcoming Booking Summary */}
-        <div className="upcoming-card">
-          <h3>Next Upcoming Trip</h3>
-          <p><strong>Service:</strong> Airport Transfer</p>
-          <p><strong>Date:</strong> 22 Oct 2025</p>
-          <p><strong>Pickup:</strong> OR Tambo Airport → Sandton Hotel</p>
-          <p><strong>Status:</strong> Confirmed ✅</p>
-        </div>
+        {/* ✅ Booking Form */}
+        <form className="booking-form" onSubmit={handleSubmit}>
+          <h3>Create New Booking</h3>
+          <input type="text" placeholder="Name" value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+          <input type="email" placeholder="Email" value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+          <input type="text" placeholder="Service" value={formData.service}
+            onChange={(e) => setFormData({ ...formData, service: e.target.value })} required />
+          <input type="date" value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+          <input type="text" placeholder="Pickup Location" value={formData.pickup}
+            onChange={(e) => setFormData({ ...formData, pickup: e.target.value })} required />
+          <input type="text" placeholder="Drop-off Location" value={formData.dropoff}
+            onChange={(e) => setFormData({ ...formData, dropoff: e.target.value })} required />
+          <input type="number" placeholder="Passengers" value={formData.passengers}
+            onChange={(e) => setFormData({ ...formData, passengers: e.target.value })} required />
+          <textarea placeholder="Message (optional)" value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}></textarea>
+          <button type="submit">Submit Booking</button>
+        </form>
 
-        {/* Search and Filter */}
+        {/* ✅ Search & Filter */}
         <div className="search-bar">
-          <input 
-            type="text" 
-            placeholder="Search by destination or date..." 
+          <input
+            type="text"
+            placeholder="Search by destination or service..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select 
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
@@ -122,66 +154,37 @@ const Bookings = () => {
           </select>
         </div>
 
-        {/* Booking Cards */}
+        {/* ✅ Bookings List */}
         <div id="bookings-list">
-          {filteredBookings.map(booking => (
-            <div key={booking.id} className="booking-card" data-status={booking.status}>
+          {filteredBookings.map((booking) => (
+            <div key={booking._id} className="booking-card" data-status={booking.status}>
               <div className="booking-header">
-                <h3>{booking.title}</h3>
+                <h3>{booking.service}</h3>
                 <span className={`status ${booking.status}`}>
-                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
                 </span>
               </div>
               <div className="booking-details">
-                <p><strong>Date:</strong> {booking.date}</p>
+                <p><strong>Date:</strong> {new Date(booking.date).toLocaleDateString()}</p>
                 <p><strong>Pickup:</strong> {booking.pickup}</p>
                 <p><strong>Drop-off:</strong> {booking.dropoff}</p>
                 <p><strong>Passengers:</strong> {booking.passengers}</p>
-                <p><strong>Price:</strong> {booking.price}</p>
+                <p><strong>Email:</strong> {booking.email}</p>
+                <p><strong>Message:</strong> {booking.message || 'N/A'}</p>
               </div>
               <div className="booking-actions">
                 {booking.status !== 'cancelled' && (
-                  <button 
-                    className="btn-cancel" 
-                    onClick={() => showToastMessage('Booking cancelled successfully!')}
-                  >
+                  <button className="btn-cancel" onClick={() => handleCancel(booking._id)}>
                     Cancel
                   </button>
                 )}
-                <button 
-                  className="btn-rebook" 
-                  onClick={() => showToastMessage('Trip rebooked!')}
-                >
-                  Rebook
-                </button>
-                <button 
-                  className="btn-feedback" 
-                  onClick={() => showToastMessage('Thank you for your feedback!')}
-                >
-                  Give Feedback
-                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Toast Message */}
-      {showToast && (
-        <div id="toast" className="toast show">
-          {toastMessage}
-        </div>
-      )}
-
-      {/* Floating chat icon */}
-      <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-        </svg>
-      </div>
+      {showToast && <div id="toast" className="toast show">{toastMessage}</div>}
 
       <Footer />
     </>

@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+/* Your page-specific styles here */
 /*
  * home.css
  * Styles extracted from the original HTML's <style> block for
@@ -6,7 +10,8 @@
 
 /* HERO */
 .hero {
-  margin-top: 72px; /* leave space for fixed header */
+  margin-top: 72px;
+  /* leave space for fixed header */
   background:
     linear-gradient(to right, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.06)),
     url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;
@@ -44,6 +49,7 @@
   font-weight: 800;
   letter-spacing: 0.2px;
 }
+
 .hero h1 b {
   font-weight: 800;
 }
@@ -59,81 +65,93 @@
   font-weight: 700;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
-.hero .cta:hover { /* Corresponds to .hero .cta-read:hover in original HTML */
+
+.hero .cta:hover {
+  /* Corresponds to .hero .cta-read:hover in original HTML */
   background: var(--silver);
 }
 
 /* CONTENT SECTIONS */
 main {
-background: var(--white);
-padding: 18px;
+  background: var(--white);
+  padding: 18px;
 }
 
 .about-section {
-margin-top: 18px;
-display: flex;
-flex-direction: column;
-gap: 18px;
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 /* STYLES TO REPLACE INLINE STYLES IN JSX */
-.about-section .about-intro { 
-font-weight: 700; /* Replaces style="font-weight:700" */
-margin: 0 0 8px 0; /* Replaces style="margin:0 0 8px 0" */
+.about-section .about-intro {
+  font-weight: 700;
+  /* Replaces style="font-weight:700" */
+  margin: 0 0 8px 0;
+  /* Replaces style="margin:0 0 8px 0" */
 }
 
 .about-section .about-body {
-margin-top: 10px; /* Replaces style="margin-top:10px" */
+  margin-top: 10px;
+  /* Replaces style="margin-top:10px" */
 }
 
 .tours .tours-callout {
-  font-weight: 600; /* Replaces style="font-weight:600" */
+  font-weight: 600;
+  /* Replaces style="font-weight:600" */
 }
+
 /* END INLINE STYLE REPLACEMENTS */
 
 
 /* Section Title: RESTORE FLEXBOX to match index.html */
 .section-title {
-/* REVERTED from display: block; */
-display: flex; 
-/* REVERTED from text-align: center; */
-justify-content: space-between; /* Added to spread h2 and hr/div */
-align-items: left;
-gap:5px; /* Re-added gap */
-/* REVERTED from margin-bottom: 18px; */
+  /* REVERTED from display: block; */
+  display: flex;
+  /* REVERTED from text-align: center; */
+  justify-content: space-between;
+  /* Added to spread h2 and hr/div */
+  align-items: left;
+  gap: 5px;
+  /* Re-added gap */
+  /* REVERTED from margin-bottom: 18px; */
 }
 
 .section-title h2 {
-margin: 0;
-font-size: 30px;
-font-weight: 700;
-color: var(--accent);
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .section-title hr {
-/* REVERTED margin: 0 auto; */
-flex: 1; /* Allows it to take up remaining space */
-height: 2px;
-background: linear-gradient(90deg, transparent, var(--muted));
-border: 0;
-margin-left: 12px; /* Restored from HTML <style> */
-margin-right: 6px; /* Restored from HTML <style> */
-opacity: 0.8;
+  /* REVERTED margin: 0 auto; */
+  flex: 1;
+  /* Allows it to take up remaining space */
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--muted));
+  border: 0;
+  margin-left: 12px;
+  /* Restored from HTML <style> */
+  margin-right: 6px;
+  /* Restored from HTML <style> */
+  opacity: 0.8;
 }
 
 /* Common CTA-read style for About and Tours sections (This section looks correct) */
 .cta-read {
-display: inline-block; 
-align-self: flex-start;
-width: auto; 
-background: #000;
-color: #fff;
-padding: 8px 12px;
-border-radius: 999px;
-font-weight: 700;
-font-size: 14px;
-text-decoration: none;
-transition: background 0.3s ease;
+  display: inline-block;
+  align-self: flex-start;
+  width: auto;
+  background: #000;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.3s ease;
 }
 
 .cta-read:hover {
@@ -149,6 +167,7 @@ transition: background 0.3s ease;
   flex-direction: column;
   gap: 14px;
 }
+
 .tours p {
   margin: 0;
   color: #333;
@@ -159,34 +178,56 @@ transition: background 0.3s ease;
 .chat-fab {
   position: fixed;
   right: 14px;
-  bottom: 92px; /* Set to match the style.css footer padding */
+  bottom: 92px;
+  /* Set to match the style.css footer padding */
   width: 58px;
   height: 58px;
   border-radius: 999px;
-  background: linear-gradient(180deg,#f9f9f9,#e6e6e6); /* Matched to style.css footer */
+  background: linear-gradient(180deg, #f9f9f9, #e6e6e6);
+  /* Matched to style.css footer */
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  z-index: 70; /* Matched to style.css */
+  z-index: 70;
+  /* Matched to style.css */
 }
 
 /* Responsive and layout tweaks for larger screens */
-@media(min-width: 720px){
-  .hero{ min-height: 320px; }
-  .hero-inner{ padding: 46px 18px }
-  .hero h1{ font-size: 36px }
-  .hero .cta{ padding: 12px 26px }
+@media(min-width: 720px) {
+  .hero {
+    min-height: 320px;
+  }
+
+  .hero-inner {
+    padding: 46px 18px
+  }
+
+  .hero h1 {
+    font-size: 36px
+  }
+
+  .hero .cta {
+    padding: 12px 26px
+  }
 
   /* Using the global .wrap styles defined in style.css */
-  main{ padding: 26px }
+  main {
+    padding: 26px
+  }
 }
 
-@media(min-width: 1000px){
-  .hero{
+@media(min-width: 1000px) {
+  .hero {
     min-height: 420px;
     background-position: center right;
   }
-  .hero h1{ font-size: 44px }
-  .hero-inner{ align-items: flex-start }
+
+  .hero h1 {
+    font-size: 44px
+  }
+
+  .hero-inner {
+    align-items: flex-start
+  }
 }

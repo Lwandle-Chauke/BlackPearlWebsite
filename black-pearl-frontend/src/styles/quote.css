@@ -1,10 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+/* Your page-specific styles here */
 /* =========================
    Quote Page Styles
    ========================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
 
-body, input, select, textarea, button {
+body,
+input,
+select,
+textarea,
+button {
     font-family: 'Poppins', sans-serif;
     box-sizing: border-box;
     margin: 0;
@@ -65,7 +73,8 @@ main {
     margin-bottom: 14px;
 }
 
-input, select {
+input,
+select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ccc;
@@ -76,7 +85,8 @@ input, select {
     transition: border-color 0.3s;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     border-color: #222;
 }
 
@@ -153,11 +163,11 @@ hr {
     border-radius: 50%;
 }
 
-.switch input:checked + .slider {
+.switch input:checked+.slider {
     background-color: #000;
 }
 
-.switch input:checked + .slider:before {
+.switch input:checked+.slider:before {
     transform: translateX(24px);
 }
 
@@ -180,7 +190,7 @@ hr {
     height: 50px;
     background: #000;
     border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     display: flex;
     justify-content: center;

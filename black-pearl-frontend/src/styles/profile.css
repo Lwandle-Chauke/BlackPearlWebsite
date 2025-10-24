@@ -1,10 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+/* Your page-specific styles here */
 .profile-container {
   max-width: 900px;
   margin: 100px auto 60px auto;
   background: #fff;
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   font-family: 'Poppins', sans-serif;
 }
 
@@ -26,49 +30,51 @@
 
 /* Profile Picture Section */
 .profile-pic-section {
-display: flex;
-flex-direction: column;
-align-items: center;
-margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
 .profile-pic {
-width: 120px;
-height: 120px;
-border-radius: 50%;
-object-fit: cover;
-margin-bottom: 15px; /* Increased margin /
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+  /* Increased margin /
   border: 3px solid black;
 cursor: pointer; / Indicate it's clickable */
-transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 /* Hover effect for the profile picture */
 .profile-pic:hover {
-transform: scale(1.03);
-box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+  transform: scale(1.03);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
 }
 
 .profile-pic-section input[type="file"] {
-display: none; /* Hide the default file input */
+  display: none;
+  /* Hide the default file input */
 }
 
 /* Style for the 'Change Picture' button */
 .upload-btn {
-background: #f1f1f1;
-color: #333;
-padding: 8px 18px;
-border: 1px solid #ddd;
-border-radius: 20px;
-cursor: pointer;
-font-size: 0.9rem;
-font-weight: 600;
-transition: 0.3s;
+  background: #f1f1f1;
+  color: #333;
+  padding: 8px 18px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: 0.3s;
 }
 
 .upload-btn:hover {
-background: #e5e5e5;
-border-color: #ccc;
+  background: #e5e5e5;
+  border-color: #ccc;
 }
 
 /* Form */
@@ -104,7 +110,7 @@ border-color: #ccc;
 .profile-form select:focus {
   outline: none;
   border-color: #000;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .full-width {
@@ -143,7 +149,7 @@ border-color: #ccc;
   margin: 10px;
   width: 220px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s;
 }
 
