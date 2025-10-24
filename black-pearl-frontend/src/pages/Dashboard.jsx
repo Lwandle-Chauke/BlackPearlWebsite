@@ -1,21 +1,47 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Remove Header and Footer imports since they're in App.jsx
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/style.css'; 
 import '../styles/dashboard.css';
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
 
-  // Use real user data from props
-  const [userData] = useState({
-    name: user?.name || "Guest",
+  // Use REAL user data from currentUser prop
+  const userData = {
+    name: currentUser?.name || "Guest",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
+    loyaltyPoints: currentUser?.loyaltyPoints || 1200,
+    tripsCompleted: currentUser?.tripsCompleted || 5,
+    memberSince: currentUser?.memberSince || "2024",
     nextBooking: {
-      title: "Cape Town Tours",
-      date: "15 September 2025",
+      title: "Cape Town City Tour",
+      date: "15 December 2024",
       status: "Confirmed"
     }
-  });
+  };
+
+  // Personal highlights based on user activity
+  const getPersonalHighlights = () => {
+    const highlights = [
+      { badge: '🏅', stat: `${userData.tripsCompleted} Trips Completed`, desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` },
+      { badge: '⏱️', stat: `${userData.tripsCompleted * 3} Hours Saved`, desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` },
+      { badge: '🧭', stat: `${userData.tripsCompleted * 240} km Traveled`, desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` },
+      { badge: '⭐', stat: '4.9 / 5 Rating', desc: "Your average feedback score from past trips." },
+    ];
+
+    // Add VIP status if user has enough trips
+    if (userData.tripsCompleted >= 5) {
+      highlights.push({ badge: '🎖️', stat: 'VIP Member', desc: "You are now a VIP member of Black Pearl Tours!" });
+    }
+
+    // Add loyalty points highlight
+    highlights.push({ badge: '💰', stat: `${userData.loyaltyPoints} Points`, desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` });
+
+    return highlights;
+  };
 
   const handleViewDetails = () => {
     alert(`${userData.nextBooking.title}\nDate: ${userData.nextBooking.date}\nStatus: ${userData.nextBooking.status}`);
@@ -39,23 +65,40 @@ const Dashboard = ({ user }) => {
     e.target.reset();
   };
 
-  const highlights = [
-    { badge: '🏅', stat: '5 Trips Completed', desc: "You've completed 5 trips with Black Pearl Tours!" },
-    { badge: '⏱️', stat: '15 Hours Saved', desc: "You've saved 15 hours of travel planning." },
-    { badge: '🧭', stat: '1,200 km Traveled', desc: "This year, you've traveled 1,200 km with us." },
-    { badge: '⭐', stat: '4.9 / 5 Rating', desc: "Your average feedback score from past trips." },
-    { badge: '🎖️', stat: 'VIP Member', desc: "You are now a VIP member of Black Pearl Tours!" }
-  ];
+  const highlights = getPersonalHighlights();
 
   return (
     <>
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
+
       {/* HERO SECTION */}
       <section className="hero-wrap">
         <div className="hero-overlay">
           <div className="container">
             <div className="hero-content">
-              <div className="hero-title">Welcome Back, {userData.name}</div>
+              <div className="hero-title">Welcome Back, {userData.name}!</div>
               <div className="hero-sub">Ready for your next adventure?</div>
+
+              {/* User Quick Stats */}
+              <div className="user-stats">
+                <div className="stat-item">
+                  <span className="stat-number">{userData.tripsCompleted}</span>
+                  <span className="stat-label">Trips</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{userData.loyaltyPoints}</span>
+                  <span className="stat-label">Points</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{userData.memberSince}</span>
+                  <span className="stat-label">Member Since</span>
+                </div>
+              </div>
 
               <div className="booking-card-wrap">
                 <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
@@ -153,6 +196,8 @@ const Dashboard = ({ user }) => {
           <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
         </svg>
       </div>
+
+      <Footer />
     </>
   );
 };

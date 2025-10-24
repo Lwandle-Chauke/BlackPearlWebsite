@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const Header = ({ isLoggedIn, onAuthClick, user }) => {
+const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,6 +57,22 @@ const Header = ({ isLoggedIn, onAuthClick, user }) => {
     }
   };
 
+  // FIXED: Handle auth button click properly
+  const handleAuthButtonClick = () => {
+    if (isLoggedIn) {
+      // If logged in, call sign out
+      if (onSignOut && typeof onSignOut === 'function') {
+        onSignOut();
+      }
+    } else {
+      // If not logged in, call sign in
+      if (onAuthClick && typeof onAuthClick === 'function') {
+        onAuthClick();
+      }
+    }
+    handleLinkClick();
+  };
+
   return (
     <header>
       <div className="header-container">
@@ -81,21 +97,13 @@ const Header = ({ isLoggedIn, onAuthClick, user }) => {
               </li>
             ))}
             
-            {/* Show user name when logged in */}
-            {isLoggedIn && user && (
-              <li className="user-welcome">
-                <span style={{color: 'white', marginRight: '15px'}}>Welcome, {user.name}</span>
-              </li>
-            )}
+            {/* REMOVED: Welcome message for desktop */}
             
             {/* Sign In/Out button */}
             <li>
               <button 
                 className="btn-header-signin" 
-                onClick={() => {
-                  onAuthClick();
-                  handleLinkClick();
-                }}
+                onClick={handleAuthButtonClick}
                 style={{
                   background: 'black',
                   color: 'white',
@@ -139,26 +147,14 @@ const Header = ({ isLoggedIn, onAuthClick, user }) => {
             </Link>
           ))}
           
-          {/* Show user name when logged in */}
-          {isLoggedIn && user && (
-            <div className="mobile-user-welcome" style={{
-              color: 'white', 
-              padding: '10px 20px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)'
-            }}>
-              Welcome, {user.name}
-            </div>
-          )}
+          {/* REMOVED: Welcome message for mobile */}
           
           <hr style={{margin: '10px 20px'}} />
           
           {/* Sign In/Out button for mobile */}
           <button 
             className="btn-sign" 
-            onClick={() => {
-              onAuthClick();
-              handleLinkClick();
-            }}
+            onClick={handleAuthButtonClick}
             style={{
               background: 'black',
               color: 'white',

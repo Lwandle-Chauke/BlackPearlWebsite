@@ -1,24 +1,26 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-// Remove Header and Footer imports
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import "../styles/style.css";
 import "../styles/profile.css";
 
 // Placeholder image URL
 const PLACEHOLDER_IMG = "https://placehold.co/120x120/000/fff?text=R"; 
 
-const Profile = ({ user }) => {
+const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   
   // State for profile picture, initialized with a placeholder
   const [profilePicture, setProfilePicture] = useState(PLACEHOLDER_IMG); 
   
+  // Initialize profile data with currentUser data
   const [profileData, setProfileData] = useState({
-    firstName: user?.name || "Guest",
-    lastName: user?.surname || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     company: "Black Pearl Tours",
     address: "123 Main Street",
     city: "Cape Town",
@@ -26,8 +28,25 @@ const Profile = ({ user }) => {
     country: "South Africa",
     dob: "1995-05-20",
     loyaltyPoints: 1200,
-    tripsCompleted: 5
+    tripsCompleted: 5,
+    memberSince: "2024"
   });
+
+  // Update profile data when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setProfileData(prev => ({
+        ...prev,
+        firstName: currentUser.name || "",
+        lastName: currentUser.surname || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "",
+        loyaltyPoints: currentUser.loyaltyPoints || 1200,
+        tripsCompleted: currentUser.tripsCompleted || 5,
+        memberSince: currentUser.memberSince || "2024"
+      }));
+    }
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setProfileData({ ...profileData, [e.target.name]: e.target.value });
@@ -50,21 +69,15 @@ const Profile = ({ user }) => {
     }
   };
 
-  // Dummy data for bookings
-  const upcomingBooking = {
-    title: "Garden Route Adventure",
-    date: "10 March 2026",
-    status: "Confirmed"
-  };
-  
-  const pastBookings = [
-    { id: 1, destination: "Cape Town Peninsula Tour", date: "2024-01-15", cost: "R 2,500" },
-    { id: 2, destination: "Winelands Day Trip", date: "2023-11-05", cost: "R 1,800" },
-    { id: 3, destination: "Shark Cage Diving", date: "2023-08-22", cost: "R 3,200" },
-  ];
-
   return (
     <>
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
+
       <main className="profile-page">
         <section className="profile-container">
           <div className="profile-header">
@@ -229,9 +242,36 @@ const Profile = ({ user }) => {
               <h3>R {profileData.loyaltyPoints * 0.1}</h3>
               <p>Discount Value</p>
             </div>
+            <div className="stat-card">
+              <h3>{profileData.memberSince}</h3>
+              <p>Member Since</p>
+            </div>
+          </div>
+
+          {/* Sign Out Button in Profile */}
+          <div className="profile-actions">
+            <button 
+              className="sign-out-btn" 
+              onClick={onSignOut}
+              style={{
+                background: '#ff4444',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontFamily: '"Poppins", sans-serif',
+                marginTop: '20px',
+                width: '100%'
+              }}
+            >
+              Sign Out
+            </button>
           </div>
         </section>
       </main>
+
+      <Footer />
     </>
   );
 };

@@ -1,9 +1,10 @@
-// components/pages/Contact.jsx
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/style.css';
 import '../styles/contact.css';
 
-const Contact = () => {
+const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -46,6 +47,13 @@ const Contact = () => {
 
   return (
     <>
+      <Header 
+        onAuthClick={onAuthClick} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
+
       <main className="quote-page">
         {/* Contact Section */}
         <section className="contact" id="contact">
@@ -183,6 +191,8 @@ const Contact = () => {
           <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
         </svg>
       </div>
+
+      <Footer />
     </>
   );
 };

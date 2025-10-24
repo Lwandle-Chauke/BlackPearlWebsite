@@ -4,18 +4,13 @@ import "../styles/quote.css";
 import "../styles/style.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import AuthModal from "../components/AuthModal";
 
-const Quote = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [searchParams] = useSearchParams();
   const [vehicleType, setVehicleType] = useState("");
   const [isOneWay, setIsOneWay] = useState(false);
   const [destination, setDestination] = useState("");
   const [showCustomDestination, setShowCustomDestination] = useState(false);
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   useEffect(() => {
     const vehicleFromUrl = searchParams.get("vehicle");
@@ -62,8 +57,12 @@ const Quote = () => {
 
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onAuthClick} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       <main className="quote-page">
         <section className="quote-section" style={{ marginTop: "60px" }}>
@@ -174,18 +173,17 @@ const Quote = () => {
               </div>
 
               {/* Trip Direction Toggle */}
-<div className="toggle-container">
-  <span>{isOneWay ? "Both Ways" : "One Way"}</span>
-  <label className="switch">
-    <input
-      type="checkbox"
-      checked={isOneWay}
-      onChange={() => setIsOneWay(!isOneWay)}
-    />
-    <span className="slider"></span>
-  </label>
-</div>
-
+              <div className="toggle-container">
+                <span>{isOneWay ? "Both Ways" : "One Way"}</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={isOneWay}
+                    onChange={() => setIsOneWay(!isOneWay)}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
 
               {/* Date & Time */}
               <div className="row">

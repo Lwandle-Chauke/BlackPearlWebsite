@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import '../styles/style.css';
 import '../styles/gallery.css';
 
-const Gallery = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
+const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const galleryItems = [
     { 
       id: 1, 
@@ -54,7 +47,6 @@ const Gallery = () => {
       image: "https://images.unsplash.com/photo-1552561018-5fea54c08479?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fEx1eHVyeSUyMGNvYWNoJTIwaW50ZXJpb3IlMjB3aXRoJTIwdHJheSUyMHRhYmxlc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600", 
       alt: "Luxury coach interior with tray tables", 
       text: '"Our kids loved every moment of the trip!" – Johan D.'
-
     },
     { 
       id: 8, 
@@ -72,8 +64,12 @@ const Gallery = () => {
 
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onAuthClick} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       {/* Gallery Section */}
       <main className="gallery-section">

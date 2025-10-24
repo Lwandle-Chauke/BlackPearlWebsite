@@ -1,19 +1,13 @@
-// components/pages/Fleet.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import '../styles/style.css';
 import '../styles/fleet.css';
 
-const Fleet = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+const Fleet = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState({});
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const openModal = (name, desc, img) => {
     setModalData({ name, desc, img, vehicleUrl: `/quote?vehicle=${encodeURIComponent(name)}` });
@@ -39,12 +33,14 @@ const Fleet = () => {
 
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
-      
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onAuthClick} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       <div className="fleet-container">
-        {/* Class added to h1 to remove inline style */}
         <h1 className="center-title fleet-title">OUR FLEET</h1>
 
         <section className="fleet-grid">

@@ -69,24 +69,14 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
         };
       }
 
-      // Flexible response handling - check for common success indicators
-      const token = data.token || data.accessToken;
-      const user = data.user || data.userData || data.userInfo;
-      
-      if (token) {
-        localStorage.setItem('token', token);
-        if (user) {
-          localStorage.setItem('user', JSON.stringify(user));
-        } else {
-          // If no user object, create a basic one from the data we have
-          localStorage.setItem('user', JSON.stringify({
-            email: email,
-            name: data.name || ''
-          }));
-        }
+      // Use the response format from your backend
+      if (data.success && data.token && data.user) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         return { 
           success: true, 
-          user: user || { email: email, name: data.name || '' } 
+          user: data.user,
+          token: data.token
         };
       } else {
         return { 
@@ -139,15 +129,10 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
         };
       }
 
-      if (data.success || data.token) {
-        const token = data.token || data.accessToken;
-        const user = data.user || data.userData;
-        
-        localStorage.setItem('token', token);
-        if (user) {
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-        return { success: true, user: user || userData };
+      if (data.success && data.token && data.user) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return { success: true, user: data.user, token: data.token };
       } else {
         return { success: false, error: data.error || 'Registration failed' };
       }
@@ -208,6 +193,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
 
       if (result.success) {
         console.log('Authentication successful, calling onAuthSuccess...');
+        console.log('User data:', result.user);
         
         // Safely call onAuthSuccess if provided
         if (onAuthSuccess && typeof onAuthSuccess === 'function') {
@@ -215,7 +201,6 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
             onAuthSuccess(result.user);
           } catch (callbackError) {
             console.error('Error in onAuthSuccess callback:', callbackError);
-            // Continue with closing even if callback fails
           }
         } else {
           console.warn('onAuthSuccess not provided or not a function');
