@@ -68,9 +68,21 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Compare password method
-userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+// Compare password method - FIXED VERSION
+userSchema.methods.correctPassword = async function(candidatePassword) {
+  // Since password is not selected by default, we need to ensure we have it
+  if (!this.password) {
+    // If password isn't available, we need to query the user with password
+    const userWithPassword = await this.constructor.findById(this._id).select('+password');
+    return await bcrypt.compare(candidatePassword, userWithPassword.password);
+  }
+  
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Alternative method name for compatibility
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return this.correctPassword(candidatePassword);
 };
 
 const User = mongoose.model('User', userSchema);

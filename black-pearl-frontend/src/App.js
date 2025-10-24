@@ -1,9 +1,8 @@
-// components/App.jsx
+// src/App.jsx
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import React, { useState } from "react"; // 1. Import useState
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; // 2. Import Navigate for protected routes
-
-// Import your pages
+// Pages
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Quote from "./pages/Quote";
@@ -12,91 +11,109 @@ import Fleet from "./pages/Fleet";
 import Gallery from "./pages/Gallery";
 import Profile from "./pages/Profile";
 import Bookings from "./pages/Bookings";
-// 3. Assume Dashboard is imported
-import Dashboard from "./pages/Dashboard"; 
+import Dashboard from "./pages/Dashboard";
+
+// Components
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import AuthModal from "./components/AuthModal";
 
 function App() {
-  // 🔑 1. Define the global login state
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  // 🔑 Global login state and modal visibility
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // 2. Define handler functions
-  const handleSignIn = () => {
-    // In a real app, this would involve API calls and token storage
+  // Check for existing token on app load
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // =====================
+  // AUTH HANDLERS
+  // =====================
+  const handleAuthSuccess = (user) => {
     setIsLoggedIn(true);
-    // You might also want to navigate to the dashboard here: navigate('/dashboard');
+    setShowAuthModal(false);
   };
 
   const handleSignOut = () => {
-    // In a real app, this would involve clearing tokens/cookies
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
-    // The Header's onAuthClick (passed to non-guest pages) will handle the alert and redirect
   };
-  
-  // 3. Helper component for protected routes
-  // This is a common pattern to protect routes that require a logged-in user.
+
+  // =====================
+  // PROTECTED ROUTE
+  // =====================
   const ProtectedRoute = ({ children }) => {
-    // If not logged in, redirect them to the home page (or login page)
     if (!isLoggedIn) {
       return <Navigate to="/" replace />;
     }
     return children;
   };
 
-
   return (
     <Router>
+      {/* Global header — appears on all pages */}
+      <Header
+        isLoggedIn={isLoggedIn}
+        onSignInClick={() => setShowAuthModal(true)}
+        onSignOutClick={handleSignOut}
+      />
+
+      {/* Auth Modal (popup card) */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {/* App routes */}
       <Routes>
-        {/* ======================================================= */}
-        {/* GUEST ROUTES                        */}
-        {/* ======================================================= */}
-        {/* These pages need the signIn handler for their Header's button */}
-        <Route path="/" element={<Home onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
-        <Route path="/about" element={<About onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
-        
-        {/* Shared Routes - These need BOTH handlers in a real app, but 
-           the pages themselves are structured to only call the sign-in modal 
-           when isLoggedIn is false. We pass the sign-in handler here: */}
-        <Route path="/quote" element={<Quote onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
-        <Route path="/contact" element={<Contact onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
-        <Route path="/fleet" element={<Fleet onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
-        <Route path="/gallery" element={<Gallery onAuthClick={handleSignIn} isLoggedIn={isLoggedIn} />} />
+        {/* Guest Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/quote" element={<Quote />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/fleet" element={<Fleet />} />
+        <Route path="/gallery" element={<Gallery />} />
 
-        {/* ======================================================= */}
-        {/* CUSTOMER ROUTES                      */}
-        {/* ======================================================= */}
-        {/* Dashboard is the new landing page after sign-in. It needs the signOut handler. */}
-        <Route 
-          path="/dashboard" 
+        {/* Protected (User) Routes */}
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
-              {/* Dashboard page is passed the signOut handler, as it assumes the user is logged in */}
-              <Dashboard onAuthClick={handleSignOut} isLoggedIn={true} />
+              <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        {/* Protected Routes: Only accessible if logged in */}
-        <Route 
-          path="/profile" 
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
-              <Profile onAuthClick={handleSignOut} isLoggedIn={true} />
+              <Profile />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/bookings" 
+        <Route
+          path="/bookings"
           element={
             <ProtectedRoute>
-              <Bookings onAuthClick={handleSignOut} isLoggedIn={true} />
+              <Bookings />
             </ProtectedRoute>
-          } 
+          }
         />
 
-        {/* Catch-all route for undefined paths */}
-        {/* Note: In a real app, you'd likely render a 404 page here, not Home. */}
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Global footer */}
+      <Footer />
     </Router>
   );
 }

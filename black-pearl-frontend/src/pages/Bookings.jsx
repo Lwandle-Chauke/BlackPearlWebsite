@@ -1,37 +1,16 @@
 // components/pages/Bookings.jsx
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
+import { useNavigate } from 'react-router-dom';
+// Remove Header and Footer imports
 import '../styles/style.css';
 import '../styles/bookings.css';
 
-const Bookings = () => {
-  const navigate = useNavigate(); // Hook for navigation
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+const Bookings = ({ user }) => {
+  const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-
-  // 🔑 Assume the user is logged in on the Bookings page
-  const isLoggedIn = true; 
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-  
-  // New logic to handle Sign In/Out click
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      // Logic for signing out (In a real app: clear tokens, reset global state)
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/'); 
-    } else {
-      openAuthModal();
-    }
-  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -82,11 +61,6 @@ const Bookings = () => {
 
   return (
     <>
-      {/* 🔄 Pass isLoggedIn and the new handler to Header */}
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
-
       {/* Bookings Content */}
       <div className="bookings-container">
         <div className="bookings-header">
@@ -182,8 +156,6 @@ const Bookings = () => {
           <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
         </svg>
       </div>
-
-      <Footer />
     </>
   );
 };

@@ -1,32 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal'; 
+// Remove Header and Footer imports since they're in App.jsx
 import '../styles/style.css'; 
 import '../styles/dashboard.css';
 
-const Dashboard = () => {
+const Dashboard = ({ user }) => {
   const navigate = useNavigate();
-  const [isAuthModalOpen, setIsAuthModal] = useState(false);
 
-  // Simulate logged-in user
-  const isLoggedIn = true; 
-
-  const openAuthModal = () => setIsAuthModal(true);
-  const closeAuthModal = () => setIsAuthModal(false);
-
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/');
-    } else {
-      openAuthModal();
-    }
-  };
-
+  // Use real user data from props
   const [userData] = useState({
-    name: "Rae",
+    name: user?.name || "Guest",
     nextBooking: {
       title: "Cape Town Tours",
       date: "15 September 2025",
@@ -66,9 +49,6 @@ const Dashboard = () => {
 
   return (
     <>
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
-
       {/* HERO SECTION */}
       <section className="hero-wrap">
         <div className="hero-overlay">
@@ -96,43 +76,24 @@ const Dashboard = () => {
       </section>
 
      {/* SERVICES */}
-
       <section className="services-area">
-
         <div className="services-row container">
-
           <div className="service-card">
-
             <h4>Airport Transfers</h4>
-
             <p>Enjoy hassle-free airport pick-ups and drop-offs with professional drivers and reliable, comfortable rides.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Conference Shuttle Hire</h4>
-
             <p>Keep events running smoothly with daily shuttle services between venues and hotels — on time and comfortable.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Sports Tours</h4>
-
             <p>Travel stress-free with transport for teams and supporters to stadiums and events. Safe and coordinated.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Events & Leisure Travel</h4>
-
             <p>Whether weddings or private functions, we arrange travel that combines comfort, style and safety.</p>
-
           </div>
-
         </div>
 
         <div className="quote-cta-wrap">
@@ -192,8 +153,6 @@ const Dashboard = () => {
           <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
         </svg>
       </div>
-
-      <Footer />
     </>
   );
 };

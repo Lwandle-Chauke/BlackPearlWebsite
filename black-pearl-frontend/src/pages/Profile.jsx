@@ -1,28 +1,24 @@
 import React, { useState, useRef } from "react";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import AuthModal from "../components/AuthModal";
+import { useNavigate } from 'react-router-dom';
+// Remove Header and Footer imports
 import "../styles/style.css";
 import "../styles/profile.css";
 
 // Placeholder image URL
 const PLACEHOLDER_IMG = "https://placehold.co/120x120/000/fff?text=R"; 
 
-const Profile = () => {
-  const navigate = useNavigate(); // Hook for navigation
-  const fileInputRef = useRef(null); // Reference to the hidden file input
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const isLoggedIn = true; // Assume logged in for the profile page
+const Profile = ({ user }) => {
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   
   // State for profile picture, initialized with a placeholder
   const [profilePicture, setProfilePicture] = useState(PLACEHOLDER_IMG); 
   
   const [profileData, setProfileData] = useState({
-    firstName: "Rae",
-    lastName: "Smith",
-    email: "rae@example.com",
-    phone: "0123456789",
+    firstName: user?.name || "Guest",
+    lastName: user?.surname || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
     company: "Black Pearl Tours",
     address: "123 Main Street",
     city: "Cape Town",
@@ -33,27 +29,12 @@ const Profile = () => {
     tripsCompleted: 5
   });
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
-  // New logic to handle Sign In/Out click (Matching Bookings.jsx)
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      // Logic for signing out (In a real app: clear tokens, reset global state)
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/'); // Redirect to the home page after sign out
-    } else {
-      openAuthModal();
-    }
-  };
-
   const handleChange = (e) => {
     setProfileData({ ...profileData, [e.target.name]: e.target.value });
   };
 
   const handleSave = (e) => {
     e.preventDefault();
-    // In a real application, you would save the text data and upload the image file separately.
     alert("Profile updated successfully!");
   };
   
@@ -61,11 +42,9 @@ const Profile = () => {
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Revoke the previous object URL to avoid memory leaks
       if (profilePicture.startsWith('blob:')) {
         URL.revokeObjectURL(profilePicture);
       }
-      // Create a new local URL for the image file
       const imageUrl = URL.createObjectURL(file);
       setProfilePicture(imageUrl);
     }
@@ -86,10 +65,6 @@ const Profile = () => {
 
   return (
     <>
-      {/* Updated Header call to match the Bookings component */}
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
-
       <main className="profile-page">
         <section className="profile-container">
           <div className="profile-header">
@@ -103,7 +78,6 @@ const Profile = () => {
               src={profilePicture} 
               alt={`${profileData.firstName}'s Profile`} 
               className="profile-pic"
-              // Trigger the hidden file input when the image is clicked
               onClick={() => fileInputRef.current?.click()} 
               role="button"
               tabIndex="0"
@@ -124,8 +98,6 @@ const Profile = () => {
               Change Picture
             </button>
           </div>
-          {/* END PROFILE PICTURE SECTION */}
-
 
           <form className="profile-form" onSubmit={handleSave}>
             {/* Name */}
@@ -258,11 +230,8 @@ const Profile = () => {
               <p>Discount Value</p>
             </div>
           </div>
-
         </section>
       </main>
-
-      <Footer />
     </>
   );
 };
