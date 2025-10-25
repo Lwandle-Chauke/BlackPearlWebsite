@@ -1,126 +1,98 @@
 const express = require('express');
-const Quote = require('../models/quote');
-const { protect, authorize } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const Quote = require('../models/Quote');
+const { protect, authorize } = require('../middleware/auth');
 
-// @desc    Submit a new quote
-// @route   POST /api/quotes
-// @access  Public (both guests and authenticated users)
-router.post('/', async (req, res) => {
-  try {
-    const {
-      tripPurpose,
-      tripType,
-      destination,
-      customDestination,
-      pickupLocation,
-      dropoffLocation,
-      vehicleType,
-      isOneWay,
-      tripDate,
-      tripTime,
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerCompany,
-      userId
-    } = req.body;
-
-    // Validation
-    const requiredFields = [
-      'tripPurpose', 'tripType', 'destination', 'pickupLocation', 
-      'dropoffLocation', 'vehicleType', 'tripDate', 'tripTime',
-      'customerName', 'customerEmail', 'customerPhone'
-    ];
-
-    for (let field of requiredFields) {
-      if (!req.body[field]) {
-        return res.status(400).json({
-          success: false,
-          error: `Please provide ${field}`
-        });
-      }
-    }
-
-    // Create quote
-    const quote = await Quote.create({
-      tripPurpose,
-      tripType,
-      destination,
-      customDestination: customDestination || '',
-      pickupLocation,
-      dropoffLocation,
-      vehicleType,
-      isOneWay: isOneWay || false,
-      tripDate: new Date(tripDate),
-      tripTime,
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerCompany: customerCompany || '',
-      userId: userId || null
-    });
-
-    console.log('New quote submitted:', quote._id);
-
-    res.status(201).json({
-      success: true,
-      message: 'Quote submitted successfully! We will contact you shortly.',
-      data: quote
-    });
-  } catch (error) {
-    console.error('Quote submission error:', error);
-    
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({
-        success: false,
-        error: messages.join(', ')
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Server error during quote submission. Please try again.'
-    });
-  }
-});
-
-// @desc    Get all quotes (for admin)
-// @route   GET /api/quotes
-// @access  Private/Admin
+// Get all quotes (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const quotes = await Quote.find()
-      .sort({ createdAt: -1 })
-      .populate('userId', 'name email phone');
-
+    const quotes = await Quote.find().sort({ createdAt: -1 });
     res.json({
       success: true,
-      count: quotes.length,
       data: quotes
     });
   } catch (error) {
     console.error('Get quotes error:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error while fetching quotes.'
+      error: 'Failed to fetch quotes'
     });
   }
 });
 
-// @desc    Update quote status
-// @route   PUT /api/quotes/:id
-// @access  Private/Admin
+// Get quotes for specific user
+router.get('/my-quotes', protect, async (req, res) => {
+  try {
+    const quotes = await Quote.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      data: quotes
+    });
+  } catch (error) {
+    console.error('Get user quotes error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch your quotes'
+    });
+  }
+});
+
+// Create new quote
+router.post('/', async (req, res) => {
+  try {
+    const quoteData = req.body;
+    
+    // Calculate estimated price based on vehicle type and destination
+    const estimatedPrice = calculateEstimatedPrice(
+      quoteData.vehicleType,
+      quoteData.destination,
+      quoteData.isOneWay
+    );
+
+    const quote = await Quote.create({
+      ...quoteData,
+      estimatedPrice,
+      status: 'pending'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Quote request submitted successfully',
+      data: quote
+    });
+  } catch (error) {
+    console.error('Create quote error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit quote request: ' + error.message
+    });
+  }
+});
+
+// Update quote status (admin only)
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, finalPrice, adminNotes } = req.body;
+    
+    const updateData = { status };
+    
+    if (finalPrice !== undefined) updateData.finalPrice = finalPrice;
+    if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+    
+    if (status === 'confirmed' && !req.body.confirmedAt) {
+      updateData.confirmedAt = new Date();
+    }
+    if (status === 'booked' && !req.body.bookedAt) {
+      updateData.bookedAt = new Date();
+    }
+    if (status === 'completed' && !req.body.completedAt) {
+      updateData.completedAt = new Date();
+    }
 
     const quote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { status },
-      { new: true, runValidators: true }
+      updateData,
+      { new: true }
     );
 
     if (!quote) {
@@ -132,24 +104,22 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Quote status updated successfully',
+      message: 'Quote updated successfully',
       data: quote
     });
   } catch (error) {
     console.error('Update quote error:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error while updating quote.'
+      error: 'Failed to update quote: ' + error.message
     });
   }
 });
 
-// @desc    Delete quote
-// @route   DELETE /api/quotes/:id
-// @access  Private/Admin
+// Delete quote (admin only)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const quote = await Quote.findById(req.params.id);
+    const quote = await Quote.findByIdAndDelete(req.params.id);
 
     if (!quote) {
       return res.status(404).json({
@@ -157,8 +127,6 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
         error: 'Quote not found'
       });
     }
-
-    await Quote.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,
@@ -168,9 +136,121 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     console.error('Delete quote error:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error while deleting quote.'
+      error: 'Failed to delete quote: ' + error.message
     });
   }
 });
+
+// Create booking from quote (admin only)
+router.post('/:id/convert-to-booking', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { finalPrice, bookingNotes } = req.body;
+    
+    const quote = await Quote.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'booked',
+        finalPrice,
+        bookingNotes,
+        bookedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Quote converted to booking successfully',
+      data: quote
+    });
+  } catch (error) {
+    console.error('Convert to booking error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to convert quote to booking: ' + error.message
+    });
+  }
+});
+
+// Create manual booking (admin only)
+router.post('/manual-booking', protect, authorize('admin'), async (req, res) => {
+  try {
+    const bookingData = req.body;
+    
+    // Calculate estimated price for manual booking
+    const estimatedPrice = calculateEstimatedPrice(
+      bookingData.vehicleType,
+      bookingData.destination || 'Manual Booking',
+      bookingData.isOneWay || false
+    );
+
+    const quote = await Quote.create({
+      ...bookingData,
+      estimatedPrice,
+      finalPrice: bookingData.finalPrice || estimatedPrice,
+      status: 'booked',
+      bookedAt: new Date(),
+      tripPurpose: bookingData.tripPurpose || 'Manual Booking',
+      tripType: bookingData.tripType || 'Manual Booking',
+      destination: bookingData.destination || 'Manual Booking',
+      isOneWay: bookingData.isOneWay || false
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Manual booking created successfully',
+      data: quote
+    });
+  } catch (error) {
+    console.error('Create manual booking error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create manual booking: ' + error.message
+    });
+  }
+});
+
+// Price calculation function based on your rates PDF
+function calculateEstimatedPrice(vehicleType, destination, isOneWay) {
+  // Base prices based on vehicle type (using rates from your PDF as reference)
+  const basePrices = {
+    '4 Seater Sedan': 695,
+    'Mini Bus Mercedes Viano': 963,
+    '15 Seater Quantum': 1200,
+    '17 Seater Luxury Sprinter': 1400,
+    '22 Seater Luxury Coach': 1800,
+    '28 Seater Semi Luxury': 2200,
+    '39 Seater Luxury Coach': 2800,
+    '60 Seater Semi Luxury': 3500,
+    '70 Seater Semi Luxury': 4000
+  };
+
+  let basePrice = basePrices[vehicleType] || 1000;
+
+  // Adjust for destination (Johannesburg and Pretoria have different rates)
+  if (destination === 'Johannesburg') {
+    // Johannesburg rates are generally higher
+    basePrice *= 1.1;
+  } else if (destination === 'Pretoria') {
+    basePrice *= 1.05;
+  } else if (destination === 'Cape Town' || destination === 'Durban') {
+    // Long distance trips
+    basePrice *= 1.3;
+  }
+
+  // Round trip adjustment
+  if (!isOneWay) {
+    basePrice *= 1.8; // Round trip is not exactly double
+  }
+
+  // Return calculated price
+  return Math.round(basePrice);
+}
 
 module.exports = router;

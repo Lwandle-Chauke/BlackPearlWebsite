@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
     minlength: [8, 'Password must be at least 8 characters long'],
-    select: false // Don't return password in queries by default
+    select: false
   },
   role: {
     type: String,
@@ -41,6 +41,25 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  loyaltyPoints: {
+    type: Number,
+    default: 0
+  },
+  tripsCompleted: {
+    type: Number,
+    default: 0
+  },
+  memberSince: {
+    type: String,
+    default: new Date().getFullYear().toString()
+  },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
+  passwordResetAt: {
+    type: Date
   },
   createdAt: {
     type: Date,
@@ -63,16 +82,17 @@ userSchema.pre('save', async function(next) {
   // Only run if password was modified
   if (!this.isModified('password')) return next();
   
+  // Set password reset timestamp
+  this.passwordResetAt = new Date();
+  
   // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// Compare password method - FIXED VERSION
+// Compare password method
 userSchema.methods.correctPassword = async function(candidatePassword) {
-  // Since password is not selected by default, we need to ensure we have it
   if (!this.password) {
-    // If password isn't available, we need to query the user with password
     const userWithPassword = await this.constructor.findById(this._id).select('+password');
     return await bcrypt.compare(candidatePassword, userWithPassword.password);
   }

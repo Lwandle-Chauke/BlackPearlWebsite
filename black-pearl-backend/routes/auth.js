@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { protect } = require('../middleware/auth'); // CHANGED TO USE auth.js
 
 const router = express.Router();
 
@@ -208,4 +209,145 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Private
+router.put('/change-password', protect, async (req, res) => {
+  try {
+    console.log('🔐 Change password request received for user:', req.user.email);
+    console.log('Request body:', { ...req.body, currentPassword: '***', newPassword: '***', confirmNewPassword: '***' });
+
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      console.log('❌ Missing required fields');
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide current password, new password, and confirmation'
+      });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      console.log('❌ New passwords do not match');
+      return res.status(400).json({
+        success: false,
+        error: 'New passwords do not match'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      console.log('❌ New password too short');
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 8 characters long'
+      });
+    }
+
+    if (currentPassword === newPassword) {
+      console.log('❌ New password same as current');
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be different from current password'
+      });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.user.id).select('+password');
+    
+    if (!user) {
+      console.log('❌ User not found');
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if current password is correct
+    console.log('🔑 Verifying current password...');
+    const isCurrentPasswordCorrect = await user.correctPassword(currentPassword);
+    if (!isCurrentPasswordCorrect) {
+      console.log('❌ Current password incorrect');
+      return res.status(401).json({
+        success: false,
+        error: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    console.log('🔄 Updating password...');
+    user.password = newPassword;
+    await user.save();
+
+    console.log('✅ Password changed successfully for user:', user.email);
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Change password error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while changing password: ' + error.message
+    });
+  }
+});
+
+// @desc    Forgot password - generate temporary password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    console.log('🔑 Forgot password request for:', email);
+
+    // Validation
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide an email address'
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      console.log('❌ User not found for email:', email);
+      return res.status(404).json({
+        success: false,
+        error: 'No account found with this email address'
+      });
+    }
+
+    // Generate temporary password (8 characters: letters and numbers)
+    const temporaryPassword = Math.random().toString(36).slice(-8);
+    console.log('🔄 Generated temporary password for:', email);
+
+    // Update user's password
+    user.password = temporaryPassword;
+    await user.save();
+
+    console.log('✅ Temporary password set for user:', email);
+
+    // In a real application, you would send an email here
+    // For now, we'll return the temporary password in the response
+    res.json({
+      success: true,
+      message: 'Temporary password generated successfully',
+      temporaryPassword: temporaryPassword, // Remove this in production - only for testing
+      note: 'In production, this would be sent via email'
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while processing forgot password request: ' + error.message
+    });
+  }
+});
 module.exports = router;

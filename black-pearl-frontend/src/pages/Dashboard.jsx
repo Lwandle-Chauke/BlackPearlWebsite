@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -7,49 +7,140 @@ import '../styles/dashboard.css';
 
 const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
+  const [userBookings, setUserBookings] = useState([]);
+  const [nextBooking, setNextBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Use REAL user data from currentUser prop
-  const userData = {
-    name: currentUser?.name || "Guest",
-    email: currentUser?.email || "",
-    phone: currentUser?.phone || "",
-    loyaltyPoints: currentUser?.loyaltyPoints || 1200,
-    tripsCompleted: currentUser?.tripsCompleted || 5,
-    memberSince: currentUser?.memberSince || "2024",
-    nextBooking: {
-      title: "Cape Town City Tour",
-      date: "15 December 2024",
-      status: "Confirmed"
+  // Fetch user's bookings when component mounts or currentUser changes
+  useEffect(() => {
+    if (currentUser && currentUser.id) {
+      fetchUserBookings();
+    }
+  }, [currentUser]);
+
+  const fetchUserBookings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/bookings/user/${currentUser.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserBookings(data.data || []);
+        
+        // Find next upcoming booking
+        const upcoming = data.data?.filter(booking => 
+          booking.status === 'confirmed' || booking.status === 'pending'
+        ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
+        
+        setNextBooking(upcoming || null);
+      } else {
+        console.error('Failed to fetch user bookings');
+        setUserBookings([]);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setUserBookings([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Personal highlights based on user activity
+  // Calculate real user data based on actual trips
+  const calculateUserData = () => {
+    const completedTrips = userBookings.filter(booking => 
+      booking.status === 'completed'
+    ).length;
+
+    // Calculate loyalty points: 100 points per completed trip + 50 points per pending/confirmed trip
+    const basePoints = completedTrips * 100;
+    const upcomingTrips = userBookings.filter(booking => 
+      booking.status === 'confirmed' || booking.status === 'pending'
+    ).length;
+    const bonusPoints = upcomingTrips * 50;
+    
+    const totalLoyaltyPoints = (currentUser?.loyaltyPoints || 0) + basePoints + bonusPoints;
+
+    return {
+      name: currentUser?.name || "Guest",
+      email: currentUser?.email || "",
+      phone: currentUser?.phone || "",
+      loyaltyPoints: totalLoyaltyPoints,
+      tripsCompleted: completedTrips,
+      memberSince: currentUser?.memberSince || "2025",
+      totalBookings: userBookings.length,
+      upcomingTrips: upcomingTrips
+    };
+  };
+
+  const userData = calculateUserData();
+
+  // Personal highlights based on REAL user activity
   const getPersonalHighlights = () => {
     const highlights = [
-      { badge: '🏅', stat: `${userData.tripsCompleted} Trips Completed`, desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` },
-      { badge: '⏱️', stat: `${userData.tripsCompleted * 3} Hours Saved`, desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` },
-      { badge: '🧭', stat: `${userData.tripsCompleted * 240} km Traveled`, desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` },
-      { badge: '⭐', stat: '4.9 / 5 Rating', desc: "Your average feedback score from past trips." },
+      { 
+        badge: '🏅', 
+        stat: `${userData.tripsCompleted} Trips Completed`, 
+        desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` 
+      },
+      { 
+        badge: '⏱️', 
+        stat: `${userData.tripsCompleted * 3} Hours Saved`, 
+        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` 
+      },
+      { 
+        badge: '🧭', 
+        stat: `${userData.tripsCompleted * 240} km Traveled`, 
+        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
+      },
+      { 
+        badge: '📅', 
+        stat: `${userData.upcomingTrips} Upcoming Trips`, 
+        desc: `You have ${userData.upcomingTrips} trips planned with us.` 
+      },
     ];
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
-      highlights.push({ badge: '🎖️', stat: 'VIP Member', desc: "You are now a VIP member of Black Pearl Tours!" });
+      highlights.push({ 
+        badge: '🎖️', 
+        stat: 'VIP Member', 
+        desc: "You are now a VIP member of Black Pearl Tours!" 
+      });
     }
 
     // Add loyalty points highlight
-    highlights.push({ badge: '💰', stat: `${userData.loyaltyPoints} Points`, desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` });
+    highlights.push({ 
+      badge: '💰', 
+      stat: `${userData.loyaltyPoints} Points`, 
+      desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` 
+    });
+
+    // Add booking milestone if applicable
+    if (userData.totalBookings >= 10) {
+      highlights.push({
+        badge: '🌟',
+        stat: 'Frequent Traveler',
+        desc: `You've made ${userData.totalBookings} bookings with us!`
+      });
+    }
 
     return highlights;
   };
 
   const handleViewDetails = () => {
-    alert(`${userData.nextBooking.title}\nDate: ${userData.nextBooking.date}\nStatus: ${userData.nextBooking.status}`);
+    if (nextBooking) {
+      alert(`${nextBooking.tripType || nextBooking.title}\nDate: ${new Date(nextBooking.tripDate).toLocaleDateString()}\nStatus: ${nextBooking.status}\nPickup: ${nextBooking.pickupLocation}\nDropoff: ${nextBooking.dropoffLocation}`);
+    } else {
+      navigate('/quote');
+    }
   };
 
   const handleRequestQuote = () => {
-    const name = prompt("Enter your name to request a quote:", userData.name || "");
-    if (name) alert(`Thanks ${name}! We'll contact you about a quote.`);
+    navigate('/quote');
   };
 
   const handleReviewSubmit = (e) => {
@@ -61,11 +152,72 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       alert("Please choose a rating."); 
       return; 
     }
+
+    // In a real app, you would submit this to your backend
+    console.log('Review submitted:', { rating, text, userId: currentUser?.id });
+    
     alert(`Thanks for your feedback (${rating} stars).\n"${text}"`);
     e.target.reset();
   };
 
   const highlights = getPersonalHighlights();
+
+  // Determine what to show in the booking card
+  const getBookingCardContent = () => {
+    if (loading) {
+      return (
+        <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
+          <div className="booking-info card-body">
+            <div className="booking-label">Loading your trips...</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (nextBooking) {
+      return (
+        <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
+          <div className="booking-info card-body">
+            <div className="booking-label">Your Next Booking:</div>
+            <div className="booking-title">{nextBooking.tripType || nextBooking.title}</div>
+            <div className="booking-meta">
+              <span className="booking-date">
+                {new Date(nextBooking.tripDate).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+              <span className={`booking-status status-${nextBooking.status}`}>
+                {nextBooking.status.charAt(0).toUpperCase() + nextBooking.status.slice(1)}
+              </span>
+            </div>
+            <div className="booking-location">
+              {nextBooking.pickupLocation} → {nextBooking.dropoffLocation}
+            </div>
+          </div>
+          <button className="view-btn" onClick={handleViewDetails}>VIEW DETAILS</button>
+        </div>
+      );
+    }
+
+    // No upcoming bookings
+    return (
+      <div className="booking-card fancy-card no-booking" role="region" aria-label="No upcoming trips">
+        <div className="booking-info card-body">
+          <div className="booking-label">No Upcoming Trips</div>
+          <div className="booking-title">Ready for your next adventure?</div>
+          <div className="booking-meta">
+            <span className="booking-description">
+              You don't have any upcoming trips. Start planning your next journey!
+            </span>
+          </div>
+        </div>
+        <button className="view-btn" onClick={handleViewDetails}>BOOK A TRIP</button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -84,41 +236,15 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <div className="hero-title">Welcome Back, {userData.name}!</div>
               <div className="hero-sub">Ready for your next adventure?</div>
 
-              {/* User Quick Stats */}
-              <div className="user-stats">
-                <div className="stat-item">
-                  <span className="stat-number">{userData.tripsCompleted}</span>
-                  <span className="stat-label">Trips</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-number">{userData.loyaltyPoints}</span>
-                  <span className="stat-label">Points</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-number">{userData.memberSince}</span>
-                  <span className="stat-label">Member Since</span>
-                </div>
-              </div>
-
               <div className="booking-card-wrap">
-                <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
-                  <div className="booking-info card-body">
-                    <div className="booking-label">Your Next Booking:</div>
-                    <div className="booking-title">{userData.nextBooking.title}</div>
-                    <div className="booking-meta">
-                      <span className="booking-date">{userData.nextBooking.date}</span>
-                      <span className="booking-status status-confirmed">{userData.nextBooking.status}</span>
-                    </div>
-                  </div>
-                  <button className="view-btn" onClick={handleViewDetails}>VIEW DETAILS</button>
-                </div>
+                {getBookingCardContent()}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-     {/* SERVICES */}
+      {/* SERVICES */}
       <section className="services-area">
         <div className="services-row container">
           <div className="service-card">
@@ -167,11 +293,43 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         </table>
       </section>
 
+      {/* RECENT TRIPS - Only show if user has trips */}
+      {userBookings.length > 0 && (
+        <section className="recent-trips">
+          <div className="container">
+            <div className="section-title">Your Recent Trips</div>
+            <div className="trips-grid">
+              {userBookings.slice(0, 3).map((booking, index) => (
+                <div key={index} className="trip-card">
+                  <div className="trip-type">{booking.tripType}</div>
+                  <div className="trip-date">
+                    {new Date(booking.tripDate).toLocaleDateString()}
+                  </div>
+                  <div className="trip-route">
+                    {booking.pickupLocation} → {booking.dropoffLocation}
+                  </div>
+                  <div className={`trip-status status-${booking.status}`}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* REVIEWS */}
       <section className="reviews-wrap" aria-labelledby="reviewsTitle">
         <div className="container">
-          <div id="reviewsTitle" className="section-title review-section-title">Leave us a review</div>
-          <p className="reviews-sub">How was your last trip?</p>
+          <div id="reviewsTitle" className="section-title review-section-title">
+            {userData.tripsCompleted > 0 ? 'Leave us a review' : 'Share your expectations'}
+          </div>
+          <p className="reviews-sub">
+            {userData.tripsCompleted > 0 
+              ? 'How was your last trip?' 
+              : 'Tell us what you\'re looking forward to!'
+            }
+          </p>
           <form className="review-form" onSubmit={handleReviewSubmit}>
             <select name="rating" required>
               <option value="">Rating...</option>
@@ -181,8 +339,15 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <option value="2">2 - Poor</option>
               <option value="1">1 - Bad</option>
             </select>
-            <textarea name="testimonial" placeholder="Your Testimonial"></textarea>
-            <button type="submit" className="review-submit">SUBMIT REVIEW</button>
+            <textarea 
+              name="testimonial" 
+              placeholder={
+                userData.tripsCompleted > 0 
+                  ? "Share your experience with your recent trip..." 
+                  : "What are you most excited about for your upcoming travel?"
+              }
+            ></textarea>
+            <button type="submit" className="review-submit">SUBMIT {userData.tripsCompleted > 0 ? 'REVIEW' : 'FEEDBACK'}</button>
           </form>
         </div>
       </section>

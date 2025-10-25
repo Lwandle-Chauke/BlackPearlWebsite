@@ -79,8 +79,35 @@ const quoteSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+    enum: ['pending', 'confirmed', 'booked', 'completed', 'cancelled'],
     default: 'pending'
+  },
+  
+  // NEW FIELDS FOR PRICING AND ADMIN FEATURES
+  estimatedPrice: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  finalPrice: {
+    type: Number
+  },
+  adminNotes: {
+    type: String,
+    trim: true
+  },
+  bookingNotes: {
+    type: String,
+    trim: true
+  },
+  confirmedAt: {
+    type: Date
+  },
+  bookedAt: {
+    type: Date
+  },
+  completedAt: {
+    type: Date
   },
   createdAt: {
     type: Date,
@@ -96,6 +123,15 @@ const quoteSchema = new mongoose.Schema({
 quoteSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
+});
+
+// Add text index for search
+quoteSchema.index({
+  customerName: 'text',
+  customerEmail: 'text',
+  destination: 'text',
+  pickupLocation: 'text',
+  dropoffLocation: 'text'
 });
 
 const Quote = mongoose.model('Quote', quoteSchema);

@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css'; 
-import '../styles/admin-bookings.css'; 
+import '../styles/admin-bookings.css';
 
 const AdminBookings = () => {
-    // State to manage the visibility of the sidebar on mobile
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showAddBookingModal, setShowAddBookingModal] = useState(false);
+    const [selectedQuote, setSelectedQuote] = useState(null);
+    const [showQuoteModal, setShowQuoteModal] = useState(false);
 
-    // Toggle function for the hamburger menu
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    // Fetch quotes from backend
     useEffect(() => {
         fetchQuotes();
     }, []);
@@ -45,7 +45,7 @@ const AdminBookings = () => {
         }
     };
 
-    const updateQuoteStatus = async (quoteId, newStatus) => {
+    const updateQuoteStatus = async (quoteId, newStatus, finalPrice = null, adminNotes = '') => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}`, {
@@ -54,16 +54,19 @@ const AdminBookings = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    ...(finalPrice && { finalPrice }),
+                    ...(adminNotes && { adminNotes })
+                })
             });
 
             const data = await response.json();
 
             if (data.success) {
-                // Update local state
                 setQuotes(prevQuotes => 
                     prevQuotes.map(quote => 
-                        quote._id === quoteId ? { ...quote, status: newStatus } : quote
+                        quote._id === quoteId ? { ...quote, status: newStatus, finalPrice, adminNotes } : quote
                     )
                 );
             } else {
@@ -72,6 +75,39 @@ const AdminBookings = () => {
         } catch (error) {
             console.error('Update status error:', error);
             alert('Failed to update status. Please try again.');
+        }
+    };
+
+    const convertToBooking = async (quoteId, finalPrice, bookingNotes = '') => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/convert-to-booking`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    finalPrice,
+                    bookingNotes
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setQuotes(prevQuotes => 
+                    prevQuotes.map(quote => 
+                        quote._id === quoteId ? { ...quote, status: 'booked', finalPrice, bookingNotes } : quote
+                    )
+                );
+                alert('Quote converted to booking successfully!');
+            } else {
+                alert('Failed to convert to booking: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Convert to booking error:', error);
+            alert('Failed to convert to booking. Please try again.');
         }
     };
 
@@ -92,7 +128,6 @@ const AdminBookings = () => {
             const data = await response.json();
 
             if (data.success) {
-                // Remove from local state
                 setQuotes(prevQuotes => prevQuotes.filter(quote => quote._id !== quoteId));
             } else {
                 alert('Failed to delete quote: ' + data.error);
@@ -103,23 +138,101 @@ const AdminBookings = () => {
         }
     };
 
-    // Helper function to determine the CSS class for the status badge
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'completed':
-                return 'status-completed';
-            case 'confirmed':
-                return 'status-confirmed';
-            case 'pending':
-                return 'status-pending';
-            case 'cancelled':
-                return 'status-cancelled';
-            default:
-                return 'status-pending';
+    const handleSendQuote = (quote) => {
+        setSelectedQuote(quote);
+        setShowQuoteModal(true);
+    };
+
+    const handleConfirmQuote = () => {
+        if (!selectedQuote) return;
+
+        const finalPrice = document.getElementById('finalPrice').value;
+        const adminNotes = document.getElementById('adminNotes').value;
+
+        if (!finalPrice) {
+            alert('Please enter a final price');
+            return;
+        }
+
+        updateQuoteStatus(selectedQuote._id, 'confirmed', parseFloat(finalPrice), adminNotes);
+        setShowQuoteModal(false);
+        setSelectedQuote(null);
+    };
+
+    const handleConvertToBooking = () => {
+        if (!selectedQuote) return;
+
+        const finalPrice = document.getElementById('finalPrice').value;
+        const bookingNotes = document.getElementById('adminNotes').value;
+
+        if (!finalPrice) {
+            alert('Please enter a final price');
+            return;
+        }
+
+        convertToBooking(selectedQuote._id, parseFloat(finalPrice), bookingNotes);
+        setShowQuoteModal(false);
+        setSelectedQuote(null);
+    };
+
+    const handleSubmitManualBooking = async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const bookingData = {
+            customerName: formData.get('customerName'),
+            customerEmail: formData.get('customerEmail'),
+            customerPhone: formData.get('customerPhone'),
+            customerCompany: formData.get('customerCompany'),
+            vehicleType: formData.get('vehicleType'),
+            pickupLocation: formData.get('pickupLocation'),
+            dropoffLocation: formData.get('dropoffLocation'),
+            tripDate: formData.get('tripDate'),
+            tripTime: formData.get('tripTime'),
+            finalPrice: parseFloat(formData.get('finalPrice')),
+            tripPurpose: formData.get('tripPurpose') || 'Manual Booking',
+            tripType: formData.get('tripType') || 'Manual Booking',
+            destination: formData.get('destination') || 'Manual Booking',
+            isOneWay: formData.get('isOneWay') === 'true'
+        };
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/quotes/manual-booking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(bookingData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Manual booking created successfully!');
+                setShowAddBookingModal(false);
+                fetchQuotes(); // Refresh the quotes list
+            } else {
+                alert('Failed to create booking: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Create manual booking error:', error);
+            alert('Failed to create manual booking. Please try again.');
         }
     };
 
-    // Format date for display
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'completed': return 'status-completed';
+            case 'confirmed': return 'status-confirmed';
+            case 'booked': return 'status-booked';
+            case 'pending': return 'status-pending';
+            case 'cancelled': return 'status-cancelled';
+            default: return 'status-pending';
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -129,9 +242,8 @@ const AdminBookings = () => {
         });
     };
 
-    // Placeholder function for the 'Add Booking' button
     const handleAddBooking = () => {
-        alert('Opening Add New Booking form...');
+        setShowAddBookingModal(true);
     };
 
     if (loading) {
@@ -143,7 +255,7 @@ const AdminBookings = () => {
                 />
                 <div id="content-wrapper">
                     <AdminTopBar 
-                        pageTitle="Bookings" 
+                        pageTitle="Bookings & Quotes" 
                         toggleSidebar={toggleSidebar}
                     />
                     <main className="bookings-page-content">
@@ -156,30 +268,7 @@ const AdminBookings = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-                <AdminSidebar 
-                    isSidebarOpen={isSidebarOpen} 
-                    toggleSidebar={toggleSidebar} 
-                />
-                <div id="content-wrapper">
-                    <AdminTopBar 
-                        pageTitle="Bookings" 
-                        toggleSidebar={toggleSidebar}
-                    />
-                    <main className="bookings-page-content">
-                        <div className="main-content">
-                            <div className="error-message">Error: {error}</div>
-                        </div>
-                    </main>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        // 'sidebar-open' class is added when the menu is active on mobile
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             
             <AdminSidebar 
@@ -190,63 +279,40 @@ const AdminBookings = () => {
             <div id="content-wrapper">
                 
                 <AdminTopBar 
-                    pageTitle="Bookings" 
+                    pageTitle="Bookings & Quotes" 
                     toggleSidebar={toggleSidebar}
                 />
 
-                {/* The 'bookings-page-content' now only holds the main content */}
                 <main className="bookings-page-content">
                     
-                    {/* --- Main Content Area (Manage Bookings Table - now full width) --- */}
                     <div className="main-content">
                         <h2>Manage Bookings & Quotes</h2>
                         
                         {/* Stats Overview */}
-                        <div className="bookings-stats" style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                            gap: '1rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                textAlign: 'center'
-                            }}>
-                                <h3 style={{color: '#666', fontSize: '0.9rem', margin: '0 0 0.5rem 0'}}>Total Quotes</h3>
-                                <span style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#667eea'}}>{quotes.length}</span>
-                            </div>
-                            <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                textAlign: 'center'
-                            }}>
-                                <h3 style={{color: '#666', fontSize: '0.9rem', margin: '0 0 0.5rem 0'}}>Pending</h3>
-                                <span style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#ffc107'}}>
+                        <div className="bookings-stats">
+                            <div className="stat-card">
+                                <h3>Pending</h3>
+                                <span className="stat-number pending">
                                     {quotes.filter(q => q.status === 'pending').length}
                                 </span>
                             </div>
-                            <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                textAlign: 'center'
-                            }}>
-                                <h3 style={{color: '#666', fontSize: '0.9rem', margin: '0 0 0.5rem 0'}}>Confirmed</h3>
-                                <span style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#28a745'}}>
+                            <div className="stat-card">
+                                <h3>Confirmed</h3>
+                                <span className="stat-number confirmed">
                                     {quotes.filter(q => q.status === 'confirmed').length}
+                                </span>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Booked</h3>
+                                <span className="stat-number booked">
+                                    {quotes.filter(q => q.status === 'booked').length}
                                 </span>
                             </div>
                         </div>
                         
-                        {/* Add Booking Button at the top for better mobile UX */}
-                        <button className="btn-add-booking-mobile" onClick={handleAddBooking}>
-                            <i className="fas fa-plus"></i> Add Booking
+                        {/* Add Booking Button */}
+                        <button className="btn-add-booking" onClick={handleAddBooking}>
+                            <i className="fas fa-plus"></i> Add Manual Booking
                         </button>
                         
                         <div className="data-table-container">
@@ -259,6 +325,7 @@ const AdminBookings = () => {
                                         <th>Vehicle</th>
                                         <th>Date & Time</th>
                                         <th>Pickup/Dropoff</th>
+                                        <th>Pricing</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -266,7 +333,7 @@ const AdminBookings = () => {
                                 <tbody>
                                     {quotes.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" style={{textAlign: 'center', padding: '2rem', color: '#666'}}>
+                                            <td colSpan="9" className="no-data">
                                                 No quote requests found
                                             </td>
                                         </tr>
@@ -275,23 +342,16 @@ const AdminBookings = () => {
                                             <tr key={quote._id}>
                                                 <td>#{quote._id.slice(-6).toUpperCase()}</td>
                                                 <td>
-                                                    <div>
+                                                    <div className="customer-info">
                                                         <strong>{quote.customerName}</strong>
-                                                        <div style={{fontSize: '0.8rem', color: '#666'}}>
+                                                        <div className="customer-details">
                                                             {quote.customerEmail}
                                                         </div>
-                                                        <div style={{fontSize: '0.8rem', color: '#666'}}>
+                                                        <div className="customer-details">
                                                             {quote.customerPhone}
                                                         </div>
                                                         {quote.userId && (
-                                                            <span style={{
-                                                                background: '#e7f3ff',
-                                                                color: '#0066cc',
-                                                                padding: '0.1rem 0.4rem',
-                                                                borderRadius: '8px',
-                                                                fontSize: '0.6rem',
-                                                                fontWeight: '600'
-                                                            }}>
+                                                            <span className="registered-badge">
                                                                 Registered User
                                                             </span>
                                                         )}
@@ -300,17 +360,23 @@ const AdminBookings = () => {
                                                 <td>{quote.tripType}</td>
                                                 <td>{quote.vehicleType}</td>
                                                 <td>
-                                                    <div>
+                                                    <div className="datetime-info">
                                                         <div>{formatDate(quote.tripDate)}</div>
-                                                        <div style={{fontSize: '0.8rem', color: '#666'}}>
-                                                            {quote.tripTime}
-                                                        </div>
+                                                        <div className="time">{quote.tripTime}</div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div style={{maxWidth: '200px'}}>
+                                                    <div className="location-info">
                                                         <div><strong>From:</strong> {quote.pickupLocation}</div>
                                                         <div><strong>To:</strong> {quote.dropoffLocation}</div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="pricing-info">
+                                                        <div>Est: R {quote.estimatedPrice}</div>
+                                                        {quote.finalPrice && (
+                                                            <div className="final-price">Final: R {quote.finalPrice}</div>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td>
@@ -318,29 +384,32 @@ const AdminBookings = () => {
                                                         {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
                                                     </span>
                                                 </td>
-                                                <td className="action-icons">
+                                                <td className="action-buttons">
+                                                    <button 
+                                                        className="btn-send-quote"
+                                                        onClick={() => handleSendQuote(quote)}
+                                                        title="Send Quote"
+                                                    >
+                                                        💰 Quote
+                                                    </button>
                                                     <select 
                                                         value={quote.status}
                                                         onChange={(e) => updateQuoteStatus(quote._id, e.target.value)}
-                                                        style={{
-                                                            padding: '0.25rem',
-                                                            border: '1px solid #ddd',
-                                                            borderRadius: '4px',
-                                                            fontSize: '0.8rem',
-                                                            marginRight: '0.5rem'
-                                                        }}
+                                                        className="status-select"
                                                     >
                                                         <option value="pending">Pending</option>
                                                         <option value="confirmed">Confirmed</option>
+                                                        <option value="booked">Booked</option>
                                                         <option value="completed">Completed</option>
                                                         <option value="cancelled">Cancelled</option>
                                                     </select>
-                                                    <i 
-                                                        className="fas fa-trash" 
-                                                        title="Delete" 
+                                                    <button 
+                                                        className="btn-delete"
                                                         onClick={() => deleteQuote(quote._id)}
-                                                        style={{color: '#dc3545', cursor: 'pointer'}}
-                                                    ></i>
+                                                        title="Delete"
+                                                    >
+                                                        🗑️
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
@@ -348,18 +417,158 @@ const AdminBookings = () => {
                                 </tbody>
                             </table>
                         </div>
-                        
-                        {/* Add Booking Button (Desktop) */}
-                        <button className="btn-add-booking-desktop" onClick={handleAddBooking}>
-                            <i className="fas fa-plus"></i> Add Booking
-                        </button>
                     </div>
                 </main>
                 
-            </div> 
-            
+            </div>
 
-            {/* Overlay for mobile view when sidebar is open */}
+            {/* Quote Modal */}
+            {showQuoteModal && selectedQuote && (
+                <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Send Quote to Customer</h3>
+                        <div className="quote-details">
+                            <p><strong>Customer:</strong> {selectedQuote.customerName}</p>
+                            <p><strong>Vehicle:</strong> {selectedQuote.vehicleType}</p>
+                            <p><strong>Trip:</strong> {selectedQuote.pickupLocation} → {selectedQuote.dropoffLocation}</p>
+                            <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="finalPrice">Final Price (R):</label>
+                            <input 
+                                type="number" 
+                                id="finalPrice"
+                                defaultValue={selectedQuote.finalPrice || selectedQuote.estimatedPrice}
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="adminNotes">Notes to Customer:</label>
+                            <textarea 
+                                id="adminNotes"
+                                rows="3"
+                                placeholder="Add any notes or terms for the customer..."
+                                defaultValue={selectedQuote.adminNotes || ''}
+                            ></textarea>
+                        </div>
+                        <div className="modal-actions">
+                            <button 
+                                className="btn-confirm"
+                                onClick={handleConfirmQuote}
+                            >
+                                Send Quote
+                            </button>
+                            <button 
+                                className="btn-book"
+                                onClick={handleConvertToBooking}
+                            >
+                                Convert to Booking
+                            </button>
+                            <button 
+                                className="btn-cancel"
+                                onClick={() => setShowQuoteModal(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Booking Modal */}
+            {showAddBookingModal && (
+                <div className="modal-overlay" onClick={() => setShowAddBookingModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Add Manual Booking</h3>
+                        <form onSubmit={handleSubmitManualBooking}>
+                            <div className="form-group">
+                                <label>Customer Name:</label>
+                                <input type="text" name="customerName" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Customer Email:</label>
+                                <input type="email" name="customerEmail" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Customer Phone:</label>
+                                <input type="tel" name="customerPhone" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Customer Company:</label>
+                                <input type="text" name="customerCompany" />
+                            </div>
+                            <div className="form-group">
+                                <label>Vehicle Type:</label>
+                                <select name="vehicleType" required>
+                                    <option value="">Select Vehicle</option>
+                                    <option>4 Seater Sedan</option>
+                                    <option>Mini Bus Mercedes Viano</option>
+                                    <option>15 Seater Quantum</option>
+                                    <option>17 Seater Luxury Sprinter</option>
+                                    <option>22 Seater Luxury Coach</option>
+                                    <option>28 Seater Semi Luxury</option>
+                                    <option>39 Seater Luxury Coach</option>
+                                    <option>60 Seater Semi Luxury</option>
+                                    <option>70 Seater Semi Luxury</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Pickup Location:</label>
+                                <input type="text" name="pickupLocation" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Dropoff Location:</label>
+                                <input type="text" name="dropoffLocation" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Destination:</label>
+                                <input type="text" name="destination" />
+                            </div>
+                            <div className="form-group">
+                                <label>Trip Purpose:</label>
+                                <input type="text" name="tripPurpose" />
+                            </div>
+                            <div className="form-group">
+                                <label>Trip Type:</label>
+                                <input type="text" name="tripType" />
+                            </div>
+                            <div className="form-group">
+                                <label>Date:</label>
+                                <input type="date" name="tripDate" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Time:</label>
+                                <input type="time" name="tripTime" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Final Price (R) :</label>
+                                <input type="number" name="finalPrice" step="0.01" min="0" required />
+                            </div>
+                            <div className="form-group">
+                                <label>Trip Direction:</label>
+                                <select name="isOneWay">
+                                    <option value="false">Both Ways</option>
+                                    <option value="true">One Way</option>
+                                </select>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" className="btn-confirm">
+                                    Create Booking
+                                </button>
+                                <button 
+                                    type="button"
+                                    className="btn-cancel"
+                                    onClick={() => setShowAddBookingModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={toggleSidebar}></div>
         </div>
     );
