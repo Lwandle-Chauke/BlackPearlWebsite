@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-// Note: This component now accepts a prop to determine its visual state
-const AdminSidebar = ({ isSidebarOpen, toggleSidebar }) => {
+const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const navLinks = [
         { path: "/admin/dashboard", label: "Dashboard", icon: "fas fa-tachometer-alt" },
@@ -13,22 +13,63 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar }) => {
         { path: "/admin/settings", label: "Settings", icon: "fas fa-cog" },
     ];
 
-    const handleLogout = (e) => {
+    const handleLogout = async (e) => {
         e.preventDefault();
-        console.log('Logged out.'); 
-        // In a real app, this would call an authentication context/redux action to sign out.
+        console.log('Logging out...');
+        
+        // Show browser confirmation dialog
+        const confirmLogout = window.confirm('localhost:3000 says:\n\nAre you sure you want to log out?');
+        
+        if (!confirmLogout) {
+            return; // User cancelled logout
+        }
+
+        try {
+            // Clear all authentication data from localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isLoggedIn');
+            
+            // Clear sessionStorage as well
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('currentUser');
+            sessionStorage.removeItem('isLoggedIn');
+            
+            // Clear any cookies (if used)
+            document.cookie.split(";").forEach(function(c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // Call the parent's sign out function to update global state
+            if (onSignOut && typeof onSignOut === 'function') {
+                onSignOut();
+            }
+
+            // Force a hard redirect to home page to ensure complete reset
+            window.location.href = '/';
+            
+            // Alternative: Use navigate with reload
+            // navigate('/', { replace: true });
+            // window.location.reload();
+
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Fallback: force redirect anyway
+            window.location.href = '/';
+        }
     };
 
     return (
-        // The isSidebarOpen class is controlled by the parent layout
         <aside className="sidebar">
-            {/* Sidebar header can remain empty or contain a title if desired */}
             <div className="sidebar-header"></div>
 
             <ul>
                 {navLinks.map((link) => (
                     <li key={link.path}>
-                        {/* Closing the sidebar on link click for mobile UX */}
                         <Link 
                             to={link.path} 
                             className={location.pathname === link.path ? "active" : ""}
@@ -39,9 +80,9 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar }) => {
                     </li>
                 ))}
                 <li>
-                    <Link to="/" onClick={handleLogout}>
+                    <a href="#logout" onClick={handleLogout} className="logout-link">
                         <i className="fas fa-sign-out-alt"></i> <span>Logout</span>
-                    </Link>
+                    </a>
                 </li>
             </ul>
         </aside>

@@ -18,7 +18,7 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
   useEffect(() => {
     const handleResize = () => {
         if (window.innerWidth >= 768 && menuOpen) {
-            setMenuOpen(false);
+          setMenuOpen(false);
         }
     };
     window.addEventListener("resize", handleResize);
@@ -57,7 +57,6 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
     }
   };
 
-  // FIXED: Handle auth button click properly
   const handleAuthButtonClick = () => {
     if (isLoggedIn) {
       // If logged in, call sign out
@@ -82,7 +81,7 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
           </Link>
         </div>
 
-        {/* Desktop navigation */}
+        {/* Desktop navigation - ONLY LINKS HERE */}
         <nav>
           <ul>
             {navLinks.map((link) => (
@@ -97,31 +96,23 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
               </li>
             ))}
             
-            {/* REMOVED: Welcome message for desktop */}
-            
-            {/* Sign In/Out button */}
-            <li>
-              <button 
-                className="btn-header-signin" 
-                onClick={handleAuthButtonClick}
-                style={{
-                  background: 'black',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontFamily: '"Poppins", sans-serif'
-                }}
-              >
-                {authButtonText}
-              </button>
-            </li>
+            {/* The Sign In/Out button is REMOVED from the <ul> */}
           </ul>
         </nav>
         
-        {/* Navigation Actions */}
+        {/* Navigation Actions - BUTTON ADDED HERE */}
         <div className="nav-actions">
+          
+          {/* Sign In/Out button is placed here, where the CSS expects it. 
+              We use the intended .btn-sign class for styling. */}
+          <button 
+            className="btn-sign" 
+            onClick={handleAuthButtonClick}
+            // All inline styles are removed to rely on CSS
+          >
+            {authButtonText}
+          </button>
+
           {/* Mobile hamburger */}
           <button
             className={`hamburger ${menuOpen ? "active" : ""}`}
@@ -147,29 +138,13 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
             </Link>
           ))}
           
-          {/* REMOVED: Welcome message for mobile */}
-          
           <hr style={{margin: '10px 20px'}} />
           
-          {/* Sign In/Out button for mobile */}
-          <button 
-            className="btn-sign" 
-            onClick={handleAuthButtonClick}
-            style={{
-              background: 'black',
-              color: 'white',
-              border: 'none',
-              padding: '12px 20px',
-              width: '100%',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontFamily: '"Poppins", sans-serif'
-            }}
-          >
-            {authButtonText.toUpperCase()}
-          </button>
+          
         </div>
       )}
+
+      
     </header>
   );
 };
