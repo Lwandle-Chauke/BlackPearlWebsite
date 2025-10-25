@@ -37,7 +37,7 @@ body {
 }
 
 /* ========================================================================================
-                                HEADER STYLES 
+                            HEADER STYLES 
 =========================================================================================*/
 
 /* Main header container */
@@ -59,7 +59,7 @@ header {
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: center; /* This ensures vertical alignment */
   padding: 0 20px;
 }
 
@@ -81,7 +81,8 @@ nav ul {
   list-style: none;
   margin: 0;
   gap: 20px;
-  margin-left: 250px;
+  /* FIX: Change from fixed margin to auto to correctly position the nav */
+  margin-left: auto; 
   padding-left: 0;
 }
 
@@ -129,7 +130,7 @@ nav ul li a.active::after,
 .nav-actions {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: center; /* Ensures button and hamburger are aligned */
 }
 
 /* Sign-in button */
@@ -284,6 +285,7 @@ nav ul li a.active::after,
 .auth-tabs {
   display: flex;
   justify-content: space-around;
+  margin-top: 25px;
   margin-bottom: 25px;
 }
 
@@ -391,6 +393,9 @@ nav ul li a.active::after,
 .close-btn:hover { color: red; }
 
 /* Header sign-in button */
+/* NOTE: .btn-header-signin is no longer used in the JSX, 
+   the standard .btn-sign class is used instead. 
+   Keeping this block in case it was used elsewhere. */
 .btn-header-signin {
   background: black;
   color: white;
@@ -421,6 +426,102 @@ nav ul li a.active::after,
   .auth-modal { width: 95%; padding: 25px 20px; }
   .auth-tabs .tab { font-size: 14px; padding: 8px; }
   .btn-auth { font-size: 15px; }
+}
+
+/* Forgot Password Styles */
+.forgot-password-link {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.forgot-password-btn {
+  background: none;
+  border: none;
+  color: #666;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+}
+
+.forgot-password-btn:hover {
+  color: #000;
+}
+
+.forgot-password-form {
+  animation: slideUp 0.3s ease;
+}
+
+.forgot-password-form h2 {
+  text-align: center;
+  color: black;
+  margin-bottom: 10px;
+}
+
+.forgot-password-form p {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.forgot-password-message {
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.forgot-password-message.success {
+  background: #e8f5e8;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+}
+
+.forgot-password-message.error {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+}
+
+.forgot-password-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.back-to-signin-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #e6e6e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #333;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.back-to-signin-btn:hover:not(:disabled) {
+  background: #e6e6e6;
+}
+
+.back-to-signin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .forgot-password-actions {
+    flex-direction: column;
+  }
+  
+  .forgot-password-message {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
 }
 
 /*-------------------------------------------------------------------------------------------

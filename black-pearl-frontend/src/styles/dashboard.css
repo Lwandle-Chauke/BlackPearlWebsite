@@ -18,9 +18,9 @@ body {
     background-position: center;
     position: relative;
     /* Increased minimum height for the hero section to look better */
-    min-height: 400px; 
+    min-height: 500px; 
     /* CHANGED: Increased margin-top to account for fixed header */
-    margin-top: 100px; 
+    margin-top: 73px; 
     /* ADDED: Ensure content is above other elements */
     z-index: 1;
 }
@@ -354,7 +354,7 @@ body {
     /* Adjusted Hero for smaller screens */
     .hero-wrap {
         margin-top: 80px; /* Slightly less on mobile if header is smaller */
-        min-height: 350px; /* Adjusted for mobile */
+        min-height: 500px; /* Adjusted for mobile */
     }
     .hero-content {
         padding: 20px 0;

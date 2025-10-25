@@ -29,8 +29,8 @@ const connectDB = async () => {
 
 connectDB();
 
-// Import middleware
-const { protect, authorize } = require('./middleware/authMiddleware');
+// Import middleware - CHANGED TO USE auth.js
+const { protect, authorize } = require('./middleware/auth');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -107,7 +107,7 @@ app.listen(PORT, () => {
   console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
   console.log(`📋 Quote endpoints:`);
   console.log(`   POST http://localhost:${PORT}/api/quotes (Public - Submit quote)`);
-  console.log(`   GET  http://localhost:${PORT}/api/quotes (Admin - Get all quotes)`);
+  console.log(`   GET  http://localhost:${PORT}/api/quotes (Admin - Get all quotes)`); // FIXED: Changed {Port} to {PORT}
   console.log(`   PUT  http://localhost:${PORT}/api/quotes/:id (Admin - Update quote)`);
   console.log(`   DELETE http://localhost:${PORT}/api/quotes/:id (Admin - Delete quote)`);
   console.log(`🔒 Admin endpoints (protected):`);

@@ -1,73 +1,73 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import "../styles/style.css";
 import "../styles/profile.css";
 
-// Placeholder image URL
-const PLACEHOLDER_IMG = "https://placehold.co/120x120/000/fff?text=R"; 
-
 const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
   
-  // State for profile picture, initialized with a placeholder
-  const [profilePicture, setProfilePicture] = useState(PLACEHOLDER_IMG); 
-  
-  // Initialize profile data with currentUser data
+  // Add state for change password modal
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
+  // Function to generate initials from first and last name
+  const generateInitials = (firstName, lastName) => {
+    const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial;
+  };
+
+  // Function to create placeholder image URL with initials
+  const getPlaceholderImage = (firstName, lastName) => {
+    const initials = generateInitials(firstName, lastName) || 'U';
+    return `https://placehold.co/120x120/000/fff?text=${initials}`;
+  };
+
+  // Initialize profile data
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    company: "Black Pearl Tours",
-    address: "123 Main Street",
-    city: "Cape Town",
-    postalCode: "8000",
-    country: "South Africa",
-    dob: "1995-05-20",
-    loyaltyPoints: 1200,
-    tripsCompleted: 5,
-    memberSince: "2024"
+    loyaltyPoints: 0,
+    tripsCompleted: 0,
+    memberSince: "2025",
+    profilePicture: ""
   });
 
   // Update profile data when currentUser changes
   useEffect(() => {
     if (currentUser) {
-      setProfileData(prev => ({
-        ...prev,
-        firstName: currentUser.name || "",
-        lastName: currentUser.surname || "",
+      const firstName = currentUser.name || "";
+      const lastName = currentUser.surname || "";
+      
+      setProfileData({
+        firstName: firstName,
+        lastName: lastName,
         email: currentUser.email || "",
         phone: currentUser.phone || "",
-        loyaltyPoints: currentUser.loyaltyPoints || 1200,
-        tripsCompleted: currentUser.tripsCompleted || 5,
-        memberSince: currentUser.memberSince || "2024"
-      }));
+        loyaltyPoints: currentUser.loyaltyPoints || 0,
+        tripsCompleted: currentUser.tripsCompleted || 0,
+        memberSince: currentUser.memberSince || "2025",
+        profilePicture: currentUser.profilePicture || ""
+      });
     }
   }, [currentUser]);
 
-  const handleChange = (e) => {
-    setProfileData({ ...profileData, [e.target.name]: e.target.value });
+  // NEW: Handle change password button click
+  const handleChangePasswordClick = () => {
+    setShowChangePasswordModal(true);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    alert("Profile updated successfully!");
+  // NEW: Handle successful password change
+  const handlePasswordChangeSuccess = () => {
+    setShowChangePasswordModal(false);
+    // You can add a success message here if needed
   };
-  
-  // Function to handle image file selection and update the preview
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (profilePicture.startsWith('blob:')) {
-        URL.revokeObjectURL(profilePicture);
-      }
-      const imageUrl = URL.createObjectURL(file);
-      setProfilePicture(imageUrl);
-    }
-  };
+
+  const profilePicture = currentUser?.profilePicture || getPlaceholderImage(profileData.firstName, profileData.lastName);
 
   return (
     <>
@@ -82,151 +82,64 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         <section className="profile-container">
           <div className="profile-header">
             <h2>My Profile</h2>
-            <p>Manage your personal details and account preferences</p>
+            <p>View your personal details and account information</p>
           </div>
           
-          {/* PROFILE PICTURE SECTION */}
+          {/* PROFILE PICTURE SECTION - Static */}
           <div className="profile-pic-section">
             <img 
               src={profilePicture} 
               alt={`${profileData.firstName}'s Profile`} 
               className="profile-pic"
-              onClick={() => fileInputRef.current?.click()} 
-              role="button"
-              tabIndex="0"
             />
-            {/* Hidden file input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: 'none' }} 
-            />
-            <button 
-              type="button" 
-              className="upload-btn" 
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Change Picture
-            </button>
+            <div className="profile-name">
+              {profileData.firstName} {profileData.lastName}
+            </div>
           </div>
 
-          <form className="profile-form" onSubmit={handleSave}>
-            {/* Name */}
-            <div className="input-group">
-              <label htmlFor="firstName">First Name</label>
-              <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                value={profileData.firstName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="lastName">Last Name</label>
-              <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                value={profileData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {/* Contact */}
-            <div className="input-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={profileData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="phone">Phone</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={profileData.phone}
-                onChange={handleChange}
-                required
-              />
+          {/* PROFILE INFORMATION - Static Display */}
+          <div className="profile-info-static">
+            <div className="info-section">
+              <h3>Personal Information</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>First Name</label>
+                  <div className="info-value">{profileData.firstName || "Not set"}</div>
+                </div>
+                <div className="info-item">
+                  <label>Last Name</label>
+                  <div className="info-value">{profileData.lastName || "Not set"}</div>
+                </div>
+                <div className="info-item">
+                  <label>Email</label>
+                  <div className="info-value">{profileData.email || "Not set"}</div>
+                </div>
+                <div className="info-item">
+                  <label>Phone</label>
+                  <div className="info-value">{profileData.phone || "Not set"}</div>
+                </div>
+              </div>
             </div>
 
-            {/* Company / DOB */}
-            <div className="input-group">
-              <label htmlFor="company">Company</label>
-              <input
-                type="text"
-                id="company"
-                name="company"
-                value={profileData.company}
-                onChange={handleChange}
-              />
+            {/* Account Actions */}
+            <div className="account-actions">
+              <h3>Account Management</h3>
+              <div className="action-buttons">
+                <button 
+                  className="password-reset-btn"
+                  onClick={handleChangePasswordClick}
+                >
+                  Change Password
+                </button>
+                <button 
+                  className="contact-support-btn"
+                  onClick={() => alert("Please email support@blackpearltours.com for profile changes.")}
+                >
+                  Request Profile Changes
+                </button>
+              </div>
             </div>
-            <div className="input-group">
-              <label htmlFor="dob">Date of Birth</label>
-              <input
-                type="date"
-                id="dob"
-                name="dob"
-                value={profileData.dob}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Address */}
-            <div className="input-group full-width">
-              <label htmlFor="address">Street Address</label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={profileData.address}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="city">City</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={profileData.city}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="postalCode">Postal Code</label>
-              <input
-                type="text"
-                id="postalCode"
-                name="postalCode"
-                value={profileData.postalCode}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="country">Country</label>
-              <input
-                type="text"
-                id="country"
-                name="country"
-                value={profileData.country}
-                onChange={handleChange}
-              />
-            </div>
-
-            <button type="submit" className="save-btn">Save Changes</button>
-          </form>
+          </div>
 
           {/* Loyalty Stats */}
           <div className="stats-section">
@@ -239,7 +152,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <p>Trips Completed</p>
             </div>
             <div className="stat-card">
-              <h3>R {profileData.loyaltyPoints * 0.1}</h3>
+              <h3>R {(profileData.loyaltyPoints * 0.01).toFixed(2)}</h3>
               <p>Discount Value</p>
             </div>
             <div className="stat-card">
@@ -247,29 +160,16 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <p>Member Since</p>
             </div>
           </div>
-
-          {/* Sign Out Button in Profile */}
-          <div className="profile-actions">
-            <button 
-              className="sign-out-btn" 
-              onClick={onSignOut}
-              style={{
-                background: '#ff4444',
-                color: 'white',
-                border: 'none',
-                padding: '12px 24px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontFamily: '"Poppins", sans-serif',
-                marginTop: '20px',
-                width: '100%'
-              }}
-            >
-              Sign Out
-            </button>
-          </div>
         </section>
       </main>
+
+      {/* Add the Change Password Modal */}
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          onClose={() => setShowChangePasswordModal(false)}
+          onPasswordChange={handlePasswordChangeSuccess}
+        />
+      )}
 
       <Footer />
     </>
