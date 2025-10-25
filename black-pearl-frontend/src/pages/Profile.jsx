@@ -9,23 +9,21 @@ import "../styles/profile.css";
 const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
   
-  // Add state for change password modal
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [userQuotes, setUserQuotes] = useState([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(true);
 
-  // Function to generate initials from first and last name
   const generateInitials = (firstName, lastName) => {
     const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
     const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
     return firstInitial + lastInitial;
   };
 
-  // Function to create placeholder image URL with initials
   const getPlaceholderImage = (firstName, lastName) => {
     const initials = generateInitials(firstName, lastName) || 'U';
     return `https://placehold.co/120x120/000/fff?text=${initials}`;
   };
 
-  // Initialize profile data
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -37,7 +35,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     profilePicture: ""
   });
 
-  // Update profile data when currentUser changes
+  // Fetch user's quotes
   useEffect(() => {
     if (currentUser) {
       const firstName = currentUser.name || "";
@@ -53,18 +51,89 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         memberSince: currentUser.memberSince || "2025",
         profilePicture: currentUser.profilePicture || ""
       });
+
+      fetchUserQuotes();
     }
   }, [currentUser]);
 
-  // NEW: Handle change password button click
+  const fetchUserQuotes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUserQuotes(data.data);
+      } else {
+        console.error('Failed to fetch quotes:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching quotes:', error);
+    } finally {
+      setLoadingQuotes(false);
+    }
+  };
+
   const handleChangePasswordClick = () => {
     setShowChangePasswordModal(true);
   };
 
-  // NEW: Handle successful password change
   const handlePasswordChangeSuccess = () => {
     setShowChangePasswordModal(false);
-    // You can add a success message here if needed
+  };
+
+  const handleDownloadQuote = (quote) => {
+    // Create PDF content
+    const pdfContent = `
+      BLACK PEARL TOURS - QUOTATION
+      ==============================
+      
+      Quote ID: ${quote._id}
+      Date: ${new Date(quote.createdAt).toLocaleDateString()}
+      
+      CUSTOMER DETAILS:
+      Name: ${quote.customerName}
+      Email: ${quote.customerEmail}
+      Phone: ${quote.customerPhone}
+      ${quote.customerCompany ? `Company: ${quote.customerCompany}` : ''}
+      
+      TRIP DETAILS:
+      Purpose: ${quote.tripPurpose}
+      Type: ${quote.tripType}
+      Destination: ${quote.destination}
+      ${quote.customDestination ? `Custom Destination: ${quote.customDestination}` : ''}
+      Pickup: ${quote.pickupLocation}
+      Drop-off: ${quote.dropoffLocation}
+      Vehicle: ${quote.vehicleType}
+      Trip: ${quote.isOneWay ? 'One Way' : 'Both Ways'}
+      Date: ${new Date(quote.tripDate).toLocaleDateString()}
+      Time: ${quote.tripTime}
+      
+      PRICING:
+      Estimated Price: R ${quote.estimatedPrice}
+      ${quote.finalPrice ? `Final Price: R ${quote.finalPrice}` : 'Status: Pending'}
+      
+      Status: ${quote.status.toUpperCase()}
+      ${quote.adminNotes ? `Admin Notes: ${quote.adminNotes}` : ''}
+      
+      Thank you for choosing Black Pearl Tours!
+    `;
+
+    // Create blob and download
+    const blob = new Blob([pdfContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `quote-${quote._id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const profilePicture = currentUser?.profilePicture || getPlaceholderImage(profileData.firstName, profileData.lastName);
@@ -85,7 +154,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
             <p>View your personal details and account information</p>
           </div>
           
-          {/* PROFILE PICTURE SECTION - Static */}
+          {/* PROFILE PICTURE SECTION */}
           <div className="profile-pic-section">
             <img 
               src={profilePicture} 
@@ -97,7 +166,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
             </div>
           </div>
 
-          {/* PROFILE INFORMATION - Static Display */}
+          {/* PROFILE INFORMATION */}
           <div className="profile-info-static">
             <div className="info-section">
               <h3>Personal Information</h3>
@@ -119,6 +188,82 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                   <div className="info-value">{profileData.phone || "Not set"}</div>
                 </div>
               </div>
+            </div>
+
+            {/* QUOTE REQUESTS SECTION */}
+            <div className="info-section">
+              <h3>My Quote Requests</h3>
+              {loadingQuotes ? (
+                <div className="loading-quotes">Loading your quotes...</div>
+              ) : userQuotes.length === 0 ? (
+                <div className="no-quotes">
+                  <p>You haven't requested any quotes yet.</p>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => navigate('/quote')}
+                  >
+                    Request Your First Quote
+                  </button>
+                </div>
+              ) : (
+                <div className="quotes-table-container">
+                  <table className="quotes-table">
+                    <thead>
+                      <tr>
+                        <th>Quote ID</th>
+                        <th>Trip Details</th>
+                        <th>Vehicle</th>
+                        <th>Date</th>
+                        <th>Estimated Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userQuotes.map(quote => (
+                        <tr key={quote._id}>
+                          <td>#{quote._id.slice(-6).toUpperCase()}</td>
+                          <td>
+                            <div className="trip-details">
+                              <strong>{quote.tripType}</strong>
+                              <div>{quote.pickupLocation} → {quote.dropoffLocation}</div>
+                              <small>{quote.destination}</small>
+                            </div>
+                          </td>
+                          <td>{quote.vehicleType}</td>
+                          <td>
+                            {new Date(quote.tripDate).toLocaleDateString()}
+                            <br />
+                            <small>{quote.tripTime}</small>
+                          </td>
+                          <td>
+                            <strong>R {quote.estimatedPrice}</strong>
+                            {quote.finalPrice && (
+                              <div>
+                                <small>Final: R {quote.finalPrice}</small>
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <span className={`status-badge status-${quote.status}`}>
+                              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                            </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="btn-download"
+                              onClick={() => handleDownloadQuote(quote)}
+                              title="Download Quote"
+                            >
+                              📄 Download
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Account Actions */}
@@ -163,7 +308,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         </section>
       </main>
 
-      {/* Add the Change Password Modal */}
+      {/* Change Password Modal */}
       {showChangePasswordModal && (
         <ChangePasswordModal
           onClose={() => setShowChangePasswordModal(false)}
