@@ -2,37 +2,46 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal'; 
 import '../styles/style.css'; 
 import '../styles/dashboard.css';
 
-const Dashboard = () => {
+const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
-  const [isAuthModalOpen, setIsAuthModal] = useState(false);
 
-  // Simulate logged-in user
-  const isLoggedIn = true; 
-
-  const openAuthModal = () => setIsAuthModal(true);
-  const closeAuthModal = () => setIsAuthModal(false);
-
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/');
-    } else {
-      openAuthModal();
+  // Use REAL user data from currentUser prop
+  const userData = {
+    name: currentUser?.name || "Guest",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
+    loyaltyPoints: currentUser?.loyaltyPoints || 1200,
+    tripsCompleted: currentUser?.tripsCompleted || 5,
+    memberSince: currentUser?.memberSince || "2024",
+    nextBooking: {
+      title: "Cape Town City Tour",
+      date: "15 December 2024",
+      status: "Confirmed"
     }
   };
 
-  const [userData] = useState({
-    name: "Rae",
-    nextBooking: {
-      title: "Cape Town Tours",
-      date: "15 September 2025",
-      status: "Confirmed"
+  // Personal highlights based on user activity
+  const getPersonalHighlights = () => {
+    const highlights = [
+      { badge: '🏅', stat: `${userData.tripsCompleted} Trips Completed`, desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` },
+      { badge: '⏱️', stat: `${userData.tripsCompleted * 3} Hours Saved`, desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` },
+      { badge: '🧭', stat: `${userData.tripsCompleted * 240} km Traveled`, desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` },
+      { badge: '⭐', stat: '4.9 / 5 Rating', desc: "Your average feedback score from past trips." },
+    ];
+
+    // Add VIP status if user has enough trips
+    if (userData.tripsCompleted >= 5) {
+      highlights.push({ badge: '🎖️', stat: 'VIP Member', desc: "You are now a VIP member of Black Pearl Tours!" });
     }
-  });
+
+    // Add loyalty points highlight
+    highlights.push({ badge: '💰', stat: `${userData.loyaltyPoints} Points`, desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` });
+
+    return highlights;
+  };
 
   const handleViewDetails = () => {
     alert(`${userData.nextBooking.title}\nDate: ${userData.nextBooking.date}\nStatus: ${userData.nextBooking.status}`);
@@ -56,26 +65,40 @@ const Dashboard = () => {
     e.target.reset();
   };
 
-  const highlights = [
-    { badge: '🏅', stat: '5 Trips Completed', desc: "You've completed 5 trips with Black Pearl Tours!" },
-    { badge: '⏱️', stat: '15 Hours Saved', desc: "You've saved 15 hours of travel planning." },
-    { badge: '🧭', stat: '1,200 km Traveled', desc: "This year, you've traveled 1,200 km with us." },
-    { badge: '⭐', stat: '4.9 / 5 Rating', desc: "Your average feedback score from past trips." },
-    { badge: '🎖️', stat: 'VIP Member', desc: "You are now a VIP member of Black Pearl Tours!" }
-  ];
+  const highlights = getPersonalHighlights();
 
   return (
     <>
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       {/* HERO SECTION */}
       <section className="hero-wrap">
         <div className="hero-overlay">
           <div className="container">
             <div className="hero-content">
-              <div className="hero-title">Welcome Back, {userData.name}</div>
+              <div className="hero-title">Welcome Back, {userData.name}!</div>
               <div className="hero-sub">Ready for your next adventure?</div>
+
+              {/* User Quick Stats */}
+              <div className="user-stats">
+                <div className="stat-item">
+                  <span className="stat-number">{userData.tripsCompleted}</span>
+                  <span className="stat-label">Trips</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{userData.loyaltyPoints}</span>
+                  <span className="stat-label">Points</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{userData.memberSince}</span>
+                  <span className="stat-label">Member Since</span>
+                </div>
+              </div>
 
               <div className="booking-card-wrap">
                 <div className="booking-card fancy-card" role="region" aria-label="Your next booking">
@@ -96,43 +119,24 @@ const Dashboard = () => {
       </section>
 
      {/* SERVICES */}
-
       <section className="services-area">
-
         <div className="services-row container">
-
           <div className="service-card">
-
             <h4>Airport Transfers</h4>
-
             <p>Enjoy hassle-free airport pick-ups and drop-offs with professional drivers and reliable, comfortable rides.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Conference Shuttle Hire</h4>
-
             <p>Keep events running smoothly with daily shuttle services between venues and hotels — on time and comfortable.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Sports Tours</h4>
-
             <p>Travel stress-free with transport for teams and supporters to stadiums and events. Safe and coordinated.</p>
-
           </div>
-
           <div className="service-card">
-
             <h4>Events & Leisure Travel</h4>
-
             <p>Whether weddings or private functions, we arrange travel that combines comfort, style and safety.</p>
-
           </div>
-
         </div>
 
         <div className="quote-cta-wrap">

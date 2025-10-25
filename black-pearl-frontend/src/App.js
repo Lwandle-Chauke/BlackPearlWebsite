@@ -1,8 +1,8 @@
-import React, { useState } from "react"; 
+import React, { useState, useEffect } from "react"; 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
 
 // =======================================================
-// IMPORT ALL PAGES (using correct file paths from file structure)
+// IMPORT ALL PAGES
 // =======================================================
 // Guest Pages
 import Home from "./pages/Home";
@@ -17,86 +17,190 @@ import Profile from "./pages/Profile";
 import Bookings from "./pages/Bookings";
 import Dashboard from "./pages/Dashboard"; 
 
-// Admin Pages (Using the exact filenames from your file structure)
+// Admin Pages
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminMessages from "./pages/Admin-Messages"; // Corresponds to Admin-Messages.jsx
-import AdminBookings from "./pages/Admin-Bookings"; // Corresponds to Admin-Bookings.jsx
-import AdminGallery from "./pages/Admin-Gallery"; // Corresponds to Admin-Gallery.jsx
-import AdminSettings from "./pages/Admin-Settings"; // Corresponds to Admin-Settings.jsx
+import AdminMessages from "./pages/Admin-Messages";
+import AdminBookings from "./pages/Admin-Bookings";
+import AdminGallery from "./pages/Admin-Gallery";
+import AdminSettings from "./pages/Admin-Settings";
+
+// Import AuthModal
+import AuthModal from "./components/AuthModal";
 
 // =======================================================
 // MAIN APP COMPONENT
 // =======================================================
 function App() {
-    /* *** TEMPORARY OVERRIDE FOR DEVELOPMENT ***
-    Change 'admin' back to 'guest' when integrating with your backend 
-    to enable normal login flow.
-    */
-    const [userRole, setUserRole] = useState('admin'); // <-- CHANGE THIS BACK TO 'guest' LATER
+    const [userRole, setUserRole] = useState('guest');
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Check for existing authentication on app load
+    useEffect(() => {
+        checkExistingAuth();
+    }, []);
+
+    const checkExistingAuth = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('user');
+            
+            if (token && userData) {
+                const user = JSON.parse(userData);
+                setCurrentUser(user);
+                setUserRole(user.role || 'customer');
+                console.log('Existing user found:', user);
+            }
+        } catch (error) {
+            console.error('Error checking existing auth:', error);
+            // Clear invalid storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Helper to determine if the user is logged in at all
     const isLoggedIn = userRole !== 'guest';
 
-    // 2. Define role-specific sign-in/sign-out handlers
-    const handleCustomerSignIn = () => {
-        // Placeholder for successful customer login logic
-        setUserRole('customer');
+    // Simple function to show auth modal
+    const handleAuthClick = () => {
+        console.log("Auth click triggered");
+        setShowAuthModal(true);
     };
-    
-    const handleAdminSignIn = () => {
-        // Placeholder for successful admin login logic
-        setUserRole('admin');
-    };
+
+    // Handle successful authentication from AuthModal
+    const handleAuthSuccess = (user) => {
+  console.log('Auth successful for user:', user);
+  setCurrentUser(user);
+  setUserRole(user.role || 'customer');
+  setShowAuthModal(false);
+  
+  // Redirect based on user role
+  if (user.role === 'admin') {
+    // Use window.location for immediate redirect to admin dashboard
+    window.location.href = '/admin/dashboard';
+  } else {
+    // Show success message for regular users
+    alert(`Welcome back, ${user.name}! You have been successfully signed in.`);
+  }
+};
 
     const handleSignOut = () => {
-        // Clears session and resets role to guest
+        // Clear local storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Reset state
         setUserRole('guest');
+        setCurrentUser(null);
+        setShowAuthModal(false);
+        
         alert('You have been logged out.'); 
     };
-    
-    // Object passed to Guest pages' authentication button/modal trigger
-    const handleAuthClick = { 
-        customer: handleCustomerSignIn,
-        admin: handleAdminSignIn,
-        signOut: handleSignOut
-    };
 
-    // 3. Helper component for protected routes based on required role
+    // Helper component for protected routes
     const ProtectedRoute = ({ children, requiredRole }) => {
         const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
         
-        // If the current userRole is NOT in the list of allowed roles, redirect to home.
         if (!requiredRoles.includes(userRole)) {
-            // Optional: You might redirect to a specific login page instead of home
             return <Navigate to="/" replace />;
         }
         return children;
     };
 
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                fontSize: '18px'
+            }}>
+                Loading...
+            </div>
+        );
+    }
 
     return (
         <Router>
+            {/* Auth Modal - Rendered at app level */}
+            {showAuthModal && (
+                <AuthModal 
+                    onClose={() => setShowAuthModal(false)}
+                    onAuthSuccess={handleAuthSuccess}
+                />
+            )}
+            
             <Routes>
                 {/* ======================================================= */}
-                {/* GUEST ROUTES (Publicly Accessible)                      */}
+                {/* GUEST ROUTES (Publicly Accessible)                     */}
                 {/* ======================================================= */}
-                <Route path="/" element={<Home onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
-                <Route path="/about" element={<About onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
-                <Route path="/quote" element={<Quote onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
-                <Route path="/contact" element={<Contact onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
-                <Route path="/fleet" element={<Fleet onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
-                <Route path="/gallery" element={<Gallery onAuthClick={handleAuthClick} isLoggedIn={isLoggedIn} />} />
+                <Route path="/" element={
+                    <Home 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
+                <Route path="/about" element={
+                    <About 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
+                <Route path="/quote" element={
+                    <Quote 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
+                <Route path="/contact" element={
+                    <Contact 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
+                <Route path="/fleet" element={
+                    <Fleet 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
+                <Route path="/gallery" element={
+                    <Gallery 
+                        onAuthClick={handleAuthClick} 
+                        isLoggedIn={isLoggedIn}
+                        onSignOut={handleSignOut}
+                        currentUser={currentUser}
+                    />
+                } />
 
                 {/* ======================================================= */}
-                {/* CUSTOMER ROUTES (Requires 'customer' or 'admin')        */}
+                {/* CUSTOMER ROUTES (Requires 'customer' or 'admin')       */}
                 {/* ======================================================= */}
-                {/* Admin user can access customer dashboards */}
                 <Route 
                     path="/dashboard" 
                     element={
                         <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            {/* Note: Customer pages use handleSignOut, Admin pages manage logout internally via sidebar */}
-                            <Dashboard onAuthClick={handleSignOut} isLoggedIn={true} />
+                            <Dashboard 
+                                onSignOut={handleSignOut} 
+                                isLoggedIn={true} 
+                                currentUser={currentUser}
+                            />
                         </ProtectedRoute>
                     } 
                 />
@@ -105,7 +209,11 @@ function App() {
                     path="/profile" 
                     element={
                         <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <Profile onAuthClick={handleSignOut} isLoggedIn={true} />
+                            <Profile 
+                                onSignOut={handleSignOut} 
+                                isLoggedIn={true} 
+                                currentUser={currentUser}
+                            />
                         </ProtectedRoute>
                     } 
                 />
@@ -113,26 +221,29 @@ function App() {
                     path="/bookings" 
                     element={
                         <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <Bookings onAuthClick={handleSignOut} isLoggedIn={true} />
+                            <Bookings 
+                                onSignOut={handleSignOut} 
+                                isLoggedIn={true} 
+                                currentUser={currentUser}
+                            />
                         </ProtectedRoute>
                     } 
                 />
 
                 {/* ======================================================= */}
-                {/* ADMIN ROUTES (Requires 'admin')                        */}
+                {/* ADMIN ROUTES (Requires 'admin')                        */}
                 {/* ======================================================= */}
-                
-                {/* Admin Dashboard */}
                 <Route 
                     path="/admin/dashboard" 
                     element={
                         <ProtectedRoute requiredRole="admin">
-                            <AdminDashboard />
+                            <AdminDashboard 
+                                onSignOut={handleSignOut} 
+                                currentUser={currentUser}
+                            />
                         </ProtectedRoute>
                     } 
                 />
-
-                {/* Admin Messages */}
                 <Route 
                     path="/admin/messages" 
                     element={
@@ -141,8 +252,6 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
-
-                {/* Admin Bookings */}
                 <Route 
                     path="/admin/bookings" 
                     element={
@@ -151,8 +260,6 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
-                
-                {/* Admin Gallery */}
                 <Route 
                     path="/admin/gallery" 
                     element={
@@ -161,8 +268,6 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
-
-                {/* Admin Settings */}
                 <Route 
                     path="/admin/settings" 
                     element={

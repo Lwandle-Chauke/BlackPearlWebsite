@@ -1,28 +1,26 @@
-import React, { useState, useRef } from "react";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import AuthModal from "../components/AuthModal";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import "../styles/style.css";
 import "../styles/profile.css";
 
 // Placeholder image URL
 const PLACEHOLDER_IMG = "https://placehold.co/120x120/000/fff?text=R"; 
 
-const Profile = () => {
-  const navigate = useNavigate(); // Hook for navigation
-  const fileInputRef = useRef(null); // Reference to the hidden file input
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const isLoggedIn = true; // Assume logged in for the profile page
+const Profile = ({ user, onSignOut, isLoggedIn, currentUser }) => {
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   
   // State for profile picture, initialized with a placeholder
   const [profilePicture, setProfilePicture] = useState(PLACEHOLDER_IMG); 
   
+  // Initialize profile data with currentUser data
   const [profileData, setProfileData] = useState({
-    firstName: "Rae",
-    lastName: "Smith",
-    email: "rae@example.com",
-    phone: "0123456789",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     company: "Black Pearl Tours",
     address: "123 Main Street",
     city: "Cape Town",
@@ -30,22 +28,25 @@ const Profile = () => {
     country: "South Africa",
     dob: "1995-05-20",
     loyaltyPoints: 1200,
-    tripsCompleted: 5
+    tripsCompleted: 5,
+    memberSince: "2024"
   });
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
-  // New logic to handle Sign In/Out click (Matching Bookings.jsx)
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      // Logic for signing out (In a real app: clear tokens, reset global state)
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/'); // Redirect to the home page after sign out
-    } else {
-      openAuthModal();
+  // Update profile data when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setProfileData(prev => ({
+        ...prev,
+        firstName: currentUser.name || "",
+        lastName: currentUser.surname || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "",
+        loyaltyPoints: currentUser.loyaltyPoints || 1200,
+        tripsCompleted: currentUser.tripsCompleted || 5,
+        memberSince: currentUser.memberSince || "2024"
+      }));
     }
-  };
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setProfileData({ ...profileData, [e.target.name]: e.target.value });
@@ -53,7 +54,6 @@ const Profile = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    // In a real application, you would save the text data and upload the image file separately.
     alert("Profile updated successfully!");
   };
   
@@ -61,34 +61,22 @@ const Profile = () => {
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Revoke the previous object URL to avoid memory leaks
       if (profilePicture.startsWith('blob:')) {
         URL.revokeObjectURL(profilePicture);
       }
-      // Create a new local URL for the image file
       const imageUrl = URL.createObjectURL(file);
       setProfilePicture(imageUrl);
     }
   };
 
-  // Dummy data for bookings
-  const upcomingBooking = {
-    title: "Garden Route Adventure",
-    date: "10 March 2026",
-    status: "Confirmed"
-  };
-  
-  const pastBookings = [
-    { id: 1, destination: "Cape Town Peninsula Tour", date: "2024-01-15", cost: "R 2,500" },
-    { id: 2, destination: "Winelands Day Trip", date: "2023-11-05", cost: "R 1,800" },
-    { id: 3, destination: "Shark Cage Diving", date: "2023-08-22", cost: "R 3,200" },
-  ];
-
   return (
     <>
-      {/* Updated Header call to match the Bookings component */}
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       <main className="profile-page">
         <section className="profile-container">
@@ -103,7 +91,6 @@ const Profile = () => {
               src={profilePicture} 
               alt={`${profileData.firstName}'s Profile`} 
               className="profile-pic"
-              // Trigger the hidden file input when the image is clicked
               onClick={() => fileInputRef.current?.click()} 
               role="button"
               tabIndex="0"
@@ -124,8 +111,6 @@ const Profile = () => {
               Change Picture
             </button>
           </div>
-          {/* END PROFILE PICTURE SECTION */}
-
 
           <form className="profile-form" onSubmit={handleSave}>
             {/* Name */}
@@ -257,8 +242,32 @@ const Profile = () => {
               <h3>R {profileData.loyaltyPoints * 0.1}</h3>
               <p>Discount Value</p>
             </div>
+            <div className="stat-card">
+              <h3>{profileData.memberSince}</h3>
+              <p>Member Since</p>
+            </div>
           </div>
 
+          {/* Sign Out Button in Profile */}
+          <div className="profile-actions">
+            <button 
+              className="sign-out-btn" 
+              onClick={onSignOut}
+              style={{
+                background: '#ff4444',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontFamily: '"Poppins", sans-serif',
+                marginTop: '20px',
+                width: '100%'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
         </section>
       </main>
 

@@ -329,6 +329,32 @@ nav ul li a.active::after,
   border: 1px solid #aaa;
   border-radius: 5px;
   font-size: 15px;
+}/* Error Message Styles */
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Form input focus states */
+.auth-form input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+/* Button disabled state */
+.btn-auth:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.btn-auth:disabled:hover {
+  background: #666;
 }
 
 /* Submit Buttons */

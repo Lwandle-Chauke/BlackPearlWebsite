@@ -1,37 +1,16 @@
-// components/pages/Bookings.jsx
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import '../styles/style.css';
 import '../styles/bookings.css';
 
-const Bookings = () => {
-  const navigate = useNavigate(); // Hook for navigation
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
+  const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-
-  // 🔑 Assume the user is logged in on the Bookings page
-  const isLoggedIn = true; 
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-  
-  // New logic to handle Sign In/Out click
-  const handleAuthClick = () => {
-    if (isLoggedIn) {
-      // Logic for signing out (In a real app: clear tokens, reset global state)
-      alert("You have been signed out. Redirecting to the home page.");
-      navigate('/'); 
-    } else {
-      openAuthModal();
-    }
-  };
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -39,40 +18,44 @@ const Bookings = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const bookings = [
+  // User-specific bookings data
+  const userBookings = [
     {
       id: 1,
       title: "Airport Transfer",
       status: "confirmed",
-      date: "22 Oct 2025",
+      date: "22 Oct 2024",
       pickup: "OR Tambo Airport",
       dropoff: "Sandton Hotel",
-      passengers: 3,
-      price: "R850"
+      passengers: currentUser?.name ? 2 : 1,
+      price: "R850",
+      customer: currentUser?.name || "Guest"
     },
     {
       id: 2,
       title: "Conference Shuttle",
       status: "pending",
-      date: "25 Oct 2025",
+      date: "25 Oct 2024",
       pickup: "Pretoria CBD",
       dropoff: "Gallagher Convention Centre",
-      passengers: 6,
-      price: "R1,400"
+      passengers: currentUser?.name ? 4 : 2,
+      price: "R1,400",
+      customer: currentUser?.name || "Guest"
     },
     {
       id: 3,
       title: "Sports Tour",
-      status: "cancelled",
-      date: "5 Sep 2025",
+      status: "completed",
+      date: "5 Sep 2024",
       pickup: "Johannesburg Stadium",
       dropoff: "Durban Beachfront",
-      passengers: 10,
-      price: "R3,500"
+      passengers: currentUser?.name ? 8 : 4,
+      price: "R3,500",
+      customer: currentUser?.name || "Guest"
     }
   ];
 
-  const filteredBookings = bookings.filter(booking => {
+  const filteredBookings = userBookings.filter(booking => {
     const matchesStatus = filter === 'all' || booking.status === filter;
     const matchesSearch = booking.title.toLowerCase().includes(search.toLowerCase()) ||
                           booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
@@ -82,25 +65,44 @@ const Bookings = () => {
 
   return (
     <>
-      {/* 🔄 Pass isLoggedIn and the new handler to Header */}
-      <Header isLoggedIn={isLoggedIn} onAuthClick={handleAuthClick} />
-      
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+        onSignOut={onSignOut}
+      />
 
       {/* Bookings Content */}
       <div className="bookings-container">
         <div className="bookings-header">
           <h2>My Bookings</h2>
-          <p>View and manage your past and upcoming trips</p>
+          <p>View and manage your past and upcoming trips, {currentUser?.name || "Guest"}</p>
         </div>
 
         {/* Upcoming Booking Summary */}
         <div className="upcoming-card">
           <h3>Next Upcoming Trip</h3>
           <p><strong>Service:</strong> Airport Transfer</p>
-          <p><strong>Date:</strong> 22 Oct 2025</p>
+          <p><strong>Date:</strong> 22 Oct 2024</p>
           <p><strong>Pickup:</strong> OR Tambo Airport → Sandton Hotel</p>
           <p><strong>Status:</strong> Confirmed ✅</p>
+          <p><strong>Booked by:</strong> {currentUser?.name || "Guest"}</p>
+        </div>
+
+        {/* User Booking Stats */}
+        <div className="booking-stats">
+          <div className="stat-item">
+            <span className="stat-number">{userBookings.filter(b => b.status === 'confirmed').length}</span>
+            <span className="stat-label">Confirmed</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{userBookings.filter(b => b.status === 'pending').length}</span>
+            <span className="stat-label">Pending</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{userBookings.filter(b => b.status === 'completed').length}</span>
+            <span className="stat-label">Completed</span>
+          </div>
         </div>
 
         {/* Search and Filter */}
@@ -118,7 +120,7 @@ const Bookings = () => {
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
           </select>
         </div>
 
@@ -138,9 +140,10 @@ const Bookings = () => {
                 <p><strong>Drop-off:</strong> {booking.dropoff}</p>
                 <p><strong>Passengers:</strong> {booking.passengers}</p>
                 <p><strong>Price:</strong> {booking.price}</p>
+                <p><strong>Customer:</strong> {booking.customer}</p>
               </div>
               <div className="booking-actions">
-                {booking.status !== 'cancelled' && (
+                {booking.status !== 'completed' && booking.status !== 'cancelled' && (
                   <button 
                     className="btn-cancel" 
                     onClick={() => showToastMessage('Booking cancelled successfully!')}
