@@ -22,9 +22,11 @@ body {
     background-position: center;
     position: relative;
     /* Increased minimum height for the hero section to look better */
-    min-height: 400px;
-    /* Add margin to account for fixed header */
-    margin-top: 73px;
+    min-height: 400px; 
+    /* CHANGED: Increased margin-top to account for fixed header */
+    margin-top: 100px; 
+    /* ADDED: Ensure content is above other elements */
+    z-index: 1;
 }
 
 /* 🔥 FIXED OVERLAY: Use absolute positioning to ensure the overlay perfectly covers the hero-wrap, then use flexbox to center the content. */
@@ -41,6 +43,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* ADDED: Ensure overlay covers properly */
+    box-sizing: border-box;
 }
 
 .container {
@@ -56,6 +60,8 @@ body {
     margin: 0 auto;
     /* Added padding for content spacing */
     padding: 40px 0;
+    /* ADDED: Extra padding for better spacing */
+    padding-top: 20px;
 }
 
 /* ⬆️ BIGGER FONT */
@@ -71,6 +77,29 @@ body {
     font-size: 18px;
     /* Slightly increased sub-heading font size */
     margin-bottom: 30px;
+}
+
+/* USER STATS */
+.user-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 30px 0;
+}
+.stat-item {
+    text-align: center;
+}
+.stat-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--white);
+}
+.stat-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* BOOKING CARD*/
@@ -372,24 +401,47 @@ body {
     margin-top: 0;
 }
 
+/* FLOATING CHAT */
+.chat-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--black);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s, background 0.3s;
+    z-index: 1000;
+}
+.chat-fab:hover {
+    transform: scale(1.1);
+    background: #333;
+}
+
 /* small screens */
 @media (max-width:880px) {
 
     /* Adjusted Hero for smaller screens */
-    .hero-title {
-        font-size: 36px;
-    }
-
-    .hero-sub {
-        font-size: 16px;
-    }
-
     .hero-wrap {
-        min-height: 400px;
+        margin-top: 80px; /* Slightly less on mobile if header is smaller */
+        min-height: 350px; /* Adjusted for mobile */
     }
 
     .hero-content {
         padding: 20px 0;
+        padding-top: 10px;
+    }
+    .hero-title {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+    .hero-sub {
+        font-size: 16px;
     }
 
     .services-row {
@@ -416,6 +468,14 @@ body {
         font-size: 20px;
     }
 
+    /* User Stats adjustments for mobile */
+    .user-stats {
+        gap: 20px;
+    }
+    .stat-number {
+        font-size: 24px;
+    }
+
     /* Highlights Table for small screens (adjust font sizes) */
     .highlights-table thead th {
         font-size: 11px;
@@ -430,5 +490,13 @@ body {
     .badge-col {
         width: 60px;
         font-size: 18px;
+    }
+
+    /* Chat button smaller on mobile */
+    .chat-fab {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
     }
 }

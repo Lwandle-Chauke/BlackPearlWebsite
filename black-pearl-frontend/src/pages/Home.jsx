@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import '../styles/style.css'; // Global/Utility styles
 import '../styles/home.css'; // Specific styles for this component
 
-const Home = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
+const Home = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   return (
     <>
-      <Header onSignInClick={openAuthModal} />
+      {/* FIXED: Pass all the required props to Header */}
+      <Header 
+        onAuthClick={onAuthClick} 
+        isLoggedIn={isLoggedIn} 
+        user={currentUser}
+      />
       
-      {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
-
       {/* HERO - Uses styles from Home.css */}
       <section className="hero" role="banner" aria-label="Welcome hero">
         <div className="hero-inner wrap">

@@ -7,7 +7,7 @@ const router = express.Router();
 // Generate JWT Token
 const signToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
   });
 };
 
@@ -36,6 +36,8 @@ const sendTokenResponse = (user, statusCode, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { name, surname, email, phone, password, confirmPassword } = req.body;
+
+    console.log('Registration attempt:', { name, surname, email, phone });
 
     // Validation
     if (!name || !surname || !email || !phone || !password || !confirmPassword) {
@@ -77,6 +79,8 @@ router.post('/register', async (req, res) => {
       password
     });
 
+    console.log('User created successfully:', user.email);
+
     sendTokenResponse(user, 201, res);
   } catch (error) {
     console.error('Registration error:', error);
@@ -112,6 +116,8 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('Login attempt:', email);
+
     // Validate email & password
     if (!email || !password) {
       return res.status(400).json({
@@ -124,14 +130,17 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
+      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
       });
     }
 
-    // Check if password matches
-    const isMatch = await user.correctPassword(password, user.password);
+    // Check if password matches - USING FIXED METHOD
+    const isMatch = await user.correctPassword(password);
+
+    console.log('Password match result:', isMatch);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -140,12 +149,61 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log('Login successful for user:', user.email);
     sendTokenResponse(user, 200, res);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error during login. Please try again.'
+    });
+  }
+});
+
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
+router.get('/me', async (req, res) => {
+  try {
+    // Get token from header
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Get user from database
+    const user = await User.findById(decoded.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(401).json({
+      success: false,
+      error: 'Invalid token'
     });
   }
 });

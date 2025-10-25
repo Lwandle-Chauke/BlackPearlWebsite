@@ -1,26 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
 import "../styles/about.css";
 import "../styles/style.css";
 
-const About = () => {
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-    const openAuthModal = () => setIsAuthModalOpen(true);
-    const closeAuthModal = () => setIsAuthModalOpen(false);
-
+const About = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     return (
         <>
-            <Header onSignInClick={openAuthModal} />
-            
-            {isAuthModalOpen && <AuthModal onClose={closeAuthModal} />}
+            <Header 
+                onAuthClick={onAuthClick} 
+                isLoggedIn={isLoggedIn} 
+                user={currentUser}
+                onSignOut={onSignOut}
+            />
 
             <div className="about-container">
                 <article className="about-panel">
-                    {/* Replaced inline style with class 'main-title' */}
                     <h1 className="main-title">ABOUT US</h1>
 
                     <section>
@@ -55,7 +51,6 @@ const About = () => {
                             <li><strong>Diverse Fleet:</strong> Well-maintained vehicles for small groups up to full-size coaches.</li>
                             <li><strong>Customer-Centric Approach:</strong> Simple booking and exceptional service from first inquiry to destination.</li>
                         </ul>
-                        {/* Ensure links use the React <Link> component */}
                         <p>Ready to experience reliable and luxurious transport? <Link to="/quote">Get a Free Quote</Link> or <Link to="/contact">Contact Us</Link> today to discuss your needs.</p>
                     </section>
                 </article>
