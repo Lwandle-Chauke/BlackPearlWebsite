@@ -1,0 +1,179 @@
+/* ==========================================================
+   GALLERY PAGE LAYOUT
+   ========================================================== */
+.gallery-page-content {
+    width: 100%;
+    /* No flex layout needed here, as the content is single-column (main-content) */
+}
+
+.main-content {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.main-content h2 { 
+    font-size: 1.5rem; 
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    color: var(--dark-gray); 
+}
+
+/* Add Album Button */
+.btn-add-album {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 20px;
+    float: right;
+}
+.btn-add-album:hover { background: #2980b9; }
+
+.gallery-list {
+    clear: both; /* Clear the float from the button */
+}
+
+/* ==========================================================
+   GALLERY CARD STYLES (Desktop - 3 Columns)
+   ========================================================== */
+.gallery-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    gap: 20px;
+}
+.gallery-item:last-child { 
+    border-bottom: none; 
+}
+
+.image-container {
+    width: 200px; /* Adjusted width for better flex behavior */
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.image-container img {
+    width: 100%;
+    height: 120px; /* Reduced height slightly */
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-info {
+    flex-grow: 1;
+    min-width: 0; /* Prevents overflow */
+}
+
+.gallery-info h3 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    color: var(--dark-gray);
+}
+
+.total-images {
+    font-size: 0.9rem; 
+    color: #666;
+}
+
+.gallery-actions {
+    margin-top: 10px;
+}
+.gallery-actions i {
+    font-size: 1.2rem;
+    margin-right: 15px;
+    cursor: pointer;
+    color: var(--dark-gray);
+    transition: color 0.2s;
+}
+.gallery-actions i:hover { color: var(--primary-blue); }
+/* Status Badge Base */
+.stat-status .status-confirmed,
+.stat-status .status-pending,
+.stat-status .status-completed {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white; /* Text color */
+    text-align: center;
+    min-width: 70px; /* optional: ensures badge isn't too narrow */
+}
+
+/* Status Colors */
+.stat-status .status-confirmed {
+    background-color: #28a745; /* green */
+}
+
+.stat-status .status-pending {
+    background-color: #ffc107; /* yellow/orange */
+    color: #333; /* dark text for contrast */
+}
+
+.stat-status .status-completed {
+    background-color: #007bff; /* blue */
+}
+
+
+
+/* ==========================================================
+   RESPONSIVE (Mobile Adaptation)
+   ========================================================== */
+@media (max-width: 768px) {
+    .btn-add-album {
+        float: none;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .gallery-item {
+        flex-direction: column; /* Stack image and info/stats vertically */
+        align-items: stretch;
+        padding: 15px 0;
+    }
+    
+    .image-container {
+        width: 100%; /* Image takes full width */
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .image-container img {
+        height: 180px; /* Slightly taller image on mobile */
+    }
+    
+    .gallery-info {
+        order: 1; /* Place info before stats */
+    }
+    
+    .current-stats {
+        order: 2; /* Place stats after info */
+        width: 100%;
+        text-align: left;
+        border-left: none;
+        border-top: 1px dashed #eee; /* Separator for clarity */
+        padding-top: 10px;
+        padding-left: 0;
+        margin-top: 10px;
+    }
+
+    .current-stats h4 {
+        display: none; /* Hide redundant header */
+    }
+    
+    /* Display stats inline for a cleaner mobile look */
+    .current-stats p {
+        display: inline-block;
+        margin-right: 15px;
+    }
+    .current-stats .stat-status {
+        display: block; /* Status on its own line */
+        margin-top: 5px;
+    }
+}

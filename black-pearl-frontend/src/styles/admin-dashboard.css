@@ -1,0 +1,140 @@
+/* ==========================================================
+   DASHBOARD CONTENT STYLES
+========================================================== */
+.dashboard-page-content {
+    width: 100%;
+    max-width: 1200px; /* Keep content from stretching too far on large screens */
+    margin: 20px auto; /* Center content */
+    padding: 0 15px; /* Small horizontal padding */
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Space between main sections */
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+/* Analytics Cards */
+.analytics-card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+.analytics-card:hover {
+    transform: translateY(-3px);
+}
+
+.analytics-card h3 {
+    font-size: 2rem;
+    margin-bottom: 5px;
+    color: var(--dark-gray);
+    font-weight: 700;
+}
+.analytics-card p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+
+/* Data Snippet / Chart Section */
+.data-snippet-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+
+/* Recent Bookings Table */
+.recent-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: var(--dark-gray);
+}
+
+.data-table-container {
+    background: var(--white);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    overflow-x: auto; /* Make table scrollable on mobile */
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Table scroll on small screens */
+}
+.data-table th, .data-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+.data-table th {
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+}
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status badges */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--white);
+    display: inline-block;
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+@media (max-width: 1024px) {
+    .dashboard-page-content {
+        gap: 25px;
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        gap: 15px;
+    }
+    .analytics-card {
+        padding: 15px;
+    }
+    .data-table th, .data-table td {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-page-content {
+        padding: 0 5px;
+        gap: 20px;
+    }
+    .analytics-card h3 {
+        font-size: 1.5rem;
+    }
+    .analytics-card p {
+        font-size: 0.8rem;
+    }
+    .data-snippet-section {
+        padding: 15px;
+    }
+}

@@ -1,0 +1,542 @@
+:root {
+  --bg-black: #000000;
+  --white: #ffffff;
+  --silver: #e6e6e6;        /* light silver for blocks */
+  --muted: #cfc9c4;         /* grey-brown muted */
+  --accent: #1f1f1f;        /* darker gray */
+  --cta-bg: #000000;
+  --cta-text: #ffffff;
+  --card-bg: #f3f4f5;
+  --radius: 28px;
+  --max-w: 980px;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+body, html, #root {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--accent);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+/* Container */
+.wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+/* ========================================================================================
+                            HEADER STYLES 
+=========================================================================================*/
+
+/* Main header container */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: var(--bg-black);
+  color: var(--white);
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Header layout */
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* This ensures vertical alignment */
+  padding: 0 20px;
+}
+
+/* Logo */
+.logo a {
+  text-decoration: none;
+  color: var(--white);
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.logo span {
+  color: var(--silver);
+}
+
+/* Desktop navigation */
+nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  gap: 20px;
+  /* FIX: Change from fixed margin to auto to correctly position the nav */
+  margin-left: auto; 
+  padding-left: 0;
+}
+
+nav ul li {
+  margin-left: 20px;
+}
+
+nav ul li a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+nav ul li a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background: var(--silver);
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+nav ul li a:hover::after {
+  width: 100%;
+}
+
+/* Active page highlight */
+nav ul li a.active,
+.mobile-menu a.active {
+  color: var(--silver);
+  font-weight: 600;
+}
+
+nav ul li a.active::after,
+.mobile-menu a.active::after {
+  width: 100%;
+}
+
+/* Navigation actions (sign-in + hamburger) */
+.nav-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center; /* Ensures button and hamburger are aligned */
+}
+
+/* Sign-in button */
+.btn-sign {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-sign:hover {
+  background: var(--muted);
+  color: #fff;
+  border-color: var(--muted);
+}
+
+/* Hamburger menu (mobile only) */
+.hamburger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.hamburger span {
+  width: 20px;
+  height: 2px;
+  background: var(--white);
+  display: block;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.hamburger span::before,
+.hamburger span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--white);
+  transition: all 0.3s ease;
+}
+
+.hamburger span::before { top: -6px; }
+.hamburger span::after { top: 6px; }
+
+/* Toggle animation */
+.hamburger.active span { background: transparent; }
+.hamburger.active span::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+.hamburger.active span::after {
+  transform: rotate(-45deg);
+  top: 0;
+}
+
+/* Mobile dropdown menu */
+.mobile-menu {
+  display: none;
+  position: absolute;
+  right: 18px;
+  top: 64px;
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--white);
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+}
+
+.mobile-menu a {
+  display: block;
+  padding: 10px 6px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 15px;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.mobile-menu a:hover { color: var(--silver); }
+
+.mobile-menu hr {
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 6px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  nav { display: none; }
+  .hamburger { display: flex; }
+  .mobile-menu.active { display: block; }
+  .header-container { padding: 0 16px; }
+  .logo { font-size: 20px; }
+}
+
+/*----------------------------------------------------------------------------------------------
+----------------------------------------------SIGN IN-------------------------------------------
+-----------------------------------------------------------------------------------------------*/
+
+/* AUTH OVERLAY */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow-y: auto;
+  padding: 40px 15px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Modal Container */
+.auth-modal {
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  position: relative;
+  overflow-y: auto;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+/* Scrollbar */
+.auth-modal::-webkit-scrollbar { width: 8px; }
+.auth-modal::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 8px;
+}
+.auth-modal::-webkit-scrollbar-thumb:hover { background: #999; }
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.auth-tabs .tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #eee;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-tabs .tab.active {
+  background: black;
+  color: white;
+}
+
+/* Forms */
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+/* Headings */
+.auth-form h2 {
+  text-align: center;
+  color: black;
+  margin-bottom: 20px;
+}
+
+/* Inputs & Labels */
+.auth-form .form-group { margin-bottom: 15px; }
+
+.auth-form label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 600;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  font-size: 15px;
+}/* Error Message Styles */
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Form input focus states */
+.auth-form input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+/* Button disabled state */
+.btn-auth:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.btn-auth:disabled:hover {
+  background: #666;
+}
+
+/* Submit Buttons */
+.btn-auth {
+  display: block;
+  width: 100%;
+  background: black;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.btn-auth:hover { background: gray; }
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  font-size: 26px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #333;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover { color: red; }
+
+/* Header sign-in button */
+/* NOTE: .btn-header-signin is no longer used in the JSX, 
+   the standard .btn-sign class is used instead. 
+   Keeping this block in case it was used elsewhere. */
+.btn-header-signin {
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 400;
+  font-family: "Poppins", sans-serif;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-header-signin:hover { background: gray; transform: translateY(-1px); }
+.btn-header-signin:active { transform: scale(0.97); }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive Sign-in */
+@media (max-width: 480px) {
+  .auth-modal { width: 95%; padding: 25px 20px; }
+  .auth-tabs .tab { font-size: 14px; padding: 8px; }
+  .btn-auth { font-size: 15px; }
+}
+
+/*-------------------------------------------------------------------------------------------
+--------------------------------------FOOTER-------------------------------------------------
+---------------------------------------------------------------------------------------------*/
+
+footer {
+  margin-top: 30px;
+  background: linear-gradient(180deg, #333, #2d2d2d);
+  color: var(--white);
+  padding: 24px 0 40px;
+}
+
+.footer-inner {
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.footer-block {
+  min-width: 150px;
+  flex-basis: 25%;
+}
+
+.footer h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.footer p, .footer a {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  text-decoration: none;
+  margin: 0 0 8px 0;
+  display: block;
+}
+
+.footer .logo-sm {
+  width: 160px;
+  height: 70px;
+  display: inline-grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.bottom-bar {
+  margin-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 12px;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+}
+
+/* Floating chat icon */
+.chat-fab {
+  position: fixed;
+  right: 14px;
+  bottom: 92px;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,#f9f9f9,#e6e6e6);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 70;
+}
+
+.chat-fab img { width: 36px; height: 36px; }
+
+/* Responsive / layout tweaks */
+@media(min-width:720px) {
+  .brand-title { display: inline-block; }
+  nav { display: flex; }
+  .hamburger { display: none; }
+  .mobile-menu { display: none !important; }
+  .wrap { padding: 0 28px; }
+  main { padding: 26px; }
+  .footer-inner { gap: 42px; }
+  .chat-fab { right: 28px; bottom: 50px; }
+}
+
+/* Footer 3-column mobile fix */
+@media(max-width: 719px) {
+  .footer-inner {
+    flex-wrap: nowrap;
+    justify-content: space-around;
+  }
+
+  .footer-block {
+    flex-basis: 33.33%;
+    min-width: 0;
+    padding: 0 5px;
+  }
+
+  .footer p, .footer a { font-size: 11px; }
+
+  .footer-block:first-child {
+    flex-basis: 100%;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+}
+
+/* Tablet / Desktop nav links spacing */
+@media(min-width:880px) {
+  nav a { font-size: 14px; }
+}

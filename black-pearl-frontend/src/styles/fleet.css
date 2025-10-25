@@ -46,7 +46,7 @@
 
 .vehicle-card img {
   width: 100%;
-  height: 200px;
+  height: 280px;
   object-fit: cover;
   border-bottom: 3px solid var(--bg-black);
 }

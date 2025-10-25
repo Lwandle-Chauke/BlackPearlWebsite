@@ -1,0 +1,125 @@
+/* ==========================================================
+   SETTINGS PAGE LAYOUT
+   ========================================================== */
+.settings-page-content {
+    width: 100%;
+}
+
+.main-content {
+    /* Using the standard layout box shared across pages */
+    width: 100%;
+    background: var(--white);
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.main-content h2 { 
+    font-size: 1.5rem; 
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    color: var(--dark-gray); 
+}
+
+/* ==========================================================
+   SETTINGS FORM STYLES
+   ========================================================== */
+.settings-section {
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 30px;
+}
+
+.settings-section h3 {
+    color: var(--primary-blue);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.form-grid {
+    display: grid;
+    /* Default is a simple stack, overridden on desktop */
+    gap: 20px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 0; /* Managed by form-grid gap */
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+    -webkit-appearance: none; /* Remove default browser styling for select */
+    appearance: none;
+}
+.form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a4a4a'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    padding-right: 30px;
+}
+
+/* Save Button */
+.btn-save {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+    float: right; /* Maintain right alignment on desktop */
+}
+.btn-save:hover { background: #2980b9; }
+
+/* ==========================================================
+   RESPONSIVE LAYOUT
+   ========================================================== */
+
+/* Tablet and Desktop Layout (Above 768px) */
+@media (min-width: 769px) {
+    /* General Website Settings (3 columns) */
+    .settings-section:nth-of-type(1) .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Booking & Quotes Settings (2 columns) */
+    .settings-section:nth-of-type(2) .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Security (1 column, stretch) */
+    .settings-section:nth-of-type(3) .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Layout (Below 768px) */
+@media (max-width: 768px) {
+    .settings-section {
+        padding: 15px;
+    }
+    
+    /* Ensure the button takes full width and floats are cleared */
+    .btn-save {
+        float: none;
+        width: 100%;
+        margin-top: 20px;
+    }
+}
