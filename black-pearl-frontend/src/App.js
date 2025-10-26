@@ -62,6 +62,44 @@ function App() {
         }
     };
 
+    // Function to refresh user data from backend
+    const refreshUserData = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await fetch('http://localhost:5000/api/auth/me', {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    console.log('User data refreshed:', data.user);
+                    setCurrentUser(data.user);
+                    setUserRole(data.user.role || 'customer');
+                    // Update localStorage with fresh data
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    return data.user;
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
+    // Handle user update from child components
+    const handleUserUpdate = (updatedUser) => {
+        console.log('User data updated:', updatedUser);
+        setCurrentUser(updatedUser);
+        setUserRole(updatedUser.role || 'customer');
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+    };
+
     // Helper to determine if the user is logged in at all
     const isLoggedIn = userRole !== 'guest';
 
@@ -73,20 +111,23 @@ function App() {
 
     // Handle successful authentication from AuthModal
     const handleAuthSuccess = (user) => {
-  console.log('Auth successful for user:', user);
-  setCurrentUser(user);
-  setUserRole(user.role || 'customer');
-  setShowAuthModal(false);
-  
-  // Redirect based on user role
-  if (user.role === 'admin') {
-    // Use window.location for immediate redirect to admin dashboard
-    window.location.href = '/admin/dashboard';
-  } else {
-    // Show success message for regular users
-    alert(`Welcome back, ${user.name}! You have been successfully signed in.`);
-  }
-};
+        console.log('Auth successful for user:', user);
+        setCurrentUser(user);
+        setUserRole(user.role || 'customer');
+        setShowAuthModal(false);
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Redirect based on user role
+        if (user.role === 'admin') {
+            // Use window.location for immediate redirect to admin dashboard
+            window.location.href = '/admin/dashboard';
+        } else {
+            // Show success message for regular users
+            alert(`Welcome back, ${user.name}! You have been successfully signed in.`);
+        }
+    };
 
     const handleSignOut = () => {
         // Clear local storage
@@ -200,6 +241,7 @@ function App() {
                                 onSignOut={handleSignOut} 
                                 isLoggedIn={true} 
                                 currentUser={currentUser}
+                                onUserUpdate={handleUserUpdate}
                             />
                         </ProtectedRoute>
                     } 
@@ -213,6 +255,7 @@ function App() {
                                 onSignOut={handleSignOut} 
                                 isLoggedIn={true} 
                                 currentUser={currentUser}
+                                onUserUpdate={handleUserUpdate}
                             />
                         </ProtectedRoute>
                     } 
@@ -225,6 +268,7 @@ function App() {
                                 onSignOut={handleSignOut} 
                                 isLoggedIn={true} 
                                 currentUser={currentUser}
+                                onUserUpdate={handleUserUpdate}
                             />
                         </ProtectedRoute>
                     } 
@@ -240,6 +284,7 @@ function App() {
                             <AdminDashboard 
                                 onSignOut={handleSignOut} 
                                 currentUser={currentUser}
+                                onUserUpdate={handleUserUpdate}
                             />
                         </ProtectedRoute>
                     } 

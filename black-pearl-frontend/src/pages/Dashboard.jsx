@@ -5,11 +5,30 @@ import Footer from '../components/Footer';
 import '../styles/style.css'; 
 import '../styles/dashboard.css';
 
-const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
+const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => {
   const navigate = useNavigate();
   const [userBookings, setUserBookings] = useState([]);
   const [nextBooking, setNextBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Refresh user data function
+  const refreshUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && onUserUpdate) {
+          onUserUpdate(data.user);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
 
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
@@ -21,7 +40,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const fetchUserBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/user/${currentUser.id}`, {
+      const response = await fetch(`http://localhost:5000/api/quotes/my-quotes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -33,7 +52,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         
         // Find next upcoming booking
         const upcoming = data.data?.filter(booking => 
-          booking.status === 'confirmed' || booking.status === 'pending'
+          booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
         ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
         
         setNextBooking(upcoming || null);
@@ -49,42 +68,56 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     }
   };
 
+  // Calculate discount value based on loyalty points (same logic as loyaltyService)
+  const calculateDiscountValue = (points) => {
+    const discountAmount = Math.floor(points / 100) * 10;
+    return Math.min(discountAmount, 500); // Max R500 discount
+  };
+
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
     const completedTrips = userBookings.filter(booking => 
       booking.status === 'completed'
     ).length;
 
-    // Calculate loyalty points: 100 points per completed trip + 50 points per pending/confirmed trip
-    const basePoints = completedTrips * 100;
-    const upcomingTrips = userBookings.filter(booking => 
-      booking.status === 'confirmed' || booking.status === 'pending'
-    ).length;
-    const bonusPoints = upcomingTrips * 50;
-    
-    const totalLoyaltyPoints = (currentUser?.loyaltyPoints || 0) + basePoints + bonusPoints;
+    // Calculate total spent from completed trips
+    const totalSpent = userBookings
+      .filter(booking => booking.status === 'completed' && booking.finalPrice)
+      .reduce((total, booking) => total + (booking.finalPrice || 0), 0);
 
+    // Use actual user data from backend - ALWAYS use currentUser directly
     return {
       name: currentUser?.name || "Guest",
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
-      loyaltyPoints: totalLoyaltyPoints,
+      loyaltyPoints: currentUser?.loyaltyPoints || 0,
       tripsCompleted: completedTrips,
-      memberSince: currentUser?.memberSince || "2025",
+      totalTrips: currentUser?.totalTrips || 0,
+      totalSpent: totalSpent,
+      tier: currentUser?.tier || 'bronze',
+      memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
-      upcomingTrips: upcomingTrips
+      upcomingTrips: userBookings.filter(booking => 
+        booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
+      ).length,
+      availableDiscount: calculateDiscountValue(currentUser?.loyaltyPoints || 0)
     };
   };
 
   const userData = calculateUserData();
-
+  
   // Personal highlights based on REAL user activity
   const getPersonalHighlights = () => {
     const highlights = [
       { 
         badge: '🏅', 
         stat: `${userData.tripsCompleted} Trips Completed`, 
-        desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` 
+        desc: `You've completed ${userData.tripsCompleted} trips with us!` 
+      },
+      { 
+        badge: '💰', 
+        stat: `${userData.loyaltyPoints} Points`, 
+        desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` 
       },
       { 
         badge: '⏱️', 
@@ -96,28 +129,48 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         stat: `${userData.tripsCompleted * 240} km Traveled`, 
         desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
       },
-      { 
-        badge: '📅', 
-        stat: `${userData.upcomingTrips} Upcoming Trips`, 
-        desc: `You have ${userData.upcomingTrips} trips planned with us.` 
-      },
     ];
+
+    // Add tier-based highlights
+    const tierEmoji = {
+      bronze: '🥉',
+      silver: '🥈', 
+      gold: '🥇',
+      platinum: '💎'
+    };
+
+    highlights.push({
+      badge: tierEmoji[userData.tier] || '🥉',
+      stat: `${userData.tier.charAt(0).toUpperCase() + userData.tier.slice(1)} Member`,
+      desc: `You are a ${userData.tier} level member with special benefits!`
+    });
+
+    // Add discount highlight
+    if (userData.availableDiscount > 0) {
+      highlights.push({
+        badge: '💎',
+        stat: `R ${userData.availableDiscount} Discount`,
+        desc: `You have R ${userData.availableDiscount} available to use on your next trip!`
+      });
+    }
+
+    // Add spending highlight
+    if (userData.totalSpent > 0) {
+      highlights.push({
+        badge: '💳',
+        stat: `R ${userData.totalSpent.toLocaleString()} Total`,
+        desc: `You've spent R ${userData.totalSpent.toLocaleString()} on trips.`
+      });
+    }
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
       highlights.push({ 
         badge: '🎖️', 
         stat: 'VIP Member', 
-        desc: "You are now a VIP member of Black Pearl Tours!" 
+        desc: "You are now a VIP member!" 
       });
     }
-
-    // Add loyalty points highlight
-    highlights.push({ 
-      badge: '💰', 
-      stat: `${userData.loyaltyPoints} Points`, 
-      desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` 
-    });
 
     // Add booking milestone if applicable
     if (userData.totalBookings >= 10) {

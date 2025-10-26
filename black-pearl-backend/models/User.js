@@ -42,11 +42,29 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // Updated loyalty fields
   loyaltyPoints: {
     type: Number,
     default: 0
   },
   tripsCompleted: {
+    type: Number,
+    default: 0
+  },
+  totalTrips: {
+    type: Number,
+    default: 0
+  },
+  totalSpent: {
+    type: Number,
+    default: 0
+  },
+  tier: {
+    type: String,
+    enum: ['bronze', 'silver', 'gold', 'platinum'],
+    default: 'bronze'
+  },
+  discountEarned: {
     type: Number,
     default: 0
   },
@@ -74,6 +92,12 @@ const userSchema = new mongoose.Schema({
 // Update the updatedAt field before saving
 userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
+  
+  // Auto-calculate tier when loyalty points change
+  if (this.isModified('loyaltyPoints')) {
+    this.tier = this.calculateTier();
+  }
+  
   next();
 });
 
@@ -90,8 +114,9 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Compare password method
+// Compare password method - FIXED
 userSchema.methods.correctPassword = async function(candidatePassword) {
+  // If password is not selected, fetch user with password
   if (!this.password) {
     const userWithPassword = await this.constructor.findById(this._id).select('+password');
     return await bcrypt.compare(candidatePassword, userWithPassword.password);
@@ -105,6 +130,36 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return this.correctPassword(candidatePassword);
 };
 
-const User = mongoose.model('User', userSchema);
+// Calculate user tier based on loyalty points
+userSchema.methods.calculateTier = function() {
+  if (this.loyaltyPoints >= 5000) return 'platinum';
+  if (this.loyaltyPoints >= 2000) return 'gold';
+  if (this.loyaltyPoints >= 500) return 'silver';
+  return 'bronze';
+};
+
+// Method to add loyalty points
+userSchema.methods.addLoyaltyPoints = function(points, amountSpent = 0) {
+  this.loyaltyPoints += points;
+  if (amountSpent > 0) {
+    this.totalSpent += amountSpent;
+  }
+  this.totalTrips += 1;
+  this.tripsCompleted += 1;
+  this.tier = this.calculateTier();
+  return this.save();
+};
+
+// Virtual for full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.name} ${this.surname}`;
+});
+
+// Ensure virtual fields are serialized
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
+
+// FIX: Check if model already exists before creating
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 module.exports = User;

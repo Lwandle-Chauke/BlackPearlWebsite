@@ -48,6 +48,9 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  returnDate: {
+    type: Date
+  },
   
   // Contact Information
   customerName: {
@@ -83,7 +86,7 @@ const quoteSchema = new mongoose.Schema({
     default: 'pending'
   },
   
-  // NEW FIELDS FOR PRICING AND ADMIN FEATURES
+  // Pricing Fields
   estimatedPrice: {
     type: Number,
     required: true,
@@ -92,6 +95,22 @@ const quoteSchema = new mongoose.Schema({
   finalPrice: {
     type: Number
   },
+  
+  // Loyalty and Discount Fields
+  loyaltyPointsEarned: {
+    type: Number,
+    default: 0
+  },
+  loyaltyPointsApplied: {
+    type: Number,
+    default: 0
+  },
+  discountApplied: {
+    type: Number,
+    default: 0
+  },
+  
+  // Admin Fields
   adminNotes: {
     type: String,
     trim: true

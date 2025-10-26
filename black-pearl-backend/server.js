@@ -5,6 +5,14 @@ require('dotenv').config();
 
 const app = express();
 
+// Clear module cache in dev (prevents model overwrite)
+if (process.env.NODE_ENV === 'development') {
+  ['user', 'quote'].forEach(model => {
+    const modelPath = `./models/${model}`;
+    if (require.cache[require.resolve(modelPath)]) delete require.cache[require.resolve(modelPath)];
+  });
+}
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -17,7 +25,11 @@ app.use(cors({
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours');
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours', {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
   } catch (error) {
@@ -25,96 +37,54 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
-
 connectDB();
 
-// Import middleware - CHANGED TO USE auth.js
+// Import middleware & routes
 const { protect, authorize } = require('./middleware/auth');
-
-// Routes
 const authRoutes = require('./routes/auth');
 const quoteRoutes = require('./routes/quotes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/quotes', quoteRoutes);
 
-// Basic routes
-app.get('/api', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Black Pearl Tours API is running!',
-    timestamp: new Date().toISOString()
-  });
-});
+// Basic API route
+app.get('/api', (req, res) => res.json({ success: true, message: 'Black Pearl Tours API running!', timestamp: new Date() }));
+app.get('/api/health', (req, res) => res.json({
+  status: 'OK',
+  database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+  timestamp: new Date()
+}));
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString()
-  });
-});
+// Protected admin routes
+app.get('/api/admin/test', protect, authorize('admin'), (req, res) => res.json({ success: true, message: 'Admin access granted!', user: req.user }));
+app.get('/api/admin/dashboard', protect, authorize('admin'), (req, res) => res.json({
+  success: true,
+  message: 'Admin dashboard data',
+  stats: { totalUsers: 150, totalBookings: 45, newMessages: 12, revenue: 12500 },
+  user: req.user
+}));
 
-// Protected admin test route
-app.get('/api/admin/test', protect, authorize('admin'), (req, res) => {
-  res.json({
-    success: true,
-    message: 'Admin access granted!',
-    user: req.user
-  });
-});
-
-// Protected admin dashboard data route
-app.get('/api/admin/dashboard', protect, authorize('admin'), (req, res) => {
-  res.json({
-    success: true,
-    message: 'Admin dashboard data',
-    stats: {
-      totalUsers: 150,
-      totalBookings: 45,
-      newMessages: 12,
-      revenue: 12500
-    },
-    user: req.user
-  });
-});
-
-// Error handling middleware
+// Error handling
 app.use((error, req, res, next) => {
   console.error('Server error:', error);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error'
-  });
+  res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
-// Simple 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: `Route ${req.originalUrl} not found`
-  });
-});
+// 404 handler
+app.use((req, res) => res.status(404).json({ success: false, error: `Route ${req.originalUrl} not found` }));
+
+// Graceful shutdown
+const shutdown = async () => {
+  console.log('\n🔻 Shutting down server...');
+  await mongoose.connection.close();
+  console.log('✅ MongoDB connection closed.');
+  process.exit(0);
+};
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 API available at http://localhost:${PORT}/api`);
-  console.log(`🔑 Auth endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
-  console.log(`   PUT  http://localhost:${PORT}/api/auth/change-password`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/forgot-password`);
-  console.log(`📋 Quote endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/quotes (Public - Submit quote)`);
-  console.log(`   GET  http://localhost:${PORT}/api/quotes (Admin - Get all quotes)`);
-  console.log(`   GET  http://localhost:${PORT}/api/quotes/my-quotes (User - Get my quotes)`);
-  console.log(`   PUT  http://localhost:${PORT}/api/quotes/:id (Admin - Update quote)`);
-  console.log(`   DELETE http://localhost:${PORT}/api/quotes/:id (Admin - Delete quote)`);
-  console.log(`   POST http://localhost:${PORT}/api/quotes/:id/convert-to-booking (Admin - Convert to booking)`);
-  console.log(`   POST http://localhost:${PORT}/api/quotes/manual-booking (Admin - Manual booking)`);
-  console.log(`🔒 Admin endpoints (protected):`);
-  console.log(`   GET  http://localhost:${PORT}/api/admin/test`);
-  console.log(`   GET  http://localhost:${PORT}/api/admin/dashboard`);
+  console.log(`🌐 API: http://localhost:${PORT}/api`);
 });

@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const Quote = require('../models/Quote');
+const Quote = require('../models/quote');
+const User = require('../models/user');
 const { protect, authorize } = require('../middleware/auth');
+const LoyaltyService = require('../services/loyaltyService');
 
 // Get all quotes (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
@@ -69,31 +71,12 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update quote status (admin only)
+// Update quote status (admin only) - FIXED VERSION
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { status, finalPrice, adminNotes } = req.body;
     
-    const updateData = { status };
-    
-    if (finalPrice !== undefined) updateData.finalPrice = finalPrice;
-    if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
-    
-    if (status === 'confirmed' && !req.body.confirmedAt) {
-      updateData.confirmedAt = new Date();
-    }
-    if (status === 'booked' && !req.body.bookedAt) {
-      updateData.bookedAt = new Date();
-    }
-    if (status === 'completed' && !req.body.completedAt) {
-      updateData.completedAt = new Date();
-    }
-
-    const quote = await Quote.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const quote = await Quote.findById(req.params.id);
 
     if (!quote) {
       return res.status(404).json({
@@ -102,10 +85,58 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
       });
     }
 
+    const oldStatus = quote.status;
+    const updateData = { status };
+    
+    if (finalPrice !== undefined) updateData.finalPrice = finalPrice;
+    if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+
+    // Handle loyalty points when trip is completed
+    if (status === 'completed' && oldStatus !== 'completed') {
+      updateData.completedAt = new Date();
+      
+      // Calculate and award loyalty points
+      if (quote.userId && finalPrice) {
+        const pointsEarned = LoyaltyService.calculatePointsEarned(
+          finalPrice, 
+          quote.vehicleType
+        );
+        
+        updateData.loyaltyPointsEarned = pointsEarned;
+
+        // Update user's loyalty points and stats
+        const user = await User.findById(quote.userId);
+        if (user) {
+          user.loyaltyPoints += pointsEarned;
+          user.totalTrips += 1;
+          user.totalSpent += finalPrice;
+          user.tier = user.calculateTier();
+          
+          await user.save();
+        }
+      }
+    }
+
+    // Handle booking confirmation
+    if (status === 'confirmed' && !req.body.confirmedAt) {
+      updateData.confirmedAt = new Date();
+    }
+    
+    // Handle booking
+    if (status === 'booked' && !req.body.bookedAt) {
+      updateData.bookedAt = new Date();
+    }
+
+    const updatedQuote = await Quote.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
     res.json({
       success: true,
       message: 'Quote updated successfully',
-      data: quote
+      data: updatedQuote
     });
   } catch (error) {
     console.error('Update quote error:', error);
@@ -225,7 +256,7 @@ function calculateEstimatedPrice(vehicleType, destination, isOneWay) {
     '15 Seater Quantum': 1200,
     '17 Seater Luxury Sprinter': 1400,
     '22 Seater Luxury Coach': 1800,
-    '28 Seater Semi Luxury': 2200,
+    '28 Seater Luxury Coach': 2200,
     '39 Seater Luxury Coach': 2800,
     '60 Seater Semi Luxury': 3500,
     '70 Seater Semi Luxury': 4000
@@ -252,5 +283,70 @@ function calculateEstimatedPrice(vehicleType, destination, isOneWay) {
   // Return calculated price
   return Math.round(basePrice);
 }
+
+// Add this route to your quotes.js file
+router.post('/fix-loyalty-points', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const quotes = await Quote.find({ 
+      userId: req.user.id,
+      status: 'completed'
+    });
+
+    let totalPoints = 0;
+    let totalSpent = 0;
+    let fixedQuotes = [];
+
+    // Recalculate points for all completed quotes
+    for (const quote of quotes) {
+      if (quote.finalPrice && !quote.loyaltyPointsEarned) {
+        const pointsEarned = LoyaltyService.calculatePointsEarned(
+          quote.finalPrice, 
+          quote.vehicleType
+        );
+        
+        // Update the quote with earned points
+        quote.loyaltyPointsEarned = pointsEarned;
+        await quote.save();
+        
+        totalPoints += pointsEarned;
+        totalSpent += quote.finalPrice;
+        fixedQuotes.push({
+          id: quote._id,
+          points: pointsEarned,
+          price: quote.finalPrice
+        });
+      } else if (quote.loyaltyPointsEarned) {
+        totalPoints += quote.loyaltyPointsEarned;
+        totalSpent += quote.finalPrice || 0;
+      }
+    }
+
+    // Update user with correct points
+    user.loyaltyPoints = totalPoints;
+    user.totalSpent = totalSpent;
+    user.totalTrips = quotes.length;
+    user.tier = user.calculateTier();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Loyalty points recalculated successfully',
+      data: {
+        pointsAdded: totalPoints,
+        totalSpent: totalSpent,
+        tripsCount: quotes.length,
+        newTier: user.tier,
+        fixedQuotes: fixedQuotes
+      }
+    });
+  } catch (error) {
+    console.error('Fix loyalty points error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fix loyalty points: ' + error.message
+    });
+  }
+});
 
 module.exports = router;

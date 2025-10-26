@@ -152,6 +152,32 @@ body {
 }
 .status-confirmed {
     background: #28a745; /* Green for confirmed */
+    border-radius: 25px;
+    padding: 10px 6px; /* Bigger button */
+    color: var(--white);
+}
+.status-booked {
+    background: #007bff; /* Blue for booked */
+    border-radius: 25px;
+    padding: 10px 6px; /* Bigger button */
+    color: var(--white);
+}
+.status-pending {
+    background: #ffc107; /* Yellow for pending */
+    border-radius: 25px;
+    padding: 10px 6px; /* Bigger button */
+    color: var(--black);
+}
+.status-completed {
+    background: #17a2b8; /* Teal for completed */
+    border-radius: 25px;
+    padding: 10px 6px; /* Bigger button */
+    color: var(--white);
+}
+.status-cancelled {
+    background: #dc3545; /* Red for cancelled */
+    border-radius: 25px;
+    padding: 10px 6px; /* Bigger button */
     color: var(--white);
 }
 .view-btn {
@@ -169,7 +195,6 @@ body {
 .view-btn:hover {
     background: grey; /* Slightly lighter on hover */
 }
-
 
 /* SERVICES row */
 .services-area {
@@ -284,6 +309,49 @@ body {
     font-weight: 700;
 }
 
+/* RECENT TRIPS */
+.recent-trips {
+    padding: 40px 20px;
+}
+.trips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 980px;
+    margin: 0 auto;
+}
+.trip-card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--black);
+}
+.trip-type {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--black);
+}
+.trip-date {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+.trip-route {
+    color: #444;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+.trip-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
 /* REVIEWS */
 .reviews-wrap {
     max-width: 820px;
@@ -347,6 +415,94 @@ body {
 .chat-fab:hover {
     transform: scale(1.1);
     background: #333;
+}
+
+/* LOYALTY SECTION */
+.loyalty-section {
+    padding: 40px 20px;
+}
+.loyalty-dashboard {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.loyalty-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.tier-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+.tier-bronze { background: #cd7f32; color: white; }
+.tier-silver { background: #c0c0c0; color: black; }
+.tier-gold { background: #ffd700; color: black; }
+.tier-platinum { background: #e5e4e2; color: black; }
+
+.loyalty-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-card h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.tier-progress {
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    transition: width 0.3s ease;
+}
+
+.benefits-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.benefits-section li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 /* small screens */
@@ -416,5 +572,10 @@ body {
         height: 50px;
         bottom: 20px;
         right: 20px;
+    }
+
+    /* Loyalty stats grid for mobile */
+    .loyalty-stats {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
