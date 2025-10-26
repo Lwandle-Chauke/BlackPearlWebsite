@@ -1,5 +1,6 @@
 import React, { useState } from "react"; 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
+import './styles/style.css';
 
 // =======================================================
 // IMPORT ALL PAGES (using correct file paths from file structure)

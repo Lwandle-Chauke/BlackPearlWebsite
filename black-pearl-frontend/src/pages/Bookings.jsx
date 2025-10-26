@@ -11,6 +11,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [bookings, setBookings] = useState([]); // Keep this for potential future backend integration
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -18,48 +19,52 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // User-specific bookings data
+  // User-specific bookings data (mock data)
   const userBookings = [
     {
       id: 1,
       title: "Airport Transfer",
       status: "confirmed",
-      date: "22 Oct 2024",
+      date: "2024-10-22",
       pickup: "OR Tambo Airport",
       dropoff: "Sandton Hotel",
       passengers: currentUser?.name ? 2 : 1,
       price: "R850",
-      customer: currentUser?.name || "Guest"
+      customer: currentUser?.name || "Guest",
+      service: "Airport Transfer" // Added service for filtering
     },
     {
       id: 2,
       title: "Conference Shuttle",
       status: "pending",
-      date: "25 Oct 2024",
+      date: "2024-10-25",
       pickup: "Pretoria CBD",
       dropoff: "Gallagher Convention Centre",
       passengers: currentUser?.name ? 4 : 2,
       price: "R1,400",
-      customer: currentUser?.name || "Guest"
+      customer: currentUser?.name || "Guest",
+      service: "Conference Shuttle" // Added service for filtering
     },
     {
       id: 3,
       title: "Sports Tour",
       status: "completed",
-      date: "5 Sep 2024",
+      date: "2024-09-05",
       pickup: "Johannesburg Stadium",
       dropoff: "Durban Beachfront",
       passengers: currentUser?.name ? 8 : 4,
       price: "R3,500",
-      customer: currentUser?.name || "Guest"
+      customer: currentUser?.name || "Guest",
+      service: "Sports Tour" // Added service for filtering
     }
   ];
 
   const filteredBookings = userBookings.filter(booking => {
     const matchesStatus = filter === 'all' || booking.status === filter;
-    const matchesSearch = booking.title.toLowerCase().includes(search.toLowerCase()) ||
-                          booking.pickup.toLowerCase().includes(search.toLowerCase()) ||
-                          booking.dropoff.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      booking.service?.toLowerCase().includes(search.toLowerCase()) ||
+      booking.pickup?.toLowerCase().includes(search.toLowerCase()) ||
+      booking.dropoff?.toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -72,7 +77,6 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         onSignOut={onSignOut}
       />
 
-      {/* Bookings Content */}
       <div className="bookings-container">
         <div className="bookings-header">
           <h2>My Bookings</h2>
@@ -105,18 +109,15 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           </div>
         </div>
 
-        {/* Search and Filter */}
+        {/* Search & Filter */}
         <div className="search-bar">
-          <input 
-            type="text" 
-            placeholder="Search by destination or date..." 
+          <input
+            type="text"
+            placeholder="Search by destination or service..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select 
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
@@ -124,18 +125,18 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           </select>
         </div>
 
-        {/* Booking Cards */}
+        {/* Bookings List */}
         <div id="bookings-list">
-          {filteredBookings.map(booking => (
+          {filteredBookings.map((booking) => (
             <div key={booking.id} className="booking-card" data-status={booking.status}>
               <div className="booking-header">
                 <h3>{booking.title}</h3>
                 <span className={`status ${booking.status}`}>
-                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
                 </span>
               </div>
               <div className="booking-details">
-                <p><strong>Date:</strong> {booking.date}</p>
+                <p><strong>Date:</strong> {new Date(booking.date).toLocaleDateString()}</p>
                 <p><strong>Pickup:</strong> {booking.pickup}</p>
                 <p><strong>Drop-off:</strong> {booking.dropoff}</p>
                 <p><strong>Passengers:</strong> {booking.passengers}</p>
@@ -151,40 +152,13 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                     Cancel
                   </button>
                 )}
-                <button 
-                  className="btn-rebook" 
-                  onClick={() => showToastMessage('Trip rebooked!')}
-                >
-                  Rebook
-                </button>
-                <button 
-                  className="btn-feedback" 
-                  onClick={() => showToastMessage('Thank you for your feedback!')}
-                >
-                  Give Feedback
-                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Toast Message */}
-      {showToast && (
-        <div id="toast" className="toast show">
-          {toastMessage}
-        </div>
-      )}
-
-      {/* Floating chat icon */}
-      <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-        </svg>
-      </div>
+      {showToast && <div id="toast" className="toast show">{toastMessage}</div>}
 
       <Footer />
     </>

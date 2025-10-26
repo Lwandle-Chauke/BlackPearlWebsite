@@ -1,11 +1,14 @@
-/* Profile Container */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+/* Your page-specific styles here */
 .profile-container {
   max-width: 900px;
   margin: 100px auto 60px auto;
   background: #fff;
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   font-family: 'Poppins', sans-serif;
 }
 
@@ -166,7 +169,7 @@
   margin: 10px;
   width: 220px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s;
 }
 
