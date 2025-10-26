@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Quote = require('../models/quote');
-const User = require('../models/user');
+const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
 const LoyaltyService = require('../services/loyaltyService');
 
