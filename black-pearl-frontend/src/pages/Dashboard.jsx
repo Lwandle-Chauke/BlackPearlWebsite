@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/style.css'; 
 import '../styles/dashboard.css';
+import ChatWidget from "../chatbot/ChatWidget";
 
 const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const navigate = useNavigate();
@@ -353,17 +354,11 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       </section>
 
       {/* Floating chat icon */}
-      <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
-        </svg>
-      </div>
-
       <Footer />
-    </>
+
+<ChatWidget />
+
+</>
   );
 };
 

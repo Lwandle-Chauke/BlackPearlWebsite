@@ -44,26 +44,8 @@ app.get('/api', (req, res) => {
     success: true,
     message: 'Black Pearl Tours API is running!',
     timestamp: new Date().toISOString()
-  console.log(`🔑 Auth endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
-  console.log(`📋 Quote endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/quotes (Public - Submit quote)`);
-  console.log(`   GET  http://localhost:${PORT}/api/quotes (Admin - Get all quotes)`);
-  console.log(`   PUT  http://localhost:${PORT}/api/quotes/:id (Admin - Update quote)`);
-  console.log(`   DELETE http://localhost:${PORT}/api/quotes/:id (Admin - Delete quote)`);
-  console.log(`🔒 Admin endpoints (protected):`);
-  console.log(`   GET  http://localhost:${PORT}/api/admin/test`);
-  console.log(`   GET  http://localhost:${PORT}/api/admin/dashboard`);
+  });
 });
-});
-
-// Import routes
-const bookingRoutes = require('./routes/bookings');
-
-// Use routes
-app.use('/api/bookings', bookingRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

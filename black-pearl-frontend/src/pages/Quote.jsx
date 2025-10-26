@@ -4,6 +4,7 @@ import "../styles/quote.css";
 import "../styles/style.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ChatWidget from "../chatbot/ChatWidget";
 
 const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [searchParams] = useSearchParams();
@@ -298,17 +299,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       </main>
 
       {/* Floating Chat Icon */}
-      <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff" />
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666" />
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666" />
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1" />
-        </svg>
-      </div>
-
       <Footer />
-    </>
+
+<ChatWidget />
+
+</>
   );
 };
 
