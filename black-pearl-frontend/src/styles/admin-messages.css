@@ -4,6 +4,7 @@
 :root {
     --unread: #e74c3c; /* Red for UNREAD */
     --read: #2ecc71; /* Green for READ */
+    --rejected: #dc3545; /* Red for rejected reviews */
     /* Inherit other colors from Admin.css */
 }
 
@@ -28,6 +29,33 @@
     margin-top: 0; 
     margin-bottom: 20px; 
     color: var(--dark-gray); 
+}
+
+/* Tab Styles */
+.admin-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.tab-button {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    border-bottom-color: var(--primary-blue);
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.tab-button:hover {
+    background: #f8f9fa;
 }
 
 /* Table Styles - Ensure horizontal scroll on mobile */
@@ -71,6 +99,10 @@
     background: var(--read); 
     color: var(--white); 
 }
+.status-rejected {
+    background: var(--rejected);
+    color: var(--white);
+}
 
 /* Action Icons */
 .action-icons i {
@@ -81,6 +113,114 @@
 }
 .action-icons i:hover { 
     color: var(--primary-blue); 
+}
+
+/* Review-specific styles */
+.review-comment {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.review-photo-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.review-photo-thumb:hover {
+    transform: scale(1.1);
+}
+
+.no-photo {
+    color: #999;
+    font-style: italic;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 1.1rem;
+}
+
+.user-info {
+    font-size: 0.9rem;
+}
+
+.user-info strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.user-info small {
+    color: #666;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+/* Photo upload styles for dashboard */
+.photo-upload-section {
+    margin: 15px 0;
+}
+
+.photo-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-upload-label:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+}
+
+.photo-preview {
+    position: relative;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.photo-preview img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #007bff;
+}
+
+.remove-photo {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploading-text {
+    color: #007bff;
+    font-style: italic;
+    margin-top: 5px;
 }
 
 /* ==========================================================
@@ -98,5 +238,34 @@
     .data-table td:nth-child(4) { 
         min-width: 150px; 
         white-space: normal; /* Allow subject to wrap */
+    }
+
+    /* Tab buttons on mobile */
+    .admin-tabs {
+        flex-direction: column;
+    }
+    
+    .tab-button {
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        border-left: 3px solid transparent;
+    }
+    
+    .tab-button.active {
+        border-left-color: var(--primary-blue);
+        border-bottom-color: #eee;
+    }
+
+    /* Adjust review table for mobile */
+    .review-comment {
+        max-width: 120px;
+    }
+
+    .user-info strong {
+        font-size: 0.8rem;
+    }
+
+    .user-info small {
+        font-size: 0.7rem;
     }
 }

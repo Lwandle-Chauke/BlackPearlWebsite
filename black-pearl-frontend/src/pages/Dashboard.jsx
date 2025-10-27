@@ -13,6 +13,8 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [reviewPhoto, setReviewPhoto] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Refresh user data function
   const refreshUserData = async () => {
@@ -71,7 +73,86 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // NEW: Customer accepts quote
+  // NEW: Photo upload function
+  const handlePhotoUpload = async (file) => {
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/uploads/review-photo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setReviewPhoto(data.photoUrl);
+        return data.photoUrl;
+      }
+      return null;
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      return null;
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // NEW: Submit review with photo
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    const rating = e.target.rating.value;
+    const text = e.target.testimonial.value.trim();
+    
+    if (!rating) {
+      alert("Please choose a rating."); 
+      return; 
+    }
+
+    try {
+      let photoUrl = reviewPhoto;
+      const photoFile = e.target.photo?.files[0];
+      
+      if (photoFile) {
+        photoUrl = await handlePhotoUpload(photoFile);
+      }
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: parseInt(rating),
+          comment: text,
+          photo: photoUrl,
+          booking: nextBooking?._id // Link to current booking if available
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Thanks for your ${rating}-star review! Your feedback has been submitted.`);
+        e.target.reset();
+        setReviewPhoto(null);
+      } else {
+        alert('Failed to submit review. Please try again.');
+      }
+    } catch (error) {
+      console.error('Review submission error:', error);
+      alert('Failed to submit review. Please try again.');
+    }
+  };
+
+  // Customer accepts quote
   const handleAcceptQuote = async (quoteId) => {
     if (!window.confirm('Are you sure you want to accept this quote? This will create a booking.')) {
       return;
@@ -100,7 +181,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // NEW: Customer declines quote
+  // Customer declines quote
   const handleDeclineQuote = async (quoteId) => {
     const declineReason = prompt('Please provide a reason for declining this quote (optional):');
     
@@ -255,23 +336,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
   const handleRequestQuote = () => {
     navigate('/quote');
-  };
-
-  const handleReviewSubmit = (e) => {
-    e.preventDefault();
-    const rating = e.target.rating.value;
-    const text = e.target.testimonial.value.trim();
-    
-    if (!rating) {
-      alert("Please choose a rating."); 
-      return; 
-    }
-
-    // In a real app, you would submit this to your backend
-    console.log('Review submitted:', { rating, text, userId: currentUser?.id });
-    
-    alert(`Thanks for your feedback (${rating} stars).\n"${text}"`);
-    e.target.reset();
   };
 
   const highlights = getPersonalHighlights();
@@ -495,7 +559,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         </section>
       )}
 
-      {/* REVIEWS */}
+      {/* REVIEWS WITH PHOTO UPLOAD */}
       <section className="reviews-wrap" aria-labelledby="reviewsTitle">
         <div className="container">
           <div id="reviewsTitle" className="section-title review-section-title">
@@ -503,7 +567,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
           </div>
           <p className="reviews-sub">
             {userData.tripsCompleted > 0 
-              ? 'How was your last trip?' 
+              ? 'How was your last trip? Share your experience with a photo!' 
               : 'Tell us what you\'re looking forward to!'
             }
           </p>
@@ -516,6 +580,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               <option value="2">2 - Poor</option>
               <option value="1">1 - Bad</option>
             </select>
+            
             <textarea 
               name="testimonial" 
               placeholder={
@@ -524,7 +589,56 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                   : "What are you most excited about for your upcoming travel?"
               }
             ></textarea>
-            <button type="submit" className="review-submit">SUBMIT {userData.tripsCompleted > 0 ? 'REVIEW' : 'FEEDBACK'}</button>
+            
+            {/* Photo Upload Section */}
+            <div className="photo-upload-section">
+              <label htmlFor="review-photo" className="photo-upload-label">
+                <i className="fas fa-camera"></i>
+                {reviewPhoto ? 'Photo Selected ✓' : 'Add Photo (Optional)'}
+              </label>
+              <input 
+                type="file" 
+                id="review-photo"
+                name="photo"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                      alert('Photo must be less than 5MB');
+                      e.target.value = '';
+                      return;
+                    }
+                    setReviewPhoto(URL.createObjectURL(file));
+                  }
+                }}
+                style={{ display: 'none' }}
+              />
+              
+              {reviewPhoto && (
+                <div className="photo-preview">
+                  <img src={reviewPhoto} alt="Review preview" />
+                  <button 
+                    type="button" 
+                    className="remove-photo"
+                    onClick={() => {
+                      setReviewPhoto(null);
+                      document.getElementById('review-photo').value = '';
+                    }}
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              )}
+              
+              {uploadingPhoto && (
+                <div className="uploading-text">Uploading photo...</div>
+              )}
+            </div>
+            
+            <button type="submit" className="review-submit" disabled={uploadingPhoto}>
+              {uploadingPhoto ? 'UPLOADING...' : 'SUBMIT REVIEW'}
+            </button>
           </form>
         </div>
       </section>
