@@ -473,6 +473,117 @@ body {
     min-height: 120px;
 }
 
+/* Add to the existing dashboard.css file */
+
+/* Photo Upload Styles */
+.photo-upload-section {
+    margin: 15px 0;
+    border: 2px dashed #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.photo-upload-section:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+
+.photo-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.photo-upload-label:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+}
+
+.photo-preview {
+    position: relative;
+    display: inline-block;
+    margin-top: 15px;
+}
+
+.photo-preview img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 3px solid #007bff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.remove-photo {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.remove-photo:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.uploading-text {
+    color: #007bff;
+    font-style: italic;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+/* Review form enhancements */
+.review-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.review-form select,
+.review-form textarea {
+    background: white;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.review-form select:focus,
+.review-form textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.review-submit:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.review-submit:disabled:hover {
+    background: #6c757d;
+    transform: none;
+}
+
 .review-submit {
     background: var(--black);
     color: var(--white);

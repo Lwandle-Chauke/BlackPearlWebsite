@@ -7,6 +7,8 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { protect, authorize } from './middleware/auth.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,7 +19,6 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
-
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +26,9 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true
 }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB connection
 const connectDB = async () => {
@@ -51,6 +55,35 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/users", userRoutes); // Use user routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quotes', quoteRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/uploads', uploadRoutes);
+
+// Test route for reviews (simple version)
+app.get('/api/reviews', (req, res) => {
+  res.json({ success: true, data: [] });
+});
+
+app.post('/api/reviews', (req, res) => {
+  console.log('📝 Review submitted:', req.body);
+  res.json({
+    success: true,
+    data: {
+      ...req.body,
+      _id: 'test-' + Date.now(),
+      status: 'pending',
+      createdAt: new Date()
+    }
+  });
+});
+
+// Test route for uploads (simple version)
+app.post('/api/uploads/review-photo', (req, res) => {
+  console.log('📸 Photo upload attempt');
+  res.json({
+    success: true,
+    photoUrl: '/uploads/reviews/test-photo.jpg'
+  });
+});
 
 // Basic API route
 app.get('/api', (req, res) => res.json({ success: true, message: 'Black Pearl Tours API running!', timestamp: new Date() }));
@@ -58,15 +91,6 @@ app.get('/api/health', (req, res) => res.json({
   status: 'OK',
   database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
   timestamp: new Date()
-}));
-
-// Protected admin routes
-app.get('/api/admin/test', protect, authorize('admin'), (req, res) => res.json({ success: true, message: 'Admin access granted!', user: req.user }));
-app.get('/api/admin/dashboard', protect, authorize('admin'), (req, res) => res.json({
-  success: true,
-  message: 'Admin dashboard data',
-  stats: { totalUsers: 150, totalBookings: 45, newMessages: 12, revenue: 12500 },
-  user: req.user
 }));
 
 // Error handling
@@ -93,4 +117,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 API: http://localhost:${PORT}/api`);
+  console.log(`📁 Uploads: http://localhost:${PORT}/uploads`);
 });

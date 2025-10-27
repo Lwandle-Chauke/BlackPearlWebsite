@@ -8,7 +8,9 @@ const AdminMessages = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [messagesData, setMessagesData] = useState([]);
     const [feedbackData, setFeedbackData] = useState([]);
-    const [activeTab, setActiveTab] = useState('messages'); // 'messages' or 'feedback'
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('messages'); // 'messages', 'feedback', or 'reviews'
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -40,12 +42,49 @@ const AdminMessages = () => {
         }
     };
 
+    const fetchReviews = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/reviews', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setReviews(data.data || []);
+            } else {
+                console.error('Failed to fetch reviews');
+                setReviews([]);
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+            setReviews([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchMessages();
         fetchFeedback();
-    }, []);
+        if (activeTab === 'reviews') {
+            fetchReviews();
+        }
+    }, [activeTab]);
 
     const getStatusClass = (status) => status === "UNREAD" ? "status-unread" : "status-read";
+
+    const getReviewStatusClass = (status) => {
+        const statusMap = {
+            'pending': 'status-unread',
+            'approved': 'status-read',
+            'rejected': 'status-rejected'
+        };
+        return statusMap[status] || 'status-read';
+    };
 
     const handleMessageAction = async (action, id, currentStatus) => {
         if (action === "View") {
@@ -77,14 +116,38 @@ const AdminMessages = () => {
         }
     };
 
+    const handleReviewAction = async (action, reviewId, responseText = '') => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/reviews/${reviewId}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: responseText ? JSON.stringify({ response: responseText }) : undefined
+            });
+
+            if (response.ok) {
+                fetchReviews(); // Refresh the list
+                alert(`Review ${action}ed successfully`);
+            } else {
+                alert('Failed to update review');
+            }
+        } catch (error) {
+            console.error('Error updating review:', error);
+            alert('Failed to update review');
+        }
+    };
+
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             <div id="content-wrapper">
-                <AdminTopBar pageTitle="Messages & Feedback" toggleSidebar={toggleSidebar} />
+                <AdminTopBar pageTitle={activeTab === 'messages' ? 'Messages' : activeTab === 'feedback' ? 'User Feedback' : 'Customer Reviews'} toggleSidebar={toggleSidebar} />
                 <main className="messages-page-content">
                     <div className="main-content">
-                        <div className="tabs">
+                        <div className="admin-tabs">
                             <button
                                 className={`tab-button ${activeTab === 'messages' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('messages')}
@@ -97,11 +160,24 @@ const AdminMessages = () => {
                             >
                                 User Feedback
                             </button>
+                            <button
+                                className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('reviews')}
+                            >
+                                Customer Reviews
+                            </button>
                         </div>
+
+                        <h2>
+                            {activeTab === 'messages'
+                                ? 'Manage Contact Messages:'
+                                : activeTab === 'feedback'
+                                    ? 'Manage User Feedback:'
+                                    : 'Manage Customer Reviews:'}
+                        </h2>
 
                         {activeTab === 'messages' && (
                             <>
-                                <h2>Manage Contact Messages :</h2>
                                 <div className="data-table-container">
                                     <table className="data-table">
                                         <thead>
@@ -150,7 +226,6 @@ const AdminMessages = () => {
 
                         {activeTab === 'feedback' && (
                             <>
-                                <h2>Manage User Feedback :</h2>
                                 <div className="data-table-container">
                                     <table className="data-table">
                                         <thead>
@@ -186,6 +261,94 @@ const AdminMessages = () => {
                                     </table>
                                 </div>
                             </>
+                        )}
+
+                        {activeTab === 'reviews' && (
+                            <div className="data-table-container">
+                                {loading ? (
+                                    <div className="loading">Loading reviews...</div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Rating</th>
+                                                <th>Comment</th>
+                                                <th>Photo</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reviews.map((review) => (
+                                                <tr key={review._id}>
+                                                    <td>
+                                                        <div className="user-info">
+                                                            <strong>{review.user?.name || 'Unknown User'}</strong>
+                                                            <br />
+                                                            <small>{review.user?.email || 'No email'}</small>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div className="rating-stars">
+                                                            {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="review-comment">{review.comment}</td>
+                                                    <td>
+                                                        {review.photo ? (
+                                                            <img
+                                                                src={`http://localhost:5000${review.photo}`}
+                                                                alt="Review"
+                                                                className="review-photo-thumb"
+                                                                onClick={() => window.open(`http://localhost:5000${review.photo}`, '_blank')}
+                                                            />
+                                                        ) : (
+                                                            <span className="no-photo">No Photo</span>
+                                                        )}
+                                                    </td>
+                                                    <td>{new Date(review.createdAt).toLocaleDateString()}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${getReviewStatusClass(review.status)}`}>
+                                                            {review.status.toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="action-icons">
+                                                        <i
+                                                            className="fas fa-check"
+                                                            title="Approve Review"
+                                                            onClick={() => handleReviewAction('approve', review._id)}
+                                                        ></i>
+                                                        <i
+                                                            className="fas fa-times"
+                                                            title="Reject Review"
+                                                            onClick={() => handleReviewAction('reject', review._id)}
+                                                        ></i>
+                                                        <i
+                                                            className="fas fa-reply"
+                                                            title="Respond to Review"
+                                                            onClick={() => {
+                                                                const response = prompt('Enter your response to this review:');
+                                                                if (response) {
+                                                                    handleReviewAction('respond', review._id, response);
+                                                                }
+                                                            }}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {reviews.length === 0 && (
+                                                <tr>
+                                                    <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                                                        No reviews yet
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
                         )}
                     </div>
                 </main>
