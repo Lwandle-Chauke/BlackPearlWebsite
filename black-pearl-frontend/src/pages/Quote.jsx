@@ -18,6 +18,108 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [pickupLocation, setPickupLocation] = useState("");
   const [dropoffLocation, setDropoffLocation] = useState("");
+  const [tripDate, setTripDate] = useState("");
+  const [tripTime, setTripTime] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [tripPurpose, setTripPurpose] = useState("");
+  const [tripType, setTripType] = useState("");
+  const [customDestination, setCustomDestination] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerCompany, setCustomerCompany] = useState("");
+
+  // Comprehensive location to zone mapping based on PDF
+  const locationZones = {
+    // Johannesburg Zones
+    johannesburg: {
+      zone1: [
+        'bedford gardens', 'bedfordview', 'bafevan', 'benzul', 'beaufortnout valley', 
+        'birch acree', 'birchleigh', 'boladburg', 'bonasno park', 'brentwood park', 
+        'burma', 'cynldren', 'dawn park', 'down glen', 'eden glen', 'eromdale', 
+        'farinade', 'fairwood', 'frantemes', 'feltside', 'glen marais', 'glenhazel', 
+        'heriotdale', 'highlands', 'hurleyville', 'isanto', 'jet park', 'kempton park', 
+        'kerrington', 'kilimrey', 'lakefield', 'linksfield', 'lombardy east', 
+        'lyndhurst', 'malvern', 'marsh steyn park', 'north norwood', 'oakland', 
+        'observatory', 'orchards', 'raedens', 'riviera', 'roshenville', 'ruxunlin', 
+        'ryttfield', 'sandringham', 'sondawood', 'silvermont', 'spatham', 
+        'st. andrews', 'sydenham', 'victoria'
+      ],
+      zone2: [
+        'alboisidout', 'aberton', 'abendnie', 'alhol', 'auckland park', 'bassords', 
+        'benmore', 'besato', 'bergbon', 'birdhaven', 'batigownie', 'bootour', 
+        'basenfonden', 'backenhurst', 'badyon', 'bamley', 'brysenton', 'chislehurstton', 
+        'cragghill park', 'danewood', 'dunfield', 'quickery', 'emmarstrids', 'fattand', 
+        'fernolds', 'fontainebleau', 'gallo mauro', 'gemiskon', 'gwyndorf', 'hurtingham', 
+        'hyde park', 'ilfovo', 'isonda', 'johannesburg cbd', 'kalacol', 'kelvin', 
+        'kerrington ydf', 'kibler park', 'kyalami', 'kyber rock', 'linden', 'limmeyer', 
+        'lyme park', 'maimahud', 'mercea', 'melville', 'mendela', 'mayersold', 'midland', 
+        'mondoor', 'montroux', 'montropski', 'mulcainry', 'northcliff', 'northriding', 
+        'omnova', 'parkmont', 'parkmore', 'petkoon', 'parktown north', 'parkview', 
+        'parkwood', 'palacket', 'penovale', 'randburg cbd', 'randhart', 'rampage', 
+        'richmond', 'ridgeway', 'ribana', 'risdells', 'river club', 'rhonda', 
+        'robindale', 'robinthia', 'roosevelt park', 'rosebank', 'roskenhuth', 
+        'rosarene', 'sandhurst', 'starbunch', 'sandton cbd', 'sevoy estate', 
+        'saxonsolid', 'stethancon', 'strydom park', 'sunninghill', 'the town trunkman', 
+        'victoria park', 'viona valley', 'waverley', 'wendyspool', 'westcliff', 
+        'weedsboro', 'windsor', 'woodward'
+      ],
+      zone3: [
+        'alemselle', 'beverley', 'bodwin', 'broadscene', 'blombock', 'bubill estate', 
+        'charlevall', 'craigavon', 'daniilern', 'douglasdale', 'farmhall', 'foraways', 
+        'jackal park', 'lowell', 'magalesegg', 'northriding', 'olivestale', 
+        'piree slopes', 'quelferina', 'rangpark ridge', 'sharonites', 'someglans', 
+        'sundowner', 'waterford estate', 'welterweden park', 'wilcoxpon'
+      ],
+      zone4: [
+        'breunanda', 'constantia kloud', 'discovery', 'featherbrook estate', 
+        'florida', 'georgina', 'helderburn', 'hongview', 'houston', 'kya sands', 
+        'lamonta', 'little falls', 'meadalong', 'mindstone', 'middlesbitt', 
+        'princess', 'radiology', 'rangview', 'roodekrans', 'roodepoort cbd', 
+        'ruining', 'seixant', 'springs', 'southern valley', 'wigelhauser', 
+        'who park', 'wipcooffs', 'zambgoroll'
+      ],
+      zone5: [
+        'kermans', 'kingsmidorp', 'mountmart', 'noordhauser', 'rand el dal'
+      ],
+      zone6: [
+        'brits', 'bondentroom', 'magaliesburg', 'nigel', 'randforthin', 
+        'sandburg', 'vanderbiljank', 'vereinship', 'westonia', 'witbank'
+      ]
+    },
+    // Pretoria Zones
+    pretoria: {
+      zone1: [
+        'amherfield', 'arcadia', 'brotherrick', 'brooklyn', 'brunerda', 
+        'capital park', 'centurion north', 'centurion south', 'clubview', 
+        'colony', 'cordentia park', 'cornwall hill', 'dict-howes', 'de-wigura', 
+        'durbiskot', 'eldersigne', 'enpastria', 'faerie giau', 'gastricnini', 
+        'genevilliers', 'hatfield', 'hammarabizat', 'highland park', 'irene', 
+        'la mustangra', 'lynnwood', 'lyttleton manvi', 'mirandjeld', 'merlin park', 
+        'meyerspark', 'monument park', 'modokoot', 'morelena park', 'mukkhenak', 
+        'nevalands', 'offershorten', 'pierre van ryeweld', 'pretoria cbd', 
+        'pretoria gardens', 'pretoria park', 'queenswood', 'restriction', 
+        'retorodale', 'rodmukkneal', 'silveriekes', 'stameway', 'swarthops', 
+        'the reeds', 'vahalla', 'valley farm', 'wagadrand', 'waterloof', 
+        'waverley', 'werela park', 'wilfonglen', 'wingale park', 'woodhill'
+      ],
+      zone2: [
+        'akasia', 'amandaaga', 'amith', 'doranda', 'elbowite', 'karampark', 
+        'landium montana', 'mayville', 'ordersexpoort', 'rooxleplaat', 
+        'silveston', 'shoville', 'the orchards', 'theresepark', 'wonderboom'
+      ],
+      zone3: [
+        'brits', 'bromhorstspunt', 'cuffman', 'damas', 'hammarabizat', 
+        'harthesexpoort dam'
+      ],
+      zone4: [
+        'soulangyue', 'mamiddol', 'makopane'
+      ],
+      zone5: [
+        'hammarabizat', 'lethibelle', 'brits'
+      ]
+    }
+  };
 
   // Rate structures based on the PDF
   const johannesburgRates = {
@@ -44,18 +146,107 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     '70 Seater Semi Luxury': { zone4: 4800, zone5: 4900, zone6: 6500 }
   };
 
+  // Function to find zone for a location
+  const findZone = (location, city) => {
+    if (!location || !city) return null;
+    
+    const locationLower = location.toLowerCase().trim();
+    const cityZones = locationZones[city];
+    
+    if (!cityZones) return null;
+
+    // Check each zone for matching suburbs
+    for (const [zone, suburbs] of Object.entries(cityZones)) {
+      if (suburbs.some(suburb => locationLower.includes(suburb.toLowerCase()))) {
+        return zone;
+      }
+    }
+
+    return null;
+  };
+
+  // Function to detect city based on location
+  const detectCity = (location) => {
+    if (!location) return null;
+    
+    const locationLower = location.toLowerCase();
+    
+    // Check for Johannesburg areas
+    const johannesburgIndicators = [
+      'johannesburg', 'jhb', 'sandton', 'randburg', 'roodepoort', 
+      'kempton', 'midrand', 'fourways', 'rosebank'
+    ];
+    
+    // Check for Pretoria areas
+    const pretoriaIndicators = [
+      'pretoria', 'pta', 'centurion', 'hatfield', 'lynnwood', 
+      'brooklyn', 'arcadia', 'queenswood'
+    ];
+
+    if (johannesburgIndicators.some(indicator => locationLower.includes(indicator))) {
+      return 'johannesburg';
+    }
+    
+    if (pretoriaIndicators.some(indicator => locationLower.includes(indicator))) {
+      return 'pretoria';
+    }
+
+    return null;
+  };
+
+  // Special location mappings for common routes
+  const specialLocations = {
+    // Airports
+    'or tambo': { city: 'johannesburg', zone: 'zone1' },
+    'ortambo': { city: 'johannesburg', zone: 'zone1' },
+    'johannesburg airport': { city: 'johannesburg', zone: 'zone1' },
+    'lanseria': { city: 'johannesburg', zone: 'zone4' },
+    'lanseria airport': { city: 'johannesburg', zone: 'zone4' },
+    
+    // Common landmarks
+    'iie msa': { city: 'johannesburg', zone: 'zone4' },
+    'monash': { city: 'johannesburg', zone: 'zone4' },
+    'university of johannesburg': { city: 'johannesburg', zone: 'zone2' },
+    'uj': { city: 'johannesburg', zone: 'zone2' },
+    'wits': { city: 'johannesburg', zone: 'zone2' },
+    'university of witwatersrand': { city: 'johannesburg', zone: 'zone2' },
+    'up': { city: 'pretoria', zone: 'zone1' },
+    'university of pretoria': { city: 'pretoria', zone: 'zone1' },
+    'tuks': { city: 'pretoria', zone: 'zone1' },
+  };
+
+  // Enhanced zone detection with special locations
+  const detectZone = (location) => {
+    if (!location) return { city: null, zone: null };
+    
+    const locationLower = location.toLowerCase().trim();
+    
+    // Check special locations first
+    for (const [key, value] of Object.entries(specialLocations)) {
+      if (locationLower.includes(key)) {
+        return value;
+      }
+    }
+    
+    // Try to detect city
+    const city = detectCity(location);
+    if (!city) return { city: null, zone: null };
+    
+    // Find zone within detected city
+    const zone = findZone(location, city);
+    
+    return { city, zone };
+  };
+
   useEffect(() => {
     const vehicleFromUrl = searchParams.get("vehicle");
     if (vehicleFromUrl) {
       setVehicleType(vehicleFromUrl);
     }
 
-    // Minimum date today
+    // Set minimum date to today
     const today = new Date().toISOString().split("T")[0];
-    const dateInput = document.getElementById("tripDate");
-    const returnDateInput = document.getElementById("returnDate");
-    if (dateInput) dateInput.min = today;
-    if (returnDateInput) returnDateInput.min = today;
+    setTripDate(today);
   }, [searchParams]);
 
   useEffect(() => {
@@ -68,6 +259,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     setShowCustomDestination(e.target.value === "Other (Specify Below)");
   };
 
+  // Calculate minimum date for return date (should be after trip date)
+  const getMinReturnDate = () => {
+    return tripDate || new Date().toISOString().split('T')[0];
+  };
+
   const calculateEstimatedPrice = () => {
     if (!vehicleType || !pickupLocation || !dropoffLocation) {
       setEstimatedPrice(0);
@@ -75,48 +271,59 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     }
 
     let basePrice = 0;
-    const isJohannesburg = pickupLocation.toLowerCase().includes('johannesburg') || 
-                          dropoffLocation.toLowerCase().includes('johannesburg');
-    const isPretoria = pickupLocation.toLowerCase().includes('pretoria') || 
-                      dropoffLocation.toLowerCase().includes('pretoria');
+    
+    // Detect zones for both locations
+    const pickupInfo = detectZone(pickupLocation);
+    const dropoffInfo = detectZone(dropoffLocation);
+    
+    console.log('Pickup Info:', pickupInfo);
+    console.log('Dropoff Info:', dropoffInfo);
 
-    // Determine zone based on locations (simplified logic - you might want to enhance this)
-    const determineZone = (location) => {
-      if (location.toLowerCase().includes('zone1') || location.toLowerCase().includes('bedford')) return 'zone1';
-      if (location.toLowerCase().includes('zone2') || location.toLowerCase().includes('parktown')) return 'zone2';
-      if (location.toLowerCase().includes('zone3') || location.toLowerCase().includes('douglasdale')) return 'zone3';
-      if (location.toLowerCase().includes('zone4') || location.toLowerCase().includes('florida')) return 'zone4';
-      if (location.toLowerCase().includes('zone5') || location.toLowerCase().includes('kempton')) return 'zone5';
-      if (location.toLowerCase().includes('zone6') || location.toLowerCase().includes('brits')) return 'zone6';
-      return 'zone1'; // default to zone1
+    // Determine if this is a Johannesburg or Pretoria trip
+    const isJohannesburg = pickupInfo.city === 'johannesburg' || dropoffInfo.city === 'johannesburg';
+    const isPretoria = pickupInfo.city === 'pretoria' || dropoffInfo.city === 'pretoria';
+
+    // Use the higher zone for pricing
+    const getHigherZone = (zone1, zone2) => {
+      const zones = ['zone1', 'zone2', 'zone3', 'zone4', 'zone5', 'zone6'];
+      const index1 = zones.indexOf(zone1);
+      const index2 = zones.indexOf(zone2);
+      
+      // If both zones found, return the higher one
+      if (index1 !== -1 && index2 !== -1) {
+        return zones[Math.max(index1, index2)];
+      }
+      
+      // If only one zone found, return that one
+      if (index1 !== -1) return zone1;
+      if (index2 !== -1) return zone2;
+      
+      // Default to zone1 if no zones found
+      return 'zone1';
     };
 
-    const pickupZone = determineZone(pickupLocation);
-    const dropoffZone = determineZone(dropoffLocation);
-    
-    // Use the higher zone for pricing
-    const zone = getHigherZone(pickupZone, dropoffZone);
+    const zone = getHigherZone(pickupInfo.zone, dropoffInfo.zone);
+
+    console.log('Final Zone:', zone);
+    console.log('Is Johannesburg:', isJohannesburg);
+    console.log('Is Pretoria:', isPretoria);
 
     if (isJohannesburg && johannesburgRates[vehicleType] && johannesburgRates[vehicleType][zone]) {
       basePrice = johannesburgRates[vehicleType][zone];
+      console.log('Using Johannesburg rates:', basePrice);
     } else if (isPretoria && pretoriaRates[vehicleType] && pretoriaRates[vehicleType][zone]) {
       basePrice = pretoriaRates[vehicleType][zone];
+      console.log('Using Pretoria rates:', basePrice);
     } else {
       // For other destinations or unknown zones, use a default calculation
       basePrice = calculateDefaultPrice(vehicleType, destination);
+      console.log('Using default rates:', basePrice);
     }
 
     // Apply both ways multiplier (1.8x for round trip as per your backend)
     const finalPrice = tripDirection === "both-ways" ? Math.round(basePrice * 1.8) : basePrice;
     
     setEstimatedPrice(finalPrice);
-  };
-
-  const getHigherZone = (zone1, zone2) => {
-    const zones = ['zone1', 'zone2', 'zone3', 'zone4', 'zone5', 'zone6'];
-    const index1 = zones.indexOf(zone1);
-    const index2 = zones.indexOf(zone2);
-    return zones[Math.max(index1, index2)];
   };
 
   const calculateDefaultPrice = (vehicle, dest) => {
@@ -145,58 +352,77 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     return Math.round(price);
   };
 
+  const resetForm = () => {
+    setVehicleType("");
+    setTripDirection("one-way");
+    setDestination("");
+    setShowCustomDestination(false);
+    setEstimatedPrice(0);
+    setPickupLocation("");
+    setDropoffLocation("");
+    setTripDate(new Date().toISOString().split('T')[0]);
+    setTripTime("");
+    setReturnDate("");
+    setTripPurpose("");
+    setTripType("");
+    setCustomDestination("");
+    setCustomerName("");
+    setCustomerEmail("");
+    setCustomerPhone("");
+    setCustomerCompany("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      // Get form data
+      // Get form data - using state values
       const formData = {
-        tripPurpose: document.getElementById("tripPurpose").value,
-        tripType: document.getElementById("tripType").value,
+        tripPurpose: tripPurpose,
+        tripType: tripType,
         destination: destination,
-        customDestination: showCustomDestination ? document.getElementById("customDestination").value : "",
+        customDestination: showCustomDestination ? customDestination : "",
         pickupLocation: pickupLocation,
         dropoffLocation: dropoffLocation,
         vehicleType: vehicleType,
         isOneWay: tripDirection === "one-way",
-        tripDate: document.getElementById("tripDate").value,
-        returnDate: tripDirection === "both-ways" ? document.getElementById("returnDate").value : null,
-        tripTime: document.getElementById("tripTime").value,
-        customerName: document.getElementById("customerName").value,
-        customerEmail: document.getElementById("customerEmail").value,
-        customerPhone: document.getElementById("customerPhone").value,
-        customerCompany: document.getElementById("customerCompany").value,
+        tripDate: tripDate,
+        returnDate: tripDirection === "both-ways" ? returnDate : null,
+        tripTime: tripTime,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
+        customerCompany: customerCompany,
         estimatedPrice: estimatedPrice,
         userId: currentUser ? currentUser.id : null
       };
 
       // Validation
       const requiredFields = [
-        'tripPurpose', 'tripType', 'destination', 'pickupLocation', 
-        'dropoffLocation', 'vehicleType', 'tripDate', 'tripTime',
-        'customerName', 'customerEmail', 'customerPhone'
+        { field: 'tripPurpose', value: tripPurpose, name: 'Purpose of Trip' },
+        { field: 'tripType', value: tripType, name: 'Trip Type' },
+        { field: 'destination', value: destination, name: 'Destination' },
+        { field: 'pickupLocation', value: pickupLocation, name: 'Pickup Location' },
+        { field: 'dropoffLocation', value: dropoffLocation, name: 'Drop-off Location' },
+        { field: 'vehicleType', value: vehicleType, name: 'Vehicle Type' },
+        { field: 'tripDate', value: tripDate, name: 'Trip Date' },
+        { field: 'tripTime', value: tripTime, name: 'Trip Time' },
+        { field: 'customerName', value: customerName, name: 'Name' },
+        { field: 'customerEmail', value: customerEmail, name: 'Email' },
+        { field: 'customerPhone', value: customerPhone, name: 'Phone' }
       ];
 
       if (tripDirection === "both-ways") {
-        requiredFields.push('returnDate');
+        requiredFields.push({ field: 'returnDate', value: returnDate, name: 'Return Date' });
       }
 
-      let isValid = true;
-      requiredFields.forEach(field => {
-        const element = document.getElementById(field);
-        if (element && !element.value.trim()) {
-          isValid = false;
-          element.style.borderColor = "red";
-        } else if (element) {
-          element.style.borderColor = "#ccc";
-        }
-      });
-
-      if (!isValid) {
+      const missingFields = requiredFields.filter(field => !field.value.trim());
+      
+      if (missingFields.length > 0) {
         setMessageType("error");
-        setMessage("Please fill in all required fields.");
+        setMessage(`Please fill in all required fields: ${missingFields.map(f => f.name).join(', ')}`);
         setLoading(false);
         return;
       }
@@ -217,14 +443,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         setMessage(data.message || "Thank you for your quote request! We will contact you shortly.");
         
         // Reset form
-        e.target.reset();
-        setVehicleType("");
-        setTripDirection("one-way");
-        setDestination("");
-        setShowCustomDestination(false);
-        setEstimatedPrice(0);
-        setPickupLocation("");
-        setDropoffLocation("");
+        resetForm();
       } else {
         setMessageType("error");
         setMessage(data.error || "Failed to submit quote. Please try again.");
@@ -313,14 +532,20 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               <div className="input-group">
                 <br />
                 <label htmlFor="tripPurpose">Purpose of Trip</label>
-                <select id="tripPurpose" name="tripPurpose" required>
+                <select 
+                  id="tripPurpose" 
+                  name="tripPurpose" 
+                  value={tripPurpose}
+                  onChange={(e) => setTripPurpose(e.target.value)}
+                  required
+                >
                   <option value="">Select Purpose *</option>
-                  <option>Personal Use</option>
-                  <option>Business / Corporate</option>
-                  <option>School or University Trip</option>
-                  <option>Event / Wedding</option>
-                  <option>Tourism or Sightseeing</option>
-                  <option>Other</option>
+                  <option value="Personal Use">Personal Use</option>
+                  <option value="Business / Corporate">Business / Corporate</option>
+                  <option value="School or University Trip">School or University Trip</option>
+                  <option value="Event / Wedding">Event / Wedding</option>
+                  <option value="Tourism or Sightseeing">Tourism or Sightseeing</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
@@ -328,13 +553,19 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               <div className="input-group">
                 <br />
                 <label htmlFor="tripType">Trip Type</label>
-                <select id="tripType" name="tripType" required>
+                <select 
+                  id="tripType" 
+                  name="tripType" 
+                  value={tripType}
+                  onChange={(e) => setTripType(e.target.value)}
+                  required
+                >
                   <option value="">Select Trip Type *</option>
-                  <option>Airport Transfers</option>
-                  <option>Conference Shuttles</option>
-                  <option>Sports Travel</option>
-                  <option>Events & Leisure</option>
-                  <option>Custom Trip</option>
+                  <option value="Airport Transfers">Airport Transfers</option>
+                  <option value="Conference Shuttles">Conference Shuttles</option>
+                  <option value="Sports Travel">Sports Travel</option>
+                  <option value="Events & Leisure">Events & Leisure</option>
+                  <option value="Custom Trip">Custom Trip</option>
                 </select>
               </div>
 
@@ -350,13 +581,13 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   required
                 >
                   <option value="">Select Destination *</option>
-                  <option>Johannesburg</option>
-                  <option>Pretoria</option>
-                  <option>Cape Town</option>
-                  <option>Durban</option>
-                  <option>Bloemfontein</option>
-                  <option>Port Elizabeth</option>
-                  <option>Other (Specify Below)</option>
+                  <option value="Johannesburg">Johannesburg</option>
+                  <option value="Pretoria">Pretoria</option>
+                  <option value="Cape Town">Cape Town</option>
+                  <option value="Durban">Durban</option>
+                  <option value="Bloemfontein">Bloemfontein</option>
+                  <option value="Port Elizabeth">Port Elizabeth</option>
+                  <option value="Other (Specify Below)">Other (Specify Below)</option>
                 </select>
               </div>
 
@@ -366,6 +597,8 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   type="text"
                   id="customDestination"
                   placeholder="If 'Other', please specify your destination"
+                  value={customDestination}
+                  onChange={(e) => setCustomDestination(e.target.value)}
                   style={{ marginBottom: "14px" }}
                 />
               )}
@@ -390,6 +623,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                 />
               </div>
 
+              {/* Location Helper Text */}
+              <div style={{ fontSize: "12px", color: "#666", marginBottom: "16px" }}>
+                <strong>Tip:</strong> Include suburb names for accurate pricing (e.g., "IIE MSA, Roodepoort" or "OR Tambo Airport, Kempton Park")
+              </div>
+
               {/* Vehicle Type */}
               <div className="input-group">
                 <br />
@@ -402,15 +640,15 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   onChange={(e) => setVehicleType(e.target.value)}
                 >
                   <option value="">Select Vehicle Type *</option>
-                  <option>4 Seater Sedan</option>
-                  <option>Mini Bus Mercedes Viano</option>
-                  <option>15 Seater Quantum</option>
-                  <option>17 Seater Luxury Sprinter</option>
-                  <option>22 Seater Luxury Coach</option>
-                  <option>28 Seater Luxury Coach</option>
-                  <option>39 Seater Luxury Coach</option>
-                  <option>60 Seater Semi Luxury</option>
-                  <option>70 Seater Semi Luxury</option>
+                  <option value="4 Seater Sedan">4 Seater Sedan</option>
+                  <option value="Mini Bus Mercedes Viano">Mini Bus Mercedes Viano</option>
+                  <option value="15 Seater Quantum">15 Seater Quantum</option>
+                  <option value="17 Seater Luxury Sprinter">17 Seater Luxury Sprinter</option>
+                  <option value="22 Seater Luxury Coach">22 Seater Luxury Coach</option>
+                  <option value="28 Seater Luxury Coach">28 Seater Luxury Coach</option>
+                  <option value="39 Seater Luxury Coach">39 Seater Luxury Coach</option>
+                  <option value="60 Seater Semi Luxury">60 Seater Semi Luxury</option>
+                  <option value="70 Seater Semi Luxury">70 Seater Semi Luxury</option>
                 </select>
               </div>
 
@@ -444,8 +682,21 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Date & Time */}
               <div className="row">
-                <input type="date" id="tripDate" required />
-                <input type="time" id="tripTime" required />
+                <input 
+                  type="date" 
+                  id="tripDate" 
+                  value={tripDate}
+                  onChange={(e) => setTripDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  required 
+                />
+                <input 
+                  type="time" 
+                  id="tripTime" 
+                  value={tripTime}
+                  onChange={(e) => setTripTime(e.target.value)}
+                  required 
+                />
               </div>
 
               {/* Return Date for Both Ways */}
@@ -456,8 +707,10 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   <input 
                     type="date" 
                     id="returnDate" 
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    min={getMinReturnDate()}
                     required 
-                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               )}
@@ -469,10 +722,37 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             <div className="form-section">
               <h3>Contact Info & Details</h3>
               <div className="row">
-                <input type="text" id="customerName" placeholder="Name *" required />
-                <input type="email" id="customerEmail" placeholder="Email *" required />
-                <input type="tel" id="customerPhone" placeholder="Phone *" required />
-                <input type="text" id="customerCompany" placeholder="Company" />
+                <input 
+                  type="text" 
+                  id="customerName" 
+                  placeholder="Name *" 
+                  required 
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                <input 
+                  type="email" 
+                  id="customerEmail" 
+                  placeholder="Email *" 
+                  required 
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+                <input 
+                  type="tel" 
+                  id="customerPhone" 
+                  placeholder="Phone *" 
+                  required 
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+                <input 
+                  type="text" 
+                  id="customerCompany" 
+                  placeholder="Company" 
+                  value={customerCompany}
+                  onChange={(e) => setCustomerCompany(e.target.value)}
+                />
               </div>
             </div>
 
@@ -483,12 +763,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         </section>
       </main>
 
-      {/* Floating Chat Icon */}
       <Footer />
-
-<ChatWidget />
-
-</>
+      <ChatWidget />
+    </>
   );
 };
 

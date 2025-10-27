@@ -14,25 +14,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
 
-  // Refresh user data function
-  const refreshUserData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && onUserUpdate) {
-          onUserUpdate(data.user);
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
-  };
-
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
     if (currentUser && currentUser.id) {
@@ -129,12 +110,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // Calculate discount value based on loyalty points (same logic as loyaltyService)
-  const calculateDiscountValue = (points) => {
-    const discountAmount = Math.floor(points / 100) * 10;
-    return Math.min(discountAmount, 500); // Max R500 discount
-  };
-
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
     const completedTrips = userBookings.filter(booking => 
@@ -146,22 +121,18 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       .filter(booking => booking.status === 'completed' && booking.finalPrice)
       .reduce((total, booking) => total + (booking.finalPrice || 0), 0);
 
-    // Use actual user data from backend - ALWAYS use currentUser directly
+    // Use actual user data from backend
     return {
       name: currentUser?.name || "Guest",
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
-      loyaltyPoints: currentUser?.loyaltyPoints || 0,
       tripsCompleted: completedTrips,
-      totalTrips: currentUser?.totalTrips || 0,
       totalSpent: totalSpent,
-      tier: currentUser?.tier || 'bronze',
       memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
       upcomingTrips: userBookings.filter(booking => 
         booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
-      ).length,
-      availableDiscount: calculateDiscountValue(currentUser?.loyaltyPoints || 0)
+      ).length
     };
   };
 
@@ -176,11 +147,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         desc: `You've completed ${userData.tripsCompleted} trips with us!` 
       },
       { 
-        badge: '💰', 
-        stat: `${userData.loyaltyPoints} Points`, 
-        desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` 
-      },
-      { 
         badge: '⏱️', 
         stat: `${userData.tripsCompleted * 3} Hours Saved`, 
         desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` 
@@ -191,29 +157,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
       },
     ];
-
-    // Add tier-based highlights
-    const tierEmoji = {
-      bronze: '🥉',
-      silver: '🥈', 
-      gold: '🥇',
-      platinum: '💎'
-    };
-
-    highlights.push({
-      badge: tierEmoji[userData.tier] || '🥉',
-      stat: `${userData.tier.charAt(0).toUpperCase() + userData.tier.slice(1)} Member`,
-      desc: `You are a ${userData.tier} level member with special benefits!`
-    });
-
-    // Add discount highlight
-    if (userData.availableDiscount > 0) {
-      highlights.push({
-        badge: '💎',
-        stat: `R ${userData.availableDiscount} Discount`,
-        desc: `You have R ${userData.availableDiscount} available to use on your next trip!`
-      });
-    }
 
     // Add spending highlight
     if (userData.totalSpent > 0) {

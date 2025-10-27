@@ -42,32 +42,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  // Updated loyalty fields
-  loyaltyPoints: {
-    type: Number,
-    default: 0
-  },
-  tripsCompleted: {
-    type: Number,
-    default: 0
-  },
-  totalTrips: {
-    type: Number,
-    default: 0
-  },
-  totalSpent: {
-    type: Number,
-    default: 0
-  },
-  tier: {
-    type: String,
-    enum: ['bronze', 'silver', 'gold', 'platinum'],
-    default: 'bronze'
-  },
-  discountEarned: {
-    type: Number,
-    default: 0
-  },
   memberSince: {
     type: String,
     default: new Date().getFullYear().toString()
@@ -92,12 +66,6 @@ const userSchema = new mongoose.Schema({
 // Update the updatedAt field before saving
 userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
-  
-  // Auto-calculate tier when loyalty points change
-  if (this.isModified('loyaltyPoints')) {
-    this.tier = this.calculateTier();
-  }
-  
   next();
 });
 
@@ -128,26 +96,6 @@ userSchema.methods.correctPassword = async function(candidatePassword) {
 // Alternative method name for compatibility
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return this.correctPassword(candidatePassword);
-};
-
-// Calculate user tier based on loyalty points
-userSchema.methods.calculateTier = function() {
-  if (this.loyaltyPoints >= 5000) return 'platinum';
-  if (this.loyaltyPoints >= 2000) return 'gold';
-  if (this.loyaltyPoints >= 500) return 'silver';
-  return 'bronze';
-};
-
-// Method to add loyalty points
-userSchema.methods.addLoyaltyPoints = function(points, amountSpent = 0) {
-  this.loyaltyPoints += points;
-  if (amountSpent > 0) {
-    this.totalSpent += amountSpent;
-  }
-  this.totalTrips += 1;
-  this.tripsCompleted += 1;
-  this.tier = this.calculateTier();
-  return this.save();
 };
 
 // Virtual for full name
