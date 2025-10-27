@@ -8,17 +8,15 @@ import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
 import { protect, authorize } from './middleware/auth.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config({ path: './black-pearl-backend/.env' });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
-// Clear module cache in dev (prevents model overwrite)
-if (process.env.NODE_ENV === 'development') {
-  ['user', 'quote'].forEach(model => {
-    const modelPath = `./models/${model}`;
-    if (require.cache[require.resolve(modelPath)]) delete require.cache[require.resolve(modelPath)];
-  });
-}
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -32,6 +30,7 @@ app.use(cors({
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
+    console.log('MONGODB_URI:', process.env.MONGODB_URI); // Added for debugging
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours', {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,

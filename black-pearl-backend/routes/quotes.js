@@ -1,20 +1,20 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Quote = require('../models/quote');
-const User = require('../models/User');
-const { protect, authorize } = require('../middleware/auth');
-const LoyaltyService = require('../services/loyaltyService');
+import Quote from '../models/quote.js';
+import User from '../models/User.js';
+import { protect, authorize } from '../middleware/auth.js';
+import LoyaltyService from '../services/loyaltyService.js';
 
-// Try to require nodemailer, but don't crash if it's not available
+// Try to import nodemailer, but don't crash if it's not available
 let nodemailer;
 let transporter;
 
 try {
-  nodemailer = require('nodemailer');
-  
+  nodemailer = (await import('nodemailer')).default;
+
   // Check if email credentials are available
   const hasEmailCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
-  
+
   if (hasEmailCredentials) {
     // Create transporter with environment variables - FIXED: Using Ethereal credentials
     transporter = nodemailer.createTransport({
@@ -28,7 +28,7 @@ try {
     });
 
     // Verify transporter configuration
-    transporter.verify(function(error, success) {
+    transporter.verify(function (error, success) {
       if (error) {
         console.log('❌ Email transporter error:', error);
         console.log('Email functionality will be disabled');
@@ -47,7 +47,7 @@ try {
   console.log('To enable emails, run: npm install nodemailer');
 }
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 // Get all quotes (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
@@ -87,10 +87,12 @@ router.get('/my-quotes', protect, async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const quoteData = req.body;
-    
-    // Calculate estimated price based on vehicle type and destination
+
+    // Calculate estimated price based on vehicle type, pickup, dropoff, and destination
     const estimatedPrice = calculateEstimatedPrice(
       quoteData.vehicleType,
+      quoteData.pickupLocation,
+      quoteData.dropoffLocation,
       quoteData.destination,
       quoteData.isOneWay
     );
@@ -120,7 +122,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { status, finalPrice, adminNotes } = req.body;
-    
+
     const quote = await Quote.findById(req.params.id);
 
     if (!quote) {
@@ -132,21 +134,21 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 
     const oldStatus = quote.status;
     const updateData = { status };
-    
+
     if (finalPrice !== undefined) updateData.finalPrice = finalPrice;
     if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
 
     // Handle loyalty points when trip is completed
     if (status === 'completed' && oldStatus !== 'completed') {
       updateData.completedAt = new Date();
-      
+
       // Calculate and award loyalty points
       if (quote.userId && finalPrice) {
         const pointsEarned = LoyaltyService.calculatePointsEarned(
-          finalPrice, 
+          finalPrice,
           quote.vehicleType
         );
-        
+
         updateData.loyaltyPointsEarned = pointsEarned;
 
         // Update user's loyalty points and stats
@@ -156,7 +158,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
           user.totalTrips += 1;
           user.totalSpent += finalPrice;
           user.tier = user.calculateTier();
-          
+
           await user.save();
         }
       }
@@ -166,7 +168,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (status === 'confirmed' && !req.body.confirmedAt) {
       updateData.confirmedAt = new Date();
     }
-    
+
     // Handle booking
     if (status === 'booked' && !req.body.bookedAt) {
       updateData.bookedAt = new Date();
@@ -221,9 +223,9 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
 router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, res) => {
   try {
     const { finalPrice, adminNotes } = req.body;
-    
+
     const quote = await Quote.findById(req.params.id);
-    
+
     if (!quote) {
       return res.status(404).json({
         success: false,
@@ -237,7 +239,7 @@ router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, re
 
     const updatedQuote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         status: 'confirmed',
         quoteStatus: quote.userId ? 'pending_customer' : 'pending_email',
         finalPrice,
@@ -261,8 +263,8 @@ router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, re
 
     res.json({
       success: true,
-      message: quote.userId 
-        ? 'Quote sent to customer dashboard successfully' 
+      message: quote.userId
+        ? 'Quote sent to customer dashboard successfully'
         : (transporter ? 'Quote sent to customer email successfully' : 'Quote updated (email not configured)'),
       data: updatedQuote
     });
@@ -369,7 +371,7 @@ router.post('/:id/accept-quote', async (req, res) => {
 
     const updatedQuote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         quoteStatus: 'accepted',
         status: 'booked',
         bookedAt: new Date(),
@@ -445,7 +447,7 @@ router.post('/:id/accept-with-registration', async (req, res) => {
     // Update quote with user association and accept it
     const updatedQuote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         userId: newUser._id,
         quoteStatus: 'accepted',
         status: 'booked',
@@ -510,7 +512,7 @@ router.post('/:id/decline-quote', async (req, res) => {
 
     const updatedQuote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         quoteStatus: 'declined',
         status: 'cancelled',
         adminNotes: declineReason ? `Customer declined: ${declineReason}` : 'Customer declined quote',
@@ -548,7 +550,7 @@ router.post('/:id/customer-accept', protect, async (req, res) => {
   try {
     const quote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         quoteStatus: 'accepted',
         status: 'booked',
         bookedAt: new Date()
@@ -581,10 +583,10 @@ router.post('/:id/customer-accept', protect, async (req, res) => {
 router.post('/:id/customer-decline', protect, async (req, res) => {
   try {
     const { declineReason } = req.body;
-    
+
     const quote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         quoteStatus: 'declined',
         status: 'cancelled',
         adminNotes: declineReason ? `Customer declined: ${declineReason}` : 'Customer declined quote'
@@ -617,10 +619,10 @@ router.post('/:id/customer-decline', protect, async (req, res) => {
 router.post('/:id/convert-to-booking', protect, authorize('admin'), async (req, res) => {
   try {
     const { finalPrice, bookingNotes } = req.body;
-    
+
     const quote = await Quote.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         status: 'booked',
         quoteStatus: 'converted',
         finalPrice,
@@ -655,10 +657,12 @@ router.post('/:id/convert-to-booking', protect, authorize('admin'), async (req, 
 router.post('/manual-booking', protect, authorize('admin'), async (req, res) => {
   try {
     const bookingData = req.body;
-    
+
     // Calculate estimated price for manual booking
     const estimatedPrice = calculateEstimatedPrice(
       bookingData.vehicleType,
+      bookingData.pickupLocation || 'Manual Booking', // Added pickupLocation
+      bookingData.dropoffLocation || 'Manual Booking', // Added dropoffLocation
       bookingData.destination || 'Manual Booking',
       bookingData.isOneWay || false
     );
@@ -686,6 +690,39 @@ router.post('/manual-booking', protect, authorize('admin'), async (req, res) => 
     res.status(500).json({
       success: false,
       error: 'Failed to create manual booking: ' + error.message
+    });
+  }
+});
+
+// New endpoint to get estimated price
+router.post('/estimate-price', async (req, res) => {
+  try {
+    const { vehicleType, pickupLocation, dropoffLocation, destination, isOneWay } = req.body;
+
+    if (!vehicleType || !pickupLocation || !dropoffLocation || !destination) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields for price estimation.'
+      });
+    }
+
+    const estimatedPrice = calculateEstimatedPrice(
+      vehicleType,
+      pickupLocation,
+      dropoffLocation,
+      destination,
+      isOneWay
+    );
+
+    res.json({
+      success: true,
+      estimatedPrice
+    });
+  } catch (error) {
+    console.error('Estimate price error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to estimate price: ' + error.message
     });
   }
 });
@@ -769,8 +806,8 @@ async function sendConfirmationEmail(quote, action) {
     return;
   }
 
-  const subject = action === 'accepted' 
-    ? 'Booking Confirmed - Black Pearl Tours' 
+  const subject = action === 'accepted'
+    ? 'Booking Confirmed - Black Pearl Tours'
     : 'Quote Declined - Black Pearl Tours';
 
   const message = action === 'accepted'
@@ -827,48 +864,113 @@ async function sendConfirmationEmail(quote, action) {
   }
 }
 
-// Price calculation function based on your rates PDF
-function calculateEstimatedPrice(vehicleType, destination, isOneWay) {
-  // Base prices based on vehicle type (using rates from your PDF as reference)
-  const basePrices = {
-    '4 Seater Sedan': 695,
-    'Mini Bus Mercedes Viano': 963,
-    '15 Seater Quantum': 1200,
-    '17 Seater Luxury Sprinter': 1400,
-    '22 Seater Luxury Coach': 1800,
-    '28 Seater Luxury Coach': 2200,
-    '39 Seater Luxury Coach': 2800,
-    '60 Seater Semi Luxury': 3500,
-    '70 Seater Semi Luxury': 4000
+// Rate structures based on the PDF
+const johannesburgRates = {
+  '4 Seater Sedan': { zone1: 695, zone2: 845, zone3: 856, zone4: 963, zone5: 1059, zone6: 1900 },
+  'Mini Bus Mercedes Viano': { zone1: 963, zone2: 1123, zone3: 1357, zone4: 1357, zone5: 1487, zone6: 2354 },
+  '15 Seater Quantum': { zone1: 1200, zone2: 1400, zone3: 1600, zone4: 1800, zone5: 2000, zone6: 2800 },
+  '17 Seater Luxury Sprinter': { zone1: 1400, zone2: 1600, zone3: 1800, zone4: 2000, zone5: 2200, zone6: 3200 },
+  '22 Seater Luxury Coach': { zone1: 1800, zone2: 2000, zone3: 2200, zone4: 2400, zone5: 2600, zone6: 3800 },
+  '28 Seater Luxury Coach': { zone1: 2200, zone2: 2400, zone3: 2600, zone4: 2800, zone5: 3000, zone6: 4200 },
+  '39 Seater Luxury Coach': { zone1: 2800, zone2: 3000, zone3: 3200, zone4: 3400, zone5: 3600, zone6: 5000 },
+  '60 Seater Semi Luxury': { zone1: 3500, zone2: 3700, zone3: 3900, zone4: 4100, zone5: 4300, zone6: 5800 },
+  '70 Seater Semi Luxury': { zone1: 4000, zone2: 4200, zone3: 4400, zone4: 4600, zone5: 4800, zone6: 6500 }
+};
+
+const pretoriaRates = {
+  '4 Seater Sedan': { zone4: 856, zone5: 963, zone6: 1800 },
+  'Mini Bus Mercedes Viano': { zone4: 1800, zone5: 1700, zone6: 2300 },
+  '15 Seater Quantum': { zone4: 2000, zone5: 2100, zone6: 2800 },
+  '17 Seater Luxury Sprinter': { zone4: 2200, zone5: 2300, zone6: 3200 },
+  '22 Seater Luxury Coach': { zone4: 2600, zone5: 2700, zone6: 3800 },
+  '28 Seater Luxury Coach': { zone4: 3000, zone5: 3100, zone6: 4200 },
+  '39 Seater Luxury Coach': { zone4: 3600, zone5: 3700, zone6: 5000 },
+  '60 Seater Semi Luxury': { zone4: 4300, zone5: 4400, zone6: 5800 },
+  '70 Seater Semi Luxury': { zone4: 4800, zone5: 4900, zone6: 6500 }
+};
+
+function getHigherZone(zone1, zone2) {
+  const zones = ['zone1', 'zone2', 'zone3', 'zone4', 'zone5', 'zone6'];
+  const index1 = zones.indexOf(zone1);
+  const index2 = zones.indexOf(zone2);
+  return zones[Math.max(index1, index2)];
+}
+
+function calculateDefaultPrice(vehicle, dest) {
+  // Default pricing for vehicles when outside Johannesburg/Pretoria
+  const defaultPrices = {
+    '4 Seater Sedan': 1000,
+    'Mini Bus Mercedes Viano': 1500,
+    '15 Seater Quantum': 1800,
+    '17 Seater Luxury Sprinter': 2200,
+    '22 Seater Luxury Coach': 2800,
+    '28 Seater Luxury Coach': 3200,
+    '39 Seater Luxury Coach': 3800,
+    '60 Seater Semi Luxury': 4500,
+    '70 Seater Semi Luxury': 5000
   };
 
-  let basePrice = basePrices[vehicleType] || 1000;
+  let price = defaultPrices[vehicle] || 2000;
 
-  // Adjust for destination (Johannesburg and Pretoria have different rates)
-  if (destination === 'Johannesburg') {
-    // Johannesburg rates are generally higher
-    basePrice *= 1.1;
-  } else if (destination === 'Pretoria') {
-    basePrice *= 1.05;
-  } else if (destination === 'Cape Town' || destination === 'Durban') {
-    // Long distance trips
-    basePrice *= 1.3;
+  // Adjust for long distance
+  if (dest === 'Cape Town' || dest === 'Durban') {
+    price *= 2.5;
+  } else if (dest === 'Port Elizabeth' || dest === 'Bloemfontein') {
+    price *= 2.0;
   }
 
-  // Round trip adjustment
-  if (!isOneWay) {
-    basePrice *= 1.8; // Round trip is not exactly double
+  return Math.round(price);
+}
+
+// Price calculation function based on your rates PDF
+function calculateEstimatedPrice(vehicleType, pickupLocation, dropoffLocation, destination, isOneWay) {
+  if (!vehicleType || !pickupLocation || !dropoffLocation) {
+    return 0;
   }
 
-  // Return calculated price
-  return Math.round(basePrice);
+  let basePrice = 0;
+  const isJohannesburg = pickupLocation.toLowerCase().includes('johannesburg') ||
+    dropoffLocation.toLowerCase().includes('johannesburg');
+  const isPretoria = pickupLocation.toLowerCase().includes('pretoria') ||
+    dropoffLocation.toLowerCase().includes('pretoria');
+
+  // Determine zone based on locations (simplified logic - you might want to enhance this)
+  const determineZone = (location) => {
+    if (location.toLowerCase().includes('zone1') || location.toLowerCase().includes('bedford')) return 'zone1';
+    if (location.toLowerCase().includes('zone2') || location.toLowerCase().includes('parktown')) return 'zone2';
+    if (location.toLowerCase().includes('zone3') || location.toLowerCase().includes('douglasdale')) return 'zone3';
+    if (location.toLowerCase().includes('zone4') || location.toLowerCase().includes('florida')) return 'zone4';
+    if (location.toLowerCase().includes('zone5') || location.toLowerCase().includes('kempton')) return 'zone5';
+    if (location.toLowerCase().includes('zone6') || location.toLowerCase().includes('brits')) return 'zone6';
+    return 'zone1'; // default to zone1
+  };
+
+  const pickupZone = determineZone(pickupLocation);
+  const dropoffZone = determineZone(dropoffLocation);
+
+  // Use the higher zone for pricing
+  const zone = getHigherZone(pickupZone, dropoffZone);
+
+  if (isJohannesburg && johannesburgRates[vehicleType] && johannesburgRates[vehicleType][zone]) {
+    basePrice = johannesburgRates[vehicleType][zone];
+  } else if (isPretoria && pretoriaRates[vehicleType] && pretoriaRates[vehicleType][zone]) {
+    basePrice = pretoriaRates[vehicleType][zone];
+  } else {
+    // For other destinations or unknown zones, use a default calculation
+    basePrice = calculateDefaultPrice(vehicleType, destination);
+  }
+
+  // Apply both ways multiplier (1.8x for round trip as per your backend)
+  const finalPrice = !isOneWay ? Math.round(basePrice * 1.8) : basePrice;
+
+  return finalPrice;
 }
 
 // Fix loyalty points
 router.post('/fix-loyalty-points', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    const quotes = await Quote.find({ 
+    const quotes = await Quote.find({
       userId: req.user.id,
       status: 'completed'
     });
@@ -881,14 +983,14 @@ router.post('/fix-loyalty-points', protect, async (req, res) => {
     for (const quote of quotes) {
       if (quote.finalPrice && !quote.loyaltyPointsEarned) {
         const pointsEarned = LoyaltyService.calculatePointsEarned(
-          quote.finalPrice, 
+          quote.finalPrice,
           quote.vehicleType
         );
-        
+
         // Update the quote with earned points
         quote.loyaltyPointsEarned = pointsEarned;
         await quote.save();
-        
+
         totalPoints += pointsEarned;
         totalSpent += quote.finalPrice;
         fixedQuotes.push({
@@ -929,4 +1031,4 @@ router.post('/fix-loyalty-points', protect, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

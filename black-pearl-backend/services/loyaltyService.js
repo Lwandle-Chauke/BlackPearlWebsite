@@ -3,7 +3,7 @@ class LoyaltyService {
   static calculatePointsEarned(finalPrice, vehicleType) {
     // Base points: 1 point per R10 spent
     let basePoints = Math.floor(finalPrice / 10);
-    
+
     // Bonus points based on vehicle type
     const vehicleBonuses = {
       '4 Seater Sedan': 50,
@@ -16,9 +16,9 @@ class LoyaltyService {
       '60 Seater Semi Luxury': 600,
       '70 Seater Semi Luxury': 700
     };
-    
+
     const vehicleBonus = vehicleBonuses[vehicleType] || 0;
-    
+
     return basePoints + vehicleBonus;
   }
 
@@ -39,4 +39,4 @@ class LoyaltyService {
   }
 }
 
-module.exports = LoyaltyService;
+export default LoyaltyService;

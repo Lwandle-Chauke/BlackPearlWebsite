@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const quoteSchema = new mongoose.Schema({
   // Trip Details
@@ -51,7 +51,7 @@ const quoteSchema = new mongoose.Schema({
   returnDate: {
     type: Date
   },
-  
+
   // Contact Information
   customerName: {
     type: String,
@@ -73,7 +73,7 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  
+
   // System Fields
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -85,14 +85,14 @@ const quoteSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'booked', 'completed', 'cancelled'],
     default: 'pending'
   },
-  
+
   // NEW: Quote status for customer response
   quoteStatus: {
     type: String,
     enum: ['pending_admin', 'pending_customer', 'pending_email', 'accepted', 'declined', 'converted'],
     default: 'pending_admin'
   },
-  
+
   // NEW: Email approval fields
   approvalToken: {
     type: String
@@ -100,7 +100,7 @@ const quoteSchema = new mongoose.Schema({
   tokenExpires: {
     type: Date
   },
-  
+
   // Pricing Fields
   estimatedPrice: {
     type: Number,
@@ -110,7 +110,7 @@ const quoteSchema = new mongoose.Schema({
   finalPrice: {
     type: Number
   },
-  
+
   // Loyalty and Discount Fields
   loyaltyPointsEarned: {
     type: Number,
@@ -124,7 +124,7 @@ const quoteSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  
+
   // Admin Fields
   adminNotes: {
     type: String,
@@ -134,7 +134,7 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  
+
   // Timestamps
   sentToCustomerAt: {
     type: Date
@@ -162,7 +162,7 @@ const quoteSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-quoteSchema.pre('save', function(next) {
+quoteSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
@@ -178,4 +178,4 @@ quoteSchema.index({
 
 const Quote = mongoose.model('Quote', quoteSchema);
 
-module.exports = Quote;
+export default Quote;
