@@ -1,84 +1,139 @@
 // pages/AdminDashboard.jsx
 
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom"; 
-// Assuming shared components are available in a 'components' directory
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import AdminSidebar from '../components/AdminSidebar';
-import AdminTopBar from '../components/AdminTopBar'; 
-
-// Import the shared admin CSS (for base layout/hamburger logic) and the dashboard-specific CSS
-import '../styles/admin.css'; 
-import '../styles/admin-dashboard.css'; // <-- Dedicated CSS for this page
+import AdminTopBar from '../components/AdminTopBar';
+import '../styles/admin.css';
+import '../styles/admin-dashboard.css';
 
 const AdminDashboard = () => {
     const location = useLocation();
-    // State to manage the visibility of the sidebar on mobile
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [analyticsData, setAnalyticsData] = useState([]);
+    const [recentBookings, setRecentBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Toggle function for the hamburger menu
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    // Helper to determine active link (optional if the sidebar component handles its own state)
-    // const isActive = (path) => location.pathname === path;
-
-    // Helper function for logout
-    const handleLogout = (e) => {
-        e.preventDefault();
-        console.log("Logged out.");
-        // In a real app, this would dispatch a logout action and redirect
-    }
-
-    // Function to determine CSS class for table status (for display/styling)
     const getStatusClass = (status) => {
-        switch (status) {
-            case 'Confirmed':
-                return 'status-confirmed'; 
-            case 'Pending':
+        switch (status?.toLowerCase()) {
+            case 'confirmed':
+                return 'status-confirmed';
+            case 'pending':
                 return 'status-pending';
-            case 'Completed':
+            case 'completed':
                 return 'status-completed';
+            case 'cancelled':
+                return 'status-cancelled';
             default:
                 return '';
         }
+    };
+
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem('token'); // Assuming admin token is stored here
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            // Fetch total bookings
+            const bookingsRes = await fetch("http://localhost:5000/api/bookings", { headers });
+            const bookingsData = await bookingsRes.json();
+            const totalBookings = Array.isArray(bookingsData.data) ? bookingsData.data.length : 0;
+            const recentBookingsData = Array.isArray(bookingsData.data) ? bookingsData.data.slice(0, 3) : [];
+
+            // Fetch total messages and pending messages
+            const messagesRes = await fetch("http://localhost:5000/api/messages", { headers });
+            const messagesData = await messagesRes.json();
+            const pendingMessages = Array.isArray(messagesData) ? messagesData.filter(msg => msg.status === 'UNREAD').length : 0;
+
+            // Fetch total feedback
+            const feedbackRes = await fetch("http://localhost:5000/api/feedback", { headers });
+            const feedbackData = await feedbackRes.json();
+            const totalFeedback = Array.isArray(feedbackData) ? feedbackData.length : 0;
+
+            // Placeholder for total users (if you have a user endpoint)
+            // const usersRes = await fetch("http://localhost:5000/api/users", { headers });
+            // const usersData = await usersRes.json();
+            // const totalUsers = Array.isArray(usersData) ? usersData.length : 0;
+            const usersRes = await fetch("http://localhost:5000/api/users", { headers });
+            const usersData = await usersRes.json();
+            const totalUsers = Array.isArray(usersData.data) ? usersData.data.length : 0;
+
+            setAnalyticsData([
+                { value: totalBookings, label: "Total Bookings" },
+                { value: pendingMessages, label: "Pending Messages" },
+                { value: totalFeedback, label: "Total Feedback" },
+                { value: totalUsers, label: "Total Users" },
+            ]);
+            setRecentBookings(recentBookingsData);
+
+        } catch (err) {
+            console.error("Error fetching dashboard data:", err);
+            setError("Failed to load dashboard data.");
+            setAnalyticsData([
+                { value: "N/A", label: "Total Bookings" },
+                { value: "N/A", label: "Pending Messages" },
+                { value: "N/A", label: "Total Feedback" },
+                { value: "N/A", label: "Total Users" },
+            ]);
+            setRecentBookings([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+                <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+                <div id="content-wrapper">
+                    <AdminTopBar pageTitle="Dashboard" toggleSidebar={toggleSidebar} />
+                    <main className="dashboard-page-content">
+                        <div className="loading-message">Loading dashboard data...</div>
+                    </main>
+                </div>
+            </div>
+        );
     }
 
-    // Placeholder data for analytics
-    const analyticsData = [
-        { value: "42", label: "Total Bookings" },
-        { value: "15", label: "Pending Messages" },
-        { value: "120", label: "Total Tours" },
-        { value: "7", label: "Active Admins" },
-    ];
-    
-    // Placeholder data for recent bookings
-    const recentBookings = [
-        { id: "#001", client: "John Smith", dest: "Cape Town", date: "2025-10-20", status: "Confirmed" },
-        { id: "#002", client: "Sarah Brown", dest: "Durban", date: "2025-10-21", status: "Pending" },
-        { id: "#003", client: "Michael Green", dest: "Johannesburg", date: "2025-10-22", status: "Completed" },
-    ];
-
+    if (error) {
+        return (
+            <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+                <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+                <div id="content-wrapper">
+                    <AdminTopBar pageTitle="Dashboard" toggleSidebar={toggleSidebar} />
+                    <main className="dashboard-page-content">
+                        <div className="error-message">{error}</div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        // 'sidebar-open' class is added when the menu is active on mobile
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-            
-            <AdminSidebar 
-                isSidebarOpen={isSidebarOpen} 
-                toggleSidebar={toggleSidebar} 
+            <AdminSidebar
+                isSidebarOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
             />
 
-            {/* Main Content Wrapper */}
             <div id="content-wrapper">
-                
-                <AdminTopBar 
-                    pageTitle="Dashboard" 
+                <AdminTopBar
+                    pageTitle="Dashboard"
                     toggleSidebar={toggleSidebar}
                 />
 
                 <main className="dashboard-page-content">
-                    {/* Analytics cards */}
                     <div className="analytics-grid">
                         {analyticsData.map((data, index) => (
                             <div key={index} className="analytics-card">
@@ -88,13 +143,11 @@ const AdminDashboard = () => {
                         ))}
                     </div>
 
-                    {/* Placeholder for Chart/Snippet section (from HTML) */}
                     <section className="data-snippet-section">
                         <p className="snippet-title">Visitors Overview & Data Snippet (Placeholder)</p>
                         <p className="snippet-text">This area mimics the circle chart and conversation data seen in the screenshot.</p>
                     </section>
 
-                    {/* Recent Bookings */}
                     <section className="recent-section">
                         <h2>Recent Bookings</h2>
                         <div className="data-table-container">
@@ -103,33 +156,38 @@ const AdminDashboard = () => {
                                     <tr>
                                         <th>ID</th>
                                         <th>Client</th>
-                                        <th>Destination</th>
+                                        <th>Service</th>
                                         <th>Date</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentBookings.map((booking) => (
-                                        <tr key={booking.id}>
-                                            <td>{booking.id}</td>
-                                            <td>{booking.client}</td>
-                                            <td>{booking.dest}</td>
-                                            <td>{booking.date}</td>
-                                            <td>
-                                                <span className={`status-badge ${getStatusClass(booking.status)}`}>
-                                                    {booking.status}
-                                                </span>
-                                            </td>
+                                    {recentBookings.length > 0 ? (
+                                        recentBookings.map((booking) => (
+                                            <tr key={booking._id}>
+                                                <td>#{booking._id.slice(-4)}</td>
+                                                <td>{booking.name}</td>
+                                                <td>{booking.service}</td>
+                                                <td>{new Date(booking.date).toLocaleDateString()}</td>
+                                                <td>
+                                                    <span className={`status-badge ${getStatusClass(booking.status)}`}>
+                                                        {booking.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="no-data-message">No recent bookings found.</td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                     </section>
                 </main>
             </div>
-            
-            {/* Overlay for mobile view when sidebar is open */}
+
             <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={toggleSidebar}></div>
         </div>
     );

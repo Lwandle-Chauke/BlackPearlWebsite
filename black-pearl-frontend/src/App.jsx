@@ -198,6 +198,7 @@ function App() {
                     }
                 />
 
+
                 {/* Admin Bookings */}
                 <Route
                     path="/admin/bookings"

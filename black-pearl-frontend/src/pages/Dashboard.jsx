@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import '../styles/style.css'; 
+import '../styles/style.css';
 import '../styles/dashboard.css';
 
 const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
@@ -30,12 +30,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       if (response.ok) {
         const data = await response.json();
         setUserBookings(data.data || []);
-        
+
         // Find next upcoming booking
-        const upcoming = data.data?.filter(booking => 
+        const upcoming = data.data?.filter(booking =>
           booking.status === 'confirmed' || booking.status === 'pending'
         ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
-        
+
         setNextBooking(upcoming || null);
       } else {
         console.error('Failed to fetch user bookings');
@@ -51,17 +51,17 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
 
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
-    const completedTrips = userBookings.filter(booking => 
+    const completedTrips = userBookings.filter(booking =>
       booking.status === 'completed'
     ).length;
 
     // Calculate loyalty points: 100 points per completed trip + 50 points per pending/confirmed trip
     const basePoints = completedTrips * 100;
-    const upcomingTrips = userBookings.filter(booking => 
+    const upcomingTrips = userBookings.filter(booking =>
       booking.status === 'confirmed' || booking.status === 'pending'
     ).length;
     const bonusPoints = upcomingTrips * 50;
-    
+
     const totalLoyaltyPoints = (currentUser?.loyaltyPoints || 0) + basePoints + bonusPoints;
 
     return {
@@ -81,42 +81,42 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   // Personal highlights based on REAL user activity
   const getPersonalHighlights = () => {
     const highlights = [
-      { 
-        badge: '🏅', 
-        stat: `${userData.tripsCompleted} Trips Completed`, 
-        desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!` 
+      {
+        badge: '🏅',
+        stat: `${userData.tripsCompleted} Trips Completed`,
+        desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!`
       },
-      { 
-        badge: '⏱️', 
-        stat: `${userData.tripsCompleted * 3} Hours Saved`, 
-        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` 
+      {
+        badge: '⏱️',
+        stat: `${userData.tripsCompleted * 3} Hours Saved`,
+        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.`
       },
-      { 
-        badge: '🧭', 
-        stat: `${userData.tripsCompleted * 240} km Traveled`, 
-        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
+      {
+        badge: '🧭',
+        stat: `${userData.tripsCompleted * 240} km Traveled`,
+        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.`
       },
-      { 
-        badge: '📅', 
-        stat: `${userData.upcomingTrips} Upcoming Trips`, 
-        desc: `You have ${userData.upcomingTrips} trips planned with us.` 
+      {
+        badge: '📅',
+        stat: `${userData.upcomingTrips} Upcoming Trips`,
+        desc: `You have ${userData.upcomingTrips} trips planned with us.`
       },
     ];
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
-      highlights.push({ 
-        badge: '🎖️', 
-        stat: 'VIP Member', 
-        desc: "You are now a VIP member of Black Pearl Tours!" 
+      highlights.push({
+        badge: '🎖️',
+        stat: 'VIP Member',
+        desc: "You are now a VIP member of Black Pearl Tours!"
       });
     }
 
     // Add loyalty points highlight
-    highlights.push({ 
-      badge: '💰', 
-      stat: `${userData.loyaltyPoints} Points`, 
-      desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.` 
+    highlights.push({
+      badge: '💰',
+      stat: `${userData.loyaltyPoints} Points`,
+      desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.`
     });
 
     // Add booking milestone if applicable
@@ -135,29 +135,51 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     if (nextBooking) {
       alert(`${nextBooking.tripType || nextBooking.title}\nDate: ${new Date(nextBooking.tripDate).toLocaleDateString()}\nStatus: ${nextBooking.status}\nPickup: ${nextBooking.pickupLocation}\nDropoff: ${nextBooking.dropoffLocation}`);
     } else {
-      navigate('/quote');
+      navigate('/bookings'); // Changed from /quote to /bookings
     }
   };
 
   const handleRequestQuote = () => {
-    navigate('/quote');
+    navigate('/bookings'); // Changed from /quote to /bookings
   };
 
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const rating = e.target.rating.value;
-    const text = e.target.testimonial.value.trim();
-    
+    const feedbackText = e.target.testimonial.value.trim();
+
     if (!rating) {
-      alert("Please choose a rating."); 
-      return; 
+      alert("Please choose a rating.");
+      return;
     }
 
-    // In a real app, you would submit this to your backend
-    console.log('Review submitted:', { rating, text, userId: currentUser?.id });
-    
-    alert(`Thanks for your feedback (${rating} stars).\n"${text}"`);
-    e.target.reset();
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch("http://localhost:5000/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          name: currentUser?.name || "Anonymous",
+          email: currentUser?.email || "anonymous@example.com",
+          subject: `User Feedback - ${rating} Stars`,
+          feedback: feedbackText
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+
+      alert(`Thanks for your feedback (${rating} stars).\n"${feedbackText}"`);
+      e.target.reset();
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      alert("Failed to submit feedback. Please try again.");
+    }
   };
 
   const highlights = getPersonalHighlights();
@@ -221,9 +243,9 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
 
   return (
     <>
-      <Header 
-        onAuthClick={onSignOut} 
-        isLoggedIn={isLoggedIn} 
+      <Header
+        onAuthClick={onSignOut}
+        isLoggedIn={isLoggedIn}
         user={currentUser}
         onSignOut={onSignOut}
       />
@@ -325,8 +347,8 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
             {userData.tripsCompleted > 0 ? 'Leave us a review' : 'Share your expectations'}
           </div>
           <p className="reviews-sub">
-            {userData.tripsCompleted > 0 
-              ? 'How was your last trip?' 
+            {userData.tripsCompleted > 0
+              ? 'How was your last trip?'
               : 'Tell us what you\'re looking forward to!'
             }
           </p>
@@ -339,11 +361,11 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <option value="2">2 - Poor</option>
               <option value="1">1 - Bad</option>
             </select>
-            <textarea 
-              name="testimonial" 
+            <textarea
+              name="testimonial"
               placeholder={
-                userData.tripsCompleted > 0 
-                  ? "Share your experience with your recent trip..." 
+                userData.tripsCompleted > 0
+                  ? "Share your experience with your recent trip..."
                   : "What are you most excited about for your upcoming travel?"
               }
             ></textarea>
@@ -355,10 +377,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       {/* Floating chat icon */}
       <div className="chat-fab" title="Chat with us">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff"/>
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666"/>
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666"/>
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1"/>
+          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff" />
+          <circle cx="8.5" cy="10.3" r="1.1" fill="#666" />
+          <circle cx="15.5" cy="10.3" r="1.1" fill="#666" />
+          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1" />
         </svg>
       </div>
 

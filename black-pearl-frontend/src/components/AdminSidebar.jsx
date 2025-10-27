@@ -16,10 +16,10 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
     const handleLogout = async (e) => {
         e.preventDefault();
         console.log('Logging out...');
-        
+
         // Show browser confirmation dialog
         const confirmLogout = window.confirm('localhost:3000 says:\n\nAre you sure you want to log out?');
-        
+
         if (!confirmLogout) {
             return; // User cancelled logout
         }
@@ -31,16 +31,16 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
             localStorage.removeItem('authToken');
             localStorage.removeItem('currentUser');
             localStorage.removeItem('isLoggedIn');
-            
+
             // Clear sessionStorage as well
             sessionStorage.removeItem('token');
             sessionStorage.removeItem('user');
             sessionStorage.removeItem('authToken');
             sessionStorage.removeItem('currentUser');
             sessionStorage.removeItem('isLoggedIn');
-            
+
             // Clear any cookies (if used)
-            document.cookie.split(";").forEach(function(c) {
+            document.cookie.split(";").forEach(function (c) {
                 document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
             });
 
@@ -51,7 +51,7 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
 
             // Force a hard redirect to home page to ensure complete reset
             window.location.href = '/';
-            
+
             // Alternative: Use navigate with reload
             // navigate('/', { replace: true });
             // window.location.reload();
@@ -70,8 +70,8 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
             <ul>
                 {navLinks.map((link) => (
                     <li key={link.path}>
-                        <Link 
-                            to={link.path} 
+                        <Link
+                            to={link.path}
                             className={location.pathname === link.path ? "active" : ""}
                             onClick={toggleSidebar}
                         >

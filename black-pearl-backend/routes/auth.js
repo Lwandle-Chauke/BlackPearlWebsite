@@ -1,7 +1,7 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const { protect } = require('../middleware/auth'); // CHANGED TO USE auth.js
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js'; // Use ES module import
+import { protect } from '../middleware/auth.js'; // Use ES module import
 
 const router = express.Router();
 
@@ -168,7 +168,7 @@ router.get('/me', async (req, res) => {
   try {
     // Get token from header
     const token = req.headers.authorization?.split(' ')[1];
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -178,10 +178,10 @@ router.get('/me', async (req, res) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Get user from database
     const user = await User.findById(decoded.userId);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -254,7 +254,7 @@ router.put('/change-password', protect, async (req, res) => {
 
     // Get user with password
     const user = await User.findById(req.user.id).select('+password');
-    
+
     if (!user) {
       console.log('❌ User not found');
       return res.status(404).json({
@@ -314,7 +314,7 @@ router.post('/forgot-password', async (req, res) => {
 
     // Check if user exists
     const user = await User.findOne({ email: email.toLowerCase() });
-    
+
     if (!user) {
       console.log('❌ User not found for email:', email);
       return res.status(404).json({
@@ -350,4 +350,4 @@ router.post('/forgot-password', async (req, res) => {
     });
   }
 });
-module.exports = router;
+export default router;

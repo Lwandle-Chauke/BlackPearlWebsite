@@ -29,29 +29,55 @@ const Bookings = ({ onAuthClick, isLoggedIn, currentUser, onSignOut }) => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Fetch all bookings from backend
+  // Fetch bookings from backend
   const fetchBookings = async () => {
     try {
-      const res = await fetch(apiBase);
-      const data = await res.json();
-      setBookings(data);
+      let url = apiBase;
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+
+      if (isLoggedIn && currentUser && currentUser.id) {
+        // Fetch user-specific bookings if logged in
+        url = `${apiBase}/user/${currentUser.id}`;
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        // If not logged in, or no currentUser, fetch all bookings (if allowed by backend)
+        // Or, if you want to restrict, you could set bookings to empty array here.
+        // For now, we'll assume public access to all bookings if not logged in.
+      }
+
+      const res = await fetch(url, { headers });
+      const result = await res.json();
+
+      // Ensure data is an array before setting bookings
+      setBookings(Array.isArray(result.data) ? result.data : []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
+      setBookings([]); // Set to empty array on error
     }
   };
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [isLoggedIn, currentUser]); // Re-fetch when login status or user changes
 
   // Create new booking
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToastMessage('Please sign in to create a booking.');
+      return;
+    }
+
     try {
       const res = await fetch(apiBase, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...formData, userId: currentUser.id }) // Include userId
       });
 
       const data = await res.json();
@@ -68,6 +94,8 @@ const Bookings = ({ onAuthClick, isLoggedIn, currentUser, onSignOut }) => {
           passengers: 1,
           message: ''
         });
+      } else {
+        showToastMessage(data.msg || 'Error creating booking!');
       }
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -77,18 +105,33 @@ const Bookings = ({ onAuthClick, isLoggedIn, currentUser, onSignOut }) => {
 
   // Cancel a booking
   const handleCancel = async (id) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToastMessage('Please sign in to cancel a booking.');
+      return;
+    }
+
     try {
-      const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${apiBase}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         setBookings((prev) => prev.filter((b) => b._id !== id));
         showToastMessage('Booking cancelled successfully!');
+      } else {
+        const errorData = await res.json();
+        showToastMessage(errorData.msg || 'Error cancelling booking!');
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
+      showToastMessage('Error cancelling booking!');
     }
   };
 
-  const filteredBookings = bookings.filter((booking) => {
+  const filteredBookings = (Array.isArray(bookings) ? bookings : []).filter((booking) => {
     const matchesStatus = filter === 'all' || booking.status === filter;
     const matchesSearch =
       booking.service?.toLowerCase().includes(search.toLowerCase()) ||
@@ -151,32 +194,67 @@ const Bookings = ({ onAuthClick, isLoggedIn, currentUser, onSignOut }) => {
         </div>
 
         {/* Bookings List */}
-        <div id="bookings-list">
-          {filteredBookings.map((booking) => (
-            <div key={booking._id} className="booking-card" data-status={booking.status}>
-              <div className="booking-header">
-                <h3>{booking.service}</h3>
-                <span className={`status ${booking.status}`}>
-                  {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
-                </span>
-              </div>
-              <div className="booking-details">
-                <p><strong>Date:</strong> {new Date(booking.date).toLocaleDateString()}</p>
-                <p><strong>Pickup:</strong> {booking.pickup}</p>
-                <p><strong>Drop-off:</strong> {booking.dropoff}</p>
-                <p><strong>Passengers:</strong> {booking.passengers}</p>
-                <p><strong>Email:</strong> {booking.email}</p>
-                <p><strong>Message:</strong> {booking.message || 'N/A'}</p>
-              </div>
-              <div className="booking-actions">
-                {booking.status !== 'cancelled' && (
-                  <button className="btn-cancel" onClick={() => handleCancel(booking._id)}>
-                    Cancel
-                  </button>
-                )}
-              </div>
+        <div className="bookings-table-container">
+          {filteredBookings.length === 0 ? (
+            <div className="no-bookings">
+              <p>No bookings found matching your criteria.</p>
+              <button
+                className="btn-primary"
+                onClick={() => setFilter('all')}
+              >
+                Show All Bookings
+              </button>
             </div>
-          ))}
+          ) : (
+            <table className="bookings-table">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Service</th>
+                  <th>Route</th>
+                  <th>Date & Time</th>
+                  <th>Passengers</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBookings.map((booking) => (
+                  <tr key={booking._id}>
+                    <td>#{booking._id.slice(-6).toUpperCase()}</td>
+                    <td>{booking.service}</td>
+                    <td>
+                      <div className="trip-details">
+                        <div>{booking.pickup} → {booking.dropoff}</div>
+                      </div>
+                    </td>
+                    <td>
+                      {new Date(booking.date).toLocaleDateString()}
+                      <br />
+                      <small>{booking.time || 'N/A'}</small>
+                    </td>
+                    <td>{booking.passengers}</td>
+                    <td>
+                      <span className={`status-badge status-${booking.status}`}>
+                        {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      {booking.status !== 'cancelled' && (
+                        <button
+                          className="btn-cancel"
+                          onClick={() => handleCancel(booking._id)}
+                          title="Cancel Booking"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 

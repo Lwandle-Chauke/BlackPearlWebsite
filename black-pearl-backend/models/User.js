@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -72,39 +72,39 @@ const userSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Only run if password was modified
   if (!this.isModified('password')) return next();
-  
+
   // Set password reset timestamp
   this.passwordResetAt = new Date();
-  
+
   // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 // Compare password method
-userSchema.methods.correctPassword = async function(candidatePassword) {
+userSchema.methods.correctPassword = async function (candidatePassword) {
   if (!this.password) {
     const userWithPassword = await this.constructor.findById(this._id).select('+password');
     return await bcrypt.compare(candidatePassword, userWithPassword.password);
   }
-  
+
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Alternative method name for compatibility
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return this.correctPassword(candidatePassword);
 };
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+export default User;

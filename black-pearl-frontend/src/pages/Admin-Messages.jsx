@@ -1,105 +1,195 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
-// Import the shared admin CSS (for base layout/hamburger logic) and the messages-specific CSS
-import '../styles/admin.css'; 
-import '../styles/admin-messages.css'; 
+import '../styles/admin.css';
+import '../styles/admin-messages.css';
 
 const AdminMessages = () => {
-    // State to manage the visibility of the sidebar on mobile
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [messagesData, setMessagesData] = useState([]);
+    const [feedbackData, setFeedbackData] = useState([]);
+    const [activeTab, setActiveTab] = useState('messages'); // 'messages' or 'feedback'
 
-    // Toggle function for the hamburger menu
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    const fetchMessages = async () => {
+        try {
+            const res = await fetch("http://localhost:5000/api/messages");
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            const data = await res.json();
+            setMessagesData(data);
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+            setMessagesData([]);
+        }
     };
 
-    // Data Array for the Messages Table
-    const messagesData = [
-        { id: '#504', name: 'Nomusa Dlamini', email: 'nomusa.d@mail.com', subject: 'Urgent Inquiry: Quote Follow-up', date: '2025-10-15 14:05', status: 'UNREAD' },
-        { id: '#503', name: 'Samantha Jones', email: 'sam@example.com', subject: 'General Inquiry', date: '2025-10-15 09:30', status: 'UNREAD' },
-        { id: '#502', name: 'Mark Van Der Westhuizen', email: 'mark.vw@email.co.za', subject: 'Website Feedback', date: '2025-10-14 17:10', status: 'READ' },
-        { id: '#501', name: 'David King', email: 'david.k@hotmail.com', subject: 'Complaint About Service', date: '2025-10-14 10:05', status: 'READ' },
-    ];
-
-    // Helper function to determine the CSS class for the status badge
-    const getStatusClass = (status) => {
-        return status === 'UNREAD' ? 'status-unread' : 'status-read';
+    const fetchFeedback = async () => {
+        try {
+            const res = await fetch("http://localhost:5000/api/feedback");
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            const data = await res.json();
+            setFeedbackData(data);
+        } catch (error) {
+            console.error("Error fetching feedback:", error);
+            setFeedbackData([]);
+        }
     };
 
-    // Placeholder actions
-    const handleAction = (action, id) => {
-        alert(`${action} message ${id}`);
-        // In a real app, 'View' would open the message content, and 'Delete' would call an API.
+    useEffect(() => {
+        fetchMessages();
+        fetchFeedback();
+    }, []);
+
+    const getStatusClass = (status) => status === "UNREAD" ? "status-unread" : "status-read";
+
+    const handleMessageAction = async (action, id, currentStatus) => {
+        if (action === "View") {
+            await fetch(`http://localhost:5000/api/messages/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: currentStatus === "UNREAD" ? "READ" : "UNREAD" })
+            });
+        } else if (action === "Delete") {
+            await fetch(`http://localhost:5000/api/messages/${id}`, { method: "DELETE" });
+        }
+        fetchMessages(); // Refresh messages table
     };
-    
+
+    const handleFeedbackDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this feedback?")) {
+            try {
+                const res = await fetch(`http://localhost:5000/api/feedback/${id}`, {
+                    method: "DELETE",
+                });
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                fetchFeedback(); // Refresh feedback table
+            } catch (error) {
+                console.error("Error deleting feedback:", error);
+                alert("Failed to delete feedback. Please try again.");
+            }
+        }
+    };
+
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-            
-            <AdminSidebar 
-                isSidebarOpen={isSidebarOpen} 
-                toggleSidebar={toggleSidebar} 
-            />
-            
+            <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             <div id="content-wrapper">
-                
-                <AdminTopBar 
-                    pageTitle="Messages" 
-                    toggleSidebar={toggleSidebar}
-                />
-
+                <AdminTopBar pageTitle="Messages & Feedback" toggleSidebar={toggleSidebar} />
                 <main className="messages-page-content">
                     <div className="main-content">
-                        <h2>Manage Contact Messages :</h2>
-                        
-                        <div className="data-table-container">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Sender Name</th>
-                                        <th>Email</th>
-                                        <th>Subject</th>
-                                        <th>Date Received</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {messagesData.map((message) => (
-                                        <tr key={message.id}>
-                                            <td>{message.id}</td>
-                                            <td>{message.name}</td>
-                                            <td>{message.email}</td>
-                                            <td>{message.subject}</td>
-                                            <td>{message.date}</td>
-                                            <td>
-                                                <span className={`status-badge ${getStatusClass(message.status)}`}>
-                                                    {message.status}
-                                                </span>
-                                            </td>
-                                            <td className="action-icons">
-                                                <i 
-                                                    className="fas fa-eye" 
-                                                    title="View Message" 
-                                                    onClick={() => handleAction('View', message.id)}
-                                                ></i> 
-                                                <i 
-                                                    className="fas fa-trash-alt" 
-                                                    title="Delete" 
-                                                    onClick={() => handleAction('Delete', message.id)}
-                                                ></i> 
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="tabs">
+                            <button
+                                className={`tab-button ${activeTab === 'messages' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('messages')}
+                            >
+                                Contact Messages
+                            </button>
+                            <button
+                                className={`tab-button ${activeTab === 'feedback' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('feedback')}
+                            >
+                                User Feedback
+                            </button>
                         </div>
+
+                        {activeTab === 'messages' && (
+                            <>
+                                <h2>Manage Contact Messages :</h2>
+                                <div className="data-table-container">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Sender Name</th>
+                                                <th>Email</th>
+                                                <th>Subject</th>
+                                                <th>Date Received</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {messagesData.map((message) => (
+                                                <tr key={message._id}>
+                                                    <td>#{message._id.slice(-4)}</td>
+                                                    <td>{message.name}</td>
+                                                    <td>{message.email}</td>
+                                                    <td>{message.subject}</td>
+                                                    <td>{new Date(message.createdAt).toLocaleString()}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${getStatusClass(message.status)}`}>
+                                                            {message.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="action-icons">
+                                                        <i
+                                                            className="fas fa-eye"
+                                                            title="View Message"
+                                                            onClick={() => handleMessageAction("View", message._id, message.status)}
+                                                        ></i>
+                                                        <i
+                                                            className="fas fa-trash-alt"
+                                                            title="Delete"
+                                                            onClick={() => handleMessageAction("Delete", message._id)}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'feedback' && (
+                            <>
+                                <h2>Manage User Feedback :</h2>
+                                <div className="data-table-container">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Sender Name</th>
+                                                <th>Email</th>
+                                                <th>Subject</th>
+                                                <th>Feedback</th>
+                                                <th>Date Received</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {feedbackData.map((feedback) => (
+                                                <tr key={feedback._id}>
+                                                    <td>#{feedback._id.slice(-4)}</td>
+                                                    <td>{feedback.name}</td>
+                                                    <td>{feedback.email}</td>
+                                                    <td>{feedback.subject}</td>
+                                                    <td>{feedback.feedback}</td>
+                                                    <td>{new Date(feedback.createdAt).toLocaleString()}</td>
+                                                    <td className="action-icons">
+                                                        <i
+                                                            className="fas fa-trash-alt"
+                                                            title="Delete Feedback"
+                                                            onClick={() => handleFeedbackDelete(feedback._id)}
+                                                        ></i>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </main>
-            </div> 
-            
-            {/* Overlay for mobile view when sidebar is open */}
+            </div>
             <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={toggleSidebar}></div>
         </div>
     );
