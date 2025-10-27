@@ -101,6 +101,39 @@
 }
 
 /* ==========================================================
+   STATUS BADGE COLORS
+========================================================== */
+.status-completed { 
+    background-color: #27ae60; 
+}
+
+.status-confirmed { 
+    background-color: #3498db; 
+}
+
+.status-pending { 
+    background-color: #f39c12; 
+}
+
+.status-cancelled { 
+    background-color: #e74c3c; 
+}
+
+/* ==========================================================
+   LOADING AND ERROR STATES
+========================================================== */
+.loading-state, .error-state {
+    text-align: center;
+    padding: 2rem;
+}
+
+.error-state {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+
+/* ==========================================================
    RESPONSIVE
 ========================================================== */
 @media (max-width: 1024px) {
