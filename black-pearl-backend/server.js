@@ -47,6 +47,12 @@ app.get('/api', (req, res) => {
   });
 });
 
+// Import routes
+const bookingRoutes = require('./routes/bookings');
+
+// Use routes
+app.use('/api/bookings', bookingRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',

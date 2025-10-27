@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
-import '../styles/admin.css'; 
+import '../styles/admin.css';
 import '../styles/admin-bookings.css';
 
 const AdminBookings = () => {
@@ -54,7 +54,7 @@ const AdminBookings = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     status: newStatus,
                     ...(finalPrice && { finalPrice }),
                     ...(adminNotes && { adminNotes })
@@ -64,8 +64,8 @@ const AdminBookings = () => {
             const data = await response.json();
 
             if (data.success) {
-                setQuotes(prevQuotes => 
-                    prevQuotes.map(quote => 
+                setQuotes(prevQuotes =>
+                    prevQuotes.map(quote =>
                         quote._id === quoteId ? { ...quote, status: newStatus, finalPrice, adminNotes } : quote
                     )
                 );
@@ -87,7 +87,7 @@ const AdminBookings = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     finalPrice,
                     bookingNotes
                 })
@@ -96,8 +96,8 @@ const AdminBookings = () => {
             const data = await response.json();
 
             if (data.success) {
-                setQuotes(prevQuotes => 
-                    prevQuotes.map(quote => 
+                setQuotes(prevQuotes =>
+                    prevQuotes.map(quote =>
                         quote._id === quoteId ? { ...quote, status: 'booked', finalPrice, bookingNotes } : quote
                     )
                 );
@@ -177,7 +177,7 @@ const AdminBookings = () => {
 
     const handleSubmitManualBooking = async (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData(e.target);
         const bookingData = {
             customerName: formData.get('customerName'),
@@ -249,13 +249,13 @@ const AdminBookings = () => {
     if (loading) {
         return (
             <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-                <AdminSidebar 
-                    isSidebarOpen={isSidebarOpen} 
-                    toggleSidebar={toggleSidebar} 
+                <AdminSidebar
+                    isSidebarOpen={isSidebarOpen}
+                    toggleSidebar={toggleSidebar}
                 />
                 <div id="content-wrapper">
-                    <AdminTopBar 
-                        pageTitle="Bookings & Quotes" 
+                    <AdminTopBar
+                        pageTitle="Bookings & Quotes"
                         toggleSidebar={toggleSidebar}
                     />
                     <main className="bookings-page-content">
@@ -270,24 +270,24 @@ const AdminBookings = () => {
 
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-            
-            <AdminSidebar 
-                isSidebarOpen={isSidebarOpen} 
-                toggleSidebar={toggleSidebar} 
+
+            <AdminSidebar
+                isSidebarOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
             />
-            
+
             <div id="content-wrapper">
-                
-                <AdminTopBar 
-                    pageTitle="Bookings & Quotes" 
+
+                <AdminTopBar
+                    pageTitle="Bookings & Quotes"
                     toggleSidebar={toggleSidebar}
                 />
 
                 <main className="bookings-page-content">
-                    
+
                     <div className="main-content">
                         <h2>Manage Bookings & Quotes</h2>
-                        
+
                         {/* Stats Overview */}
                         <div className="bookings-stats">
                             <div className="stat-card">
@@ -309,12 +309,12 @@ const AdminBookings = () => {
                                 </span>
                             </div>
                         </div>
-                        
+
                         {/* Add Booking Button */}
                         <button className="btn-add-booking" onClick={handleAddBooking}>
                             <i className="fas fa-plus"></i> Add Manual Booking
                         </button>
-                        
+
                         <div className="data-table-container">
                             <table className="data-table">
                                 <thead>
@@ -385,14 +385,14 @@ const AdminBookings = () => {
                                                     </span>
                                                 </td>
                                                 <td className="action-buttons">
-                                                    <button 
+                                                    <button
                                                         className="btn-send-quote"
                                                         onClick={() => handleSendQuote(quote)}
                                                         title="Send Quote"
                                                     >
                                                         💰 Quote
                                                     </button>
-                                                    <select 
+                                                    <select
                                                         value={quote.status}
                                                         onChange={(e) => updateQuoteStatus(quote._id, e.target.value)}
                                                         className="status-select"
@@ -403,7 +403,7 @@ const AdminBookings = () => {
                                                         <option value="completed">Completed</option>
                                                         <option value="cancelled">Cancelled</option>
                                                     </select>
-                                                    <button 
+                                                    <button
                                                         className="btn-delete"
                                                         onClick={() => deleteQuote(quote._id)}
                                                         title="Delete"
@@ -419,7 +419,7 @@ const AdminBookings = () => {
                         </div>
                     </div>
                 </main>
-                
+
             </div>
 
             {/* Quote Modal */}
@@ -435,8 +435,8 @@ const AdminBookings = () => {
                         </div>
                         <div className="form-group">
                             <label htmlFor="finalPrice">Final Price (R):</label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 id="finalPrice"
                                 defaultValue={selectedQuote.finalPrice || selectedQuote.estimatedPrice}
                                 min="0"
@@ -445,7 +445,7 @@ const AdminBookings = () => {
                         </div>
                         <div className="form-group">
                             <label htmlFor="adminNotes">Notes to Customer:</label>
-                            <textarea 
+                            <textarea
                                 id="adminNotes"
                                 rows="3"
                                 placeholder="Add any notes or terms for the customer..."
@@ -453,19 +453,19 @@ const AdminBookings = () => {
                             ></textarea>
                         </div>
                         <div className="modal-actions">
-                            <button 
+                            <button
                                 className="btn-confirm"
                                 onClick={handleConfirmQuote}
                             >
                                 Send Quote
                             </button>
-                            <button 
+                            <button
                                 className="btn-book"
                                 onClick={handleConvertToBooking}
                             >
                                 Convert to Booking
                             </button>
-                            <button 
+                            <button
                                 className="btn-cancel"
                                 onClick={() => setShowQuoteModal(false)}
                             >
@@ -556,7 +556,7 @@ const AdminBookings = () => {
                                 <button type="submit" className="btn-confirm">
                                     Create Booking
                                 </button>
-                                <button 
+                                <button
                                     type="button"
                                     className="btn-cancel"
                                     onClick={() => setShowAddBookingModal(false)}

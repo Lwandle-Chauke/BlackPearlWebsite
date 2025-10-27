@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+/* Your page-specific styles here */
 /* Contact Page Styles (contact.css) */
 
 .contact {
@@ -8,13 +12,18 @@
 
 /* Section Title */
 .section-title {
-    text-align: center; /* center the heading */
+    text-align: center;
+    /* center the heading */
     margin-bottom: 20px;
     color: var(--bg-black);
-    border-bottom: none; /* remove any line */
-    width: 100%; /* full width */
-    margin: 0 auto 20px auto; /* top 0, bottom 20px, auto left/right */
-    display: block; /* ensure it's a block element */
+    border-bottom: none;
+    /* remove any line */
+    width: 100%;
+    /* full width */
+    margin: 0 auto 20px auto;
+    /* top 0, bottom 20px, auto left/right */
+    display: block;
+    /* ensure it's a block element */
 }
 
 .section-title h2 {
@@ -22,9 +31,12 @@
     color: var(--bg-black);
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
-    margin: 0; /* remove extra spacing */
-    display: inline-block; /* shrink to content width */
-    margin: 0; /* remove default margins */
+    margin: 0;
+    /* remove extra spacing */
+    display: inline-block;
+    /* shrink to content width */
+    margin: 0;
+    /* remove default margins */
 }
 
 /* Main container */
@@ -35,7 +47,7 @@
     margin: 0 auto;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* LEFT SIDE (black background) */
@@ -90,7 +102,8 @@
 
 .map iframe {
     width: 100%;
-    height: 450px; /* exact height as HTML */
+    height: 450px;
+    /* exact height as HTML */
     border: none;
 }
 
@@ -166,7 +179,8 @@
 
 /* Responsive for tablets */
 @media (max-width: 1000px) {
-    .contact-info, 
+
+    .contact-info,
     .contact-form {
         min-width: 100%;
     }
@@ -182,13 +196,13 @@
         flex-direction: column;
     }
 
-    .contact-info, 
+    .contact-info,
     .contact-form {
         width: 100%;
         padding: 30px 20px;
     }
 
     .section-title h2 {
-         font-size: 26px;
+        font-size: 26px;
     }
 }
