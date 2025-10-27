@@ -670,26 +670,6 @@ footer {
   font-size: 13px;
 }
 
-/* Floating chat icon */
-.chat-fab {
-  position: fixed;
-  right: 14px;
-  bottom: 92px;
-  width: 58px;
-  height: 58px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #f9f9f9, #e6e6e6);
-  display: grid;
-  place-items: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-  z-index: 70;
-}
-
-.chat-fab img {
-  width: 36px;
-  height: 36px;
-}
 
 /* Responsive / layout tweaks */
 @media(min-width:720px) {

@@ -48,6 +48,9 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  returnDate: {
+    type: Date
+  },
   
   // Contact Information
   customerName: {
@@ -83,7 +86,22 @@ const quoteSchema = new mongoose.Schema({
     default: 'pending'
   },
   
-  // NEW FIELDS FOR PRICING AND ADMIN FEATURES
+  // NEW: Quote status for customer response
+  quoteStatus: {
+    type: String,
+    enum: ['pending_admin', 'pending_customer', 'pending_email', 'accepted', 'declined', 'converted'],
+    default: 'pending_admin'
+  },
+  
+  // NEW: Email approval fields
+  approvalToken: {
+    type: String
+  },
+  tokenExpires: {
+    type: Date
+  },
+  
+  // Pricing Fields
   estimatedPrice: {
     type: Number,
     required: true,
@@ -92,6 +110,22 @@ const quoteSchema = new mongoose.Schema({
   finalPrice: {
     type: Number
   },
+  
+  // Loyalty and Discount Fields
+  loyaltyPointsEarned: {
+    type: Number,
+    default: 0
+  },
+  loyaltyPointsApplied: {
+    type: Number,
+    default: 0
+  },
+  discountApplied: {
+    type: Number,
+    default: 0
+  },
+  
+  // Admin Fields
   adminNotes: {
     type: String,
     trim: true
@@ -100,6 +134,11 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  
+  // Timestamps
+  sentToCustomerAt: {
+    type: Date
+  },
   confirmedAt: {
     type: Date
   },
@@ -107,6 +146,9 @@ const quoteSchema = new mongoose.Schema({
     type: Date
   },
   completedAt: {
+    type: Date
+  },
+  customerRespondedAt: {
     type: Date
   },
   createdAt: {

@@ -4,12 +4,34 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/style.css';
 import '../styles/dashboard.css';
+import ChatWidget from "../chatbot/ChatWidget";
 
-const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
+const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => {
   const navigate = useNavigate();
   const [userBookings, setUserBookings] = useState([]);
   const [nextBooking, setNextBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+
+  // Refresh user data function
+  const refreshUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && onUserUpdate) {
+          onUserUpdate(data.user);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
 
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
@@ -21,7 +43,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const fetchUserBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/user/${currentUser.id}`, {
+      const response = await fetch(`http://localhost:5000/api/quotes/my-quotes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -33,7 +55,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
 
         // Find next upcoming booking
         const upcoming = data.data?.filter(booking =>
-          booking.status === 'confirmed' || booking.status === 'pending'
+          booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
         ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
 
         setNextBooking(upcoming || null);
@@ -49,30 +71,97 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     }
   };
 
+  // NEW: Customer accepts quote
+  const handleAcceptQuote = async (quoteId) => {
+    if (!window.confirm('Are you sure you want to accept this quote? This will create a booking.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-accept`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Quote accepted! Your booking has been created.');
+        fetchUserBookings(); // Refresh the bookings
+      } else {
+        alert('Failed to accept quote: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Accept quote error:', error);
+      alert('Failed to accept quote. Please try again.');
+    }
+  };
+
+  // NEW: Customer declines quote
+  const handleDeclineQuote = async (quoteId) => {
+    const declineReason = prompt('Please provide a reason for declining this quote (optional):');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-decline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ declineReason })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Quote declined successfully.');
+        fetchUserBookings(); // Refresh the bookings
+      } else {
+        alert('Failed to decline quote: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Decline quote error:', error);
+      alert('Failed to decline quote. Please try again.');
+    }
+  };
+
+  // Calculate discount value based on loyalty points (same logic as loyaltyService)
+  const calculateDiscountValue = (points) => {
+    const discountAmount = Math.floor(points / 100) * 10;
+    return Math.min(discountAmount, 500); // Max R500 discount
+  };
+
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
     const completedTrips = userBookings.filter(booking =>
       booking.status === 'completed'
     ).length;
 
-    // Calculate loyalty points: 100 points per completed trip + 50 points per pending/confirmed trip
-    const basePoints = completedTrips * 100;
-    const upcomingTrips = userBookings.filter(booking =>
-      booking.status === 'confirmed' || booking.status === 'pending'
-    ).length;
-    const bonusPoints = upcomingTrips * 50;
+    // Calculate total spent from completed trips
+    const totalSpent = userBookings
+      .filter(booking => booking.status === 'completed' && booking.finalPrice)
+      .reduce((total, booking) => total + (booking.finalPrice || 0), 0);
 
-    const totalLoyaltyPoints = (currentUser?.loyaltyPoints || 0) + basePoints + bonusPoints;
-
+    // Use actual user data from backend - ALWAYS use currentUser directly
     return {
       name: currentUser?.name || "Guest",
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
-      loyaltyPoints: totalLoyaltyPoints,
+      loyaltyPoints: currentUser?.loyaltyPoints || 0,
       tripsCompleted: completedTrips,
-      memberSince: currentUser?.memberSince || "2025",
+      totalTrips: currentUser?.totalTrips || 0,
+      totalSpent: totalSpent,
+      tier: currentUser?.tier || 'bronze',
+      memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
-      upcomingTrips: upcomingTrips
+      upcomingTrips: userBookings.filter(booking =>
+        booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
+      ).length,
+      availableDiscount: calculateDiscountValue(currentUser?.loyaltyPoints || 0)
     };
   };
 
@@ -84,7 +173,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       {
         badge: '🏅',
         stat: `${userData.tripsCompleted} Trips Completed`,
-        desc: `You've completed ${userData.tripsCompleted} trips with Black Pearl Tours!`
+        desc: `You've completed ${userData.tripsCompleted} trips with us!`
+      },
+      {
+        badge: '💰',
+        stat: `${userData.loyaltyPoints} Points`,
+        desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.`
       },
       {
         badge: '⏱️',
@@ -96,28 +190,48 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         stat: `${userData.tripsCompleted * 240} km Traveled`,
         desc: `You've traveled ${userData.tripsCompleted * 240} km with us.`
       },
-      {
-        badge: '📅',
-        stat: `${userData.upcomingTrips} Upcoming Trips`,
-        desc: `You have ${userData.upcomingTrips} trips planned with us.`
-      },
     ];
+
+    // Add tier-based highlights
+    const tierEmoji = {
+      bronze: '🥉',
+      silver: '🥈',
+      gold: '🥇',
+      platinum: '💎'
+    };
+
+    highlights.push({
+      badge: tierEmoji[userData.tier] || '🥉',
+      stat: `${userData.tier.charAt(0).toUpperCase() + userData.tier.slice(1)} Member`,
+      desc: `You are a ${userData.tier} level member with special benefits!`
+    });
+
+    // Add discount highlight
+    if (userData.availableDiscount > 0) {
+      highlights.push({
+        badge: '💎',
+        stat: `R ${userData.availableDiscount} Discount`,
+        desc: `You have R ${userData.availableDiscount} available to use on your next trip!`
+      });
+    }
+
+    // Add spending highlight
+    if (userData.totalSpent > 0) {
+      highlights.push({
+        badge: '💳',
+        stat: `R ${userData.totalSpent.toLocaleString()} Total`,
+        desc: `You've spent R ${userData.totalSpent.toLocaleString()} on trips.`
+      });
+    }
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
       highlights.push({
         badge: '🎖️',
         stat: 'VIP Member',
-        desc: "You are now a VIP member of Black Pearl Tours!"
+        desc: "You are now a VIP member!"
       });
     }
-
-    // Add loyalty points highlight
-    highlights.push({
-      badge: '💰',
-      stat: `${userData.loyaltyPoints} Points`,
-      desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.`
-    });
 
     // Add booking milestone if applicable
     if (userData.totalBookings >= 10) {
@@ -241,6 +355,11 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     );
   };
 
+  // Get pending quotes for the customer
+  const pendingQuotes = userBookings.filter(booking =>
+    booking.quoteStatus === 'pending_customer'
+  );
+
   return (
     <>
       <Header
@@ -265,6 +384,64 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           </div>
         </div>
       </section>
+
+      {/* PENDING QUOTES SECTION */}
+      {pendingQuotes.length > 0 && (
+        <section className="pending-quotes-section">
+          <div className="container">
+            <div className="section-title">Pending Quotes</div>
+            <p className="section-subtitle">You have {pendingQuotes.length} quote(s) waiting for your response</p>
+            <div className="pending-quotes-grid">
+              {pendingQuotes.map(quote => (
+                <div key={quote._id} className="pending-quote-card">
+                  <div className="quote-header">
+                    <h4>{quote.tripType}</h4>
+                    <span className="quote-badge">Quote Sent</span>
+                  </div>
+                  <div className="quote-details">
+                    <p><strong>Route:</strong> {quote.pickupLocation} → {quote.dropoffLocation}</p>
+                    <p><strong>Vehicle:</strong> {quote.vehicleType}</p>
+                    <p><strong>Date:</strong> {new Date(quote.tripDate).toLocaleDateString()}</p>
+                    <p><strong>Time:</strong> {quote.tripTime}</p>
+                    <p><strong>Final Price:</strong> R {quote.finalPrice || quote.estimatedPrice}</p>
+                    {quote.adminNotes && (
+                      <p><strong>Admin Notes:</strong> {quote.adminNotes}</p>
+                    )}
+                    {quote.sentToCustomerAt && (
+                      <p className="quote-sent-date">
+                        <small>Sent on: {new Date(quote.sentToCustomerAt).toLocaleDateString()}</small>
+                      </p>
+                    )}
+                  </div>
+                  <div className="quote-actions">
+                    <button
+                      className="btn-accept"
+                      onClick={() => handleAcceptQuote(quote._id)}
+                    >
+                      Accept Quote
+                    </button>
+                    <button
+                      className="btn-decline"
+                      onClick={() => handleDeclineQuote(quote._id)}
+                    >
+                      Decline
+                    </button>
+                    <button
+                      className="btn-view-details"
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowQuoteModal(true);
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* SERVICES */}
       <section className="services-area">
@@ -374,17 +551,68 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         </div>
       </section>
 
-      {/* Floating chat icon */}
-      <div className="chat-fab" title="Chat with us">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="5" width="20" height="14" rx="3" fill="#fff" />
-          <circle cx="8.5" cy="10.3" r="1.1" fill="#666" />
-          <circle cx="15.5" cy="10.3" r="1.1" fill="#666" />
-          <rect x="9.5" y="13.6" width="5" height="1.3" rx="0.65" fill="#c1c1c1" />
-        </svg>
-      </div>
+      {/* Quote Details Modal */}
+      {showQuoteModal && selectedQuote && (
+        <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
+          <div className="modal-content quote-details-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Quote Details</h3>
+            <div className="quote-full-details">
+              <div className="detail-group">
+                <h4>Trip Information</h4>
+                <p><strong>Type:</strong> {selectedQuote.tripType}</p>
+                <p><strong>Purpose:</strong> {selectedQuote.tripPurpose}</p>
+                <p><strong>Destination:</strong> {selectedQuote.destination}</p>
+                <p><strong>Route:</strong> {selectedQuote.pickupLocation} → {selectedQuote.dropoffLocation}</p>
+                <p><strong>Vehicle:</strong> {selectedQuote.vehicleType}</p>
+                <p><strong>Date:</strong> {new Date(selectedQuote.tripDate).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> {selectedQuote.tripTime}</p>
+                <p><strong>Direction:</strong> {selectedQuote.isOneWay ? 'One Way' : 'Both Ways'}</p>
+              </div>
+
+              <div className="detail-group">
+                <h4>Pricing</h4>
+                <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
+                <p><strong>Final Price:</strong> R {selectedQuote.finalPrice || selectedQuote.estimatedPrice}</p>
+                {selectedQuote.adminNotes && (
+                  <>
+                    <h4>Admin Notes</h4>
+                    <p>{selectedQuote.adminNotes}</p>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="btn-accept"
+                onClick={() => {
+                  handleAcceptQuote(selectedQuote._id);
+                  setShowQuoteModal(false);
+                }}
+              >
+                Accept Quote
+              </button>
+              <button
+                className="btn-decline"
+                onClick={() => {
+                  handleDeclineQuote(selectedQuote._id);
+                  setShowQuoteModal(false);
+                }}
+              >
+                Decline Quote
+              </button>
+              <button
+                className="btn-cancel"
+                onClick={() => setShowQuoteModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
+      <ChatWidget />
     </>
   );
 };

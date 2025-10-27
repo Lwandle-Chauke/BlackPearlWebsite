@@ -1,0 +1,127 @@
+
+/* src/chatbot/chatbot.css */
+.chat-widget {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  font-family: Inter, Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial;
+}
+.chat-toggle {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 28px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  font-weight: 600;
+}
+.chat-panel {
+  width: 340px;
+  max-height: 540px;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: all 0.35s ease;
+  flex-direction: column;
+  background: #fff;
+  color: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  margin-bottom: 70px; 
+  position: relative;
+}
+/* when open, slide up and fade in smoothly */
+.chat-widget.open .chat-panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  display: flex;
+}
+/* header */
+.chat-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+  background: #000;
+  color: #fff;
+}
+.chat-header .brand { font-weight: 700; }
+.chat-header .subtitle { font-size: 12px; opacity: 0.9; }
+/* body */
+.chat-body {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  background: #fafafa;
+}
+/* messages */
+.chat-msg-list { display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { max-width: 95%; display:flex; }
+.chat-msg.user { justify-content: flex-end; }
+.chat-msg.user .msg-content { background: #000; color: #fff; border-radius: 12px 12px 0 12px; padding: 10px; }
+.chat-msg.bot .msg-content { background: #fff; color: #000; border: 1px solid #eee; border-radius: 12px 12px 12px 0; padding: 10px; }
+/* vehicle card inside messages */
+.chat-msg .vehicle-card { display:flex; gap:10px; align-items:center; }
+.chat-msg .vehicle-card img { width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid #ddd; }
+.chat-msg .vehicle-info { font-size:13px; }
+.chat-msg .vehicle-info strong { display: block; margin-bottom: 4px; }
+.chat-msg .vehicle-info p { margin: 0; line-height: 1.3; }
+/* quick replies */
+.chat-quick { display:flex; gap:8px; padding:8px 12px; flex-wrap:wrap; border-top:1px solid #eee; background:#fff; }
+.quick-btn { background:#000; color:#fff; border:none; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:12px; }
+/* input */
+.chat-input-form { display:flex; gap:8px; padding:10px; border-top:1px solid #eee; background:#fff; }
+.chat-input-form input {
+  flex:1;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+.chat-input-form button {
+  background:#000;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+/* === Floating black chat circle === */
+.chat-fab {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #000;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 9999;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+.chat-fab:hover {
+  background: #222;
+  transform: scale(1.05);
+}
+.chat-fab svg {
+  pointer-events: none;
+}
+.chat-close {
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+}
+/* Keep the close bubble just below the panel */
+.chat-widget.open .chat-fab {
+  bottom: 20px;        
+  right: 25px;
+  transform: none;    
+}
+.chat-fab {
+  transition: transform 0.25s ease, background 0.25s ease, bottom 0.25s ease;
+}
