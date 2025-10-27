@@ -12,6 +12,7 @@ import Quote from "./pages/Quote";
 import Contact from "./pages/Contact";
 import Fleet from "./pages/Fleet";
 import Gallery from "./pages/Gallery";
+import ErrorBoundary from "./components/ErrorBoundary"; // Import ErrorBoundary
 
 // Customer Pages
 import Profile from "./pages/Profile";
@@ -170,7 +171,9 @@ function App() {
                     path="/bookings"
                     element={
                         <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <Bookings onSignOut={handleSignOut} isLoggedIn={true} />
+                            <ErrorBoundary>
+                                <Bookings onSignOut={handleSignOut} isLoggedIn={true} />
+                            </ErrorBoundary>
                         </ProtectedRoute>
                     }
                 />

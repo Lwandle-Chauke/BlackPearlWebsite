@@ -8,33 +8,70 @@ import ChatWidget from "../chatbot/ChatWidget";
 
 const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [searchParams] = useSearchParams();
-  const [vehicleType, setVehicleType] = useState("");
-  const [tripDirection, setTripDirection] = useState("one-way");
-  const [destination, setDestination] = useState("");
-  const [showCustomDestination, setShowCustomDestination] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState(0);
-  const [pickupLocation, setPickupLocation] = useState("");
-  const [dropoffLocation, setDropoffLocation] = useState("");
 
+  // Form state - all fields managed by React
+  const [formData, setFormData] = useState({
+    vehicleType: "",
+    tripDirection: "one-way",
+    destination: "",
+    customDestination: "",
+    showCustomDestination: false,
+    pickupLocation: "",
+    dropoffLocation: "",
+    tripPurpose: "",
+    tripType: "",
+    tripDate: "",
+    returnDate: "",
+    tripTime: "",
+    customerName: currentUser?.name || "",
+    customerEmail: currentUser?.email || "",
+    customerPhone: currentUser?.phone || "",
+    customerCompany: ""
+  });
 
   useEffect(() => {
     const vehicleFromUrl = searchParams.get("vehicle");
     if (vehicleFromUrl) {
-      setVehicleType(vehicleFromUrl);
+      setFormData(prev => ({ ...prev, vehicleType: vehicleFromUrl }));
     }
 
-    // Minimum date today
+    // Set minimum dates
     const today = new Date().toISOString().split("T")[0];
-    const dateInput = document.getElementById("tripDate");
-    const returnDateInput = document.getElementById("returnDate");
-    if (dateInput) dateInput.min = today;
-    if (returnDateInput) returnDateInput.min = today;
-  }, [searchParams]);
+    setFormData(prev => ({
+      ...prev,
+      tripDate: prev.tripDate || today,
+      returnDate: prev.returnDate || today
+    }));
+  }, [searchParams, currentUser]);
+
+  // Handle all input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    // Special handling for destination
+    if (name === 'destination') {
+      const showCustom = value === "Other (Specify Below)";
+      setFormData(prev => ({
+        ...prev,
+        destination: value,
+        showCustomDestination: showCustom,
+        customDestination: showCustom ? prev.customDestination : ""
+      }));
+    }
+  };
 
   const fetchEstimatedPrice = async () => {
+    const { vehicleType, pickupLocation, dropoffLocation, destination, tripDirection } = formData;
+
     if (!vehicleType || !pickupLocation || !dropoffLocation || !destination) {
       setEstimatedPrice(0);
       return;
@@ -51,7 +88,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
           vehicleType,
           pickupLocation,
           dropoffLocation,
-          destination,
+          destination: formData.showCustomDestination ? formData.customDestination : destination,
           isOneWay: tripDirection === "one-way",
         }),
       });
@@ -74,11 +111,55 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
   useEffect(() => {
     fetchEstimatedPrice();
-  }, [vehicleType, tripDirection, destination, pickupLocation, dropoffLocation]);
+  }, [formData.vehicleType, formData.tripDirection, formData.destination, formData.customDestination, formData.pickupLocation, formData.dropoffLocation]);
 
-  const handleDestinationChange = (e) => {
-    setDestination(e.target.value);
-    setShowCustomDestination(e.target.value === "Other (Specify Below)");
+  // Enhanced validation
+  const validateForm = () => {
+    const errors = [];
+    const {
+      tripPurpose, tripType, destination, pickupLocation, dropoffLocation,
+      vehicleType, tripDate, tripTime, customerName, customerEmail, customerPhone,
+      tripDirection, returnDate, showCustomDestination, customDestination
+    } = formData;
+
+    // Required fields validation
+    if (!tripPurpose) errors.push("Trip purpose is required");
+    if (!tripType) errors.push("Trip type is required");
+    if (!destination) errors.push("Destination is required");
+    if (showCustomDestination && !customDestination) errors.push("Please specify your custom destination");
+    if (!pickupLocation) errors.push("Pickup location is required");
+    if (!dropoffLocation) errors.push("Drop-off location is required");
+    if (!vehicleType) errors.push("Vehicle type is required");
+    if (!tripDate) errors.push("Trip date is required");
+    if (!tripTime) errors.push("Trip time is required");
+    if (!customerName) errors.push("Name is required");
+    if (!customerEmail) errors.push("Email is required");
+    if (!customerPhone) errors.push("Phone is required");
+    if (tripDirection === "both-ways" && !returnDate) errors.push("Return date is required for round trips");
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (customerEmail && !emailRegex.test(customerEmail)) {
+      errors.push("Please enter a valid email address");
+    }
+
+    // Date validation
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(tripDate);
+    if (selectedDate < today) {
+      errors.push("Trip date cannot be in the past");
+    }
+
+    if (tripDirection === "both-ways" && returnDate) {
+      const returnDateObj = new Date(returnDate);
+      const tripDateObj = new Date(tripDate);
+      if (returnDateObj < tripDateObj) {
+        errors.push("Return date cannot be before trip date");
+      }
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
@@ -86,56 +167,27 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     setLoading(true);
     setMessage("");
 
+    // Validate form
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setMessageType("error");
+      setMessage(validationErrors.join(". "));
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Get form data
-      const formData = {
-        tripPurpose: document.getElementById("tripPurpose").value,
-        tripType: document.getElementById("tripType").value,
-        destination: destination,
-        customDestination: showCustomDestination ? document.getElementById("customDestination").value : "",
-        pickupLocation: pickupLocation,
-        dropoffLocation: dropoffLocation,
-        vehicleType: vehicleType,
-        isOneWay: tripDirection === "one-way",
-        tripDate: document.getElementById("tripDate").value,
-        returnDate: tripDirection === "both-ways" ? document.getElementById("returnDate").value : null,
-        tripTime: document.getElementById("tripTime").value,
-        customerName: document.getElementById("customerName").value,
-        customerEmail: document.getElementById("customerEmail").value,
-        customerPhone: document.getElementById("customerPhone").value,
-        customerCompany: document.getElementById("customerCompany").value,
+      // Prepare submission data
+      const submissionData = {
+        ...formData,
+        // Use custom destination if "Other" was selected
+        destination: formData.showCustomDestination ? formData.customDestination : formData.destination,
+        isOneWay: formData.tripDirection === "one-way",
         estimatedPrice: estimatedPrice,
-        userId: currentUser ? currentUser.id : null
+        userId: currentUser ? currentUser.id : null,
+        // Remove internal state fields
+        showCustomDestination: undefined
       };
-
-      // Validation
-      const requiredFields = [
-        'tripPurpose', 'tripType', 'destination', 'pickupLocation',
-        'dropoffLocation', 'vehicleType', 'tripDate', 'tripTime',
-        'customerName', 'customerEmail', 'customerPhone'
-      ];
-
-      if (tripDirection === "both-ways") {
-        requiredFields.push('returnDate');
-      }
-
-      let isValid = true;
-      requiredFields.forEach(field => {
-        const element = document.getElementById(field);
-        if (element && !element.value.trim()) {
-          isValid = false;
-          element.style.borderColor = "red";
-        } else if (element) {
-          element.style.borderColor = "#ccc";
-        }
-      });
-
-      if (!isValid) {
-        setMessageType("error");
-        setMessage("Please fill in all required fields.");
-        setLoading(false);
-        return;
-      }
 
       // Submit to backend
       const response = await fetch('http://localhost:5000/api/quotes', {
@@ -143,7 +195,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       const data = await response.json();
@@ -153,14 +205,25 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         setMessage(data.message || "Thank you for your quote request! We will contact you shortly.");
 
         // Reset form
-        e.target.reset();
-        setVehicleType("");
-        setTripDirection("one-way");
-        setDestination("");
-        setShowCustomDestination(false);
+        setFormData({
+          vehicleType: "",
+          tripDirection: "one-way",
+          destination: "",
+          customDestination: "",
+          showCustomDestination: false,
+          pickupLocation: "",
+          dropoffLocation: "",
+          tripPurpose: "",
+          tripType: "",
+          tripDate: "",
+          returnDate: "",
+          tripTime: "",
+          customerName: currentUser?.name || "",
+          customerEmail: currentUser?.email || "",
+          customerPhone: currentUser?.phone || "",
+          customerCompany: ""
+        });
         setEstimatedPrice(0);
-        setPickupLocation("");
-        setDropoffLocation("");
       } else {
         setMessageType("error");
         setMessage(data.error || "Failed to submit quote. Please try again.");
@@ -173,6 +236,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       setLoading(false);
     }
   };
+
+  // Get today's date for min attribute
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -188,11 +254,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
           <h1>GET A QUOTE</h1>
           <p className="subtitle">
             Fast, tailored quotes for private coach charters and shuttle services.
-            {vehicleType && (
+            {formData.vehicleType && (
               <>
                 <br />
                 <small style={{ color: "green", fontWeight: "600" }}>
-                  ✓ {vehicleType} pre-selected
+                  ✓ {formData.vehicleType} pre-selected
                 </small>
               </>
             )}
@@ -207,102 +273,94 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
           {/* Price Estimate Display */}
           {estimatedPrice > 0 && (
-            <div className="price-estimate" style={{
-              backgroundColor: "#e7f3ff",
-              border: "1px solid #b3d9ff",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginBottom: "20px",
-              fontSize: "16px",
-              color: "#0066cc",
-              textAlign: "center",
-              fontWeight: "600"
-            }}>
+            <div className="price-estimate">
               Estimated Price: <strong>R {estimatedPrice.toLocaleString()}</strong>
               <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                {tripDirection === "both-ways" ? "Round trip" : "One way"} • Final price may vary
+                {formData.tripDirection === "both-ways" ? "Round trip" : "One way"} • Final price may vary
               </div>
             </div>
           )}
 
           {message && (
-            <div className={`message ${messageType}`} style={{
-              padding: "1rem",
-              borderRadius: "6px",
-              marginBottom: "1rem",
-              textAlign: "center",
-              fontWeight: "600",
-              backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da",
-              color: messageType === "success" ? "#155724" : "#721c24",
-              border: `1px solid ${messageType === "success" ? "#c3e6cb" : "#f5c6cb"}`
-            }}>
+            <div className={`message ${messageType}`}>
               {message}
             </div>
           )}
 
-          <form id="quoteForm" className="quote-form" onSubmit={handleSubmit} noValidate>
+          <form className="quote-form" onSubmit={handleSubmit} noValidate>
             {/* Trip Details */}
             <div className="form-section">
               <h3>Trip Details</h3>
 
               {/* Purpose of Trip */}
               <div className="input-group">
-                <br />
                 <label htmlFor="tripPurpose">Purpose of Trip</label>
-                <select id="tripPurpose" name="tripPurpose" required>
+                <select
+                  id="tripPurpose"
+                  name="tripPurpose"
+                  value={formData.tripPurpose}
+                  onChange={handleInputChange}
+                  required
+                >
                   <option value="">Select Purpose *</option>
-                  <option>Personal Use</option>
-                  <option>Business / Corporate</option>
-                  <option>School or University Trip</option>
-                  <option>Event / Wedding</option>
-                  <option>Tourism or Sightseeing</option>
-                  <option>Other</option>
+                  <option value="Personal Use">Personal Use</option>
+                  <option value="Business / Corporate">Business / Corporate</option>
+                  <option value="School or University Trip">School or University Trip</option>
+                  <option value="Event / Wedding">Event / Wedding</option>
+                  <option value="Tourism or Sightseeing">Tourism or Sightseeing</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
               {/* Trip Type */}
               <div className="input-group">
-                <br />
                 <label htmlFor="tripType">Trip Type</label>
-                <select id="tripType" name="tripType" required>
+                <select
+                  id="tripType"
+                  name="tripType"
+                  value={formData.tripType}
+                  onChange={handleInputChange}
+                  required
+                >
                   <option value="">Select Trip Type *</option>
-                  <option>Airport Transfers</option>
-                  <option>Conference Shuttles</option>
-                  <option>Sports Travel</option>
-                  <option>Events & Leisure</option>
-                  <option>Custom Trip</option>
+                  <option value="Airport Transfers">Airport Transfers</option>
+                  <option value="Conference Shuttles">Conference Shuttles</option>
+                  <option value="Sports Travel">Sports Travel</option>
+                  <option value="Events & Leisure">Events & Leisure</option>
+                  <option value="Custom Trip">Custom Trip</option>
                 </select>
               </div>
 
               {/* Destination */}
               <div className="input-group">
-                <br />
                 <label htmlFor="destination">Destination</label>
                 <select
                   id="destination"
                   name="destination"
-                  value={destination}
-                  onChange={handleDestinationChange}
+                  value={formData.destination}
+                  onChange={handleInputChange}
                   required
                 >
                   <option value="">Select Destination *</option>
-                  <option>Johannesburg</option>
-                  <option>Pretoria</option>
-                  <option>Cape Town</option>
-                  <option>Durban</option>
-                  <option>Bloemfontein</option>
-                  <option>Port Elizabeth</option>
-                  <option>Other (Specify Below)</option>
+                  <option value="Johannesburg">Johannesburg</option>
+                  <option value="Pretoria">Pretoria</option>
+                  <option value="Cape Town">Cape Town</option>
+                  <option value="Durban">Durban</option>
+                  <option value="Bloemfontein">Bloemfontein</option>
+                  <option value="Port Elizabeth">Port Elizabeth</option>
+                  <option value="Other (Specify Below)">Other (Specify Below)</option>
                 </select>
               </div>
 
               {/* Custom Destination */}
-              {showCustomDestination && (
+              {formData.showCustomDestination && (
                 <input
                   type="text"
-                  id="customDestination"
-                  placeholder="If 'Other', please specify your destination"
-                  style={{ marginBottom: "14px" }}
+                  name="customDestination"
+                  placeholder="Please specify your destination *"
+                  value={formData.customDestination}
+                  onChange={handleInputChange}
+                  required
                 />
               )}
 
@@ -310,49 +368,47 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               <div className="row">
                 <input
                   type="text"
-                  id="pickupLocation"
+                  name="pickupLocation"
                   placeholder="Pickup Location *"
+                  value={formData.pickupLocation}
+                  onChange={handleInputChange}
                   required
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
                 />
                 <input
                   type="text"
-                  id="dropoffLocation"
+                  name="dropoffLocation"
                   placeholder="Drop-off Location *"
+                  value={formData.dropoffLocation}
+                  onChange={handleInputChange}
                   required
-                  value={dropoffLocation}
-                  onChange={(e) => setDropoffLocation(e.target.value)}
                 />
               </div>
 
               {/* Vehicle Type */}
               <div className="input-group">
-                <br />
                 <label htmlFor="vehicleType">Vehicle Type</label>
                 <select
                   id="vehicleType"
                   name="vehicleType"
+                  value={formData.vehicleType}
+                  onChange={handleInputChange}
                   required
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
                 >
                   <option value="">Select Vehicle Type *</option>
-                  <option>4 Seater Sedan</option>
-                  <option>Mini Bus Mercedes Viano</option>
-                  <option>15 Seater Quantum</option>
-                  <option>17 Seater Luxury Sprinter</option>
-                  <option>22 Seater Luxury Coach</option>
-                  <option>28 Seater Luxury Coach</option>
-                  <option>39 Seater Luxury Coach</option>
-                  <option>60 Seater Semi Luxury</option>
-                  <option>70 Seater Semi Luxury</option>
+                  <option value="4 Seater Sedan">4 Seater Sedan</option>
+                  <option value="Mini Bus Mercedes Viano">Mini Bus Mercedes Viano</option>
+                  <option value="15 Seater Quantum">15 Seater Quantum</option>
+                  <option value="17 Seater Luxury Sprinter">17 Seater Luxury Sprinter</option>
+                  <option value="22 Seater Luxury Coach">22 Seater Luxury Coach</option>
+                  <option value="28 Seater Luxury Coach">28 Seater Luxury Coach</option>
+                  <option value="39 Seater Luxury Coach">39 Seater Luxury Coach</option>
+                  <option value="60 Seater Semi Luxury">60 Seater Semi Luxury</option>
+                  <option value="70 Seater Semi Luxury">70 Seater Semi Luxury</option>
                 </select>
               </div>
 
               {/* Trip Direction Radio Buttons */}
               <div className="input-group">
-                <br />
                 <label>Trip Direction</label>
                 <div className="radio-group">
                   <label>
@@ -360,8 +416,8 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                       type="radio"
                       name="tripDirection"
                       value="one-way"
-                      checked={tripDirection === "one-way"}
-                      onChange={() => setTripDirection("one-way")}
+                      checked={formData.tripDirection === "one-way"}
+                      onChange={handleInputChange}
                     />
                     One Way
                   </label>
@@ -370,8 +426,8 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                       type="radio"
                       name="tripDirection"
                       value="both-ways"
-                      checked={tripDirection === "both-ways"}
-                      onChange={() => setTripDirection("both-ways")}
+                      checked={formData.tripDirection === "both-ways"}
+                      onChange={handleInputChange}
                     />
                     Both Ways
                   </label>
@@ -380,20 +436,34 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Date & Time */}
               <div className="row">
-                <input type="date" id="tripDate" required />
-                <input type="time" id="tripTime" required />
+                <input
+                  type="date"
+                  name="tripDate"
+                  value={formData.tripDate}
+                  onChange={handleInputChange}
+                  min={today}
+                  required
+                />
+                <input
+                  type="time"
+                  name="tripTime"
+                  value={formData.tripTime}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
 
               {/* Return Date for Both Ways */}
-              {tripDirection === "both-ways" && (
+              {formData.tripDirection === "both-ways" && (
                 <div className="input-group">
-                  <br />
                   <label htmlFor="returnDate">Return Date *</label>
                   <input
                     type="date"
-                    id="returnDate"
+                    name="returnDate"
+                    value={formData.returnDate}
+                    onChange={handleInputChange}
+                    min={formData.tripDate || today}
                     required
-                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               )}
@@ -405,10 +475,37 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             <div className="form-section">
               <h3>Contact Info & Details</h3>
               <div className="row">
-                <input type="text" id="customerName" placeholder="Name *" required />
-                <input type="email" id="customerEmail" placeholder="Email *" required />
-                <input type="tel" id="customerPhone" placeholder="Phone *" required />
-                <input type="text" id="customerCompany" placeholder="Company" />
+                <input
+                  type="text"
+                  name="customerName"
+                  placeholder="Name *"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                  required
+                />
+                <input
+                  type="email"
+                  name="customerEmail"
+                  placeholder="Email *"
+                  value={formData.customerEmail}
+                  onChange={handleInputChange}
+                  required
+                />
+                <input
+                  type="tel"
+                  name="customerPhone"
+                  placeholder="Phone *"
+                  value={formData.customerPhone}
+                  onChange={handleInputChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="customerCompany"
+                  placeholder="Company"
+                  value={formData.customerCompany}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
 
@@ -419,11 +516,8 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         </section>
       </main>
 
-      {/* Floating Chat Icon */}
       <Footer />
-
       <ChatWidget />
-
     </>
   );
 };

@@ -15,15 +15,19 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [nextBooking, setNextBooking] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null); // New state for loading actions
+  const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
-    tripType: 'airport',
+    tripType: 'Airport Transfers',
+    tripPurpose: 'Personal Use',
+    destination: '',
     pickupLocation: '',
     dropoffLocation: '',
+    vehicleType: '4 Seater Sedan',
+    isOneWay: true,
     tripDate: '',
     tripTime: '',
     passengerCount: 1,
-    vehicleType: 'sedan',
-    tripPurpose: '',
     specialRequests: ''
   });
 
@@ -79,61 +83,145 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       ...prev,
       [name]: value
     }));
+
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
-  // Handle new booking submission
+  // Enhanced form validation
+  const validateForm = () => {
+    const errors = {};
+    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = new Date(formData.tripDate);
+
+    // Required fields validation
+    if (!formData.pickupLocation.trim()) errors.pickupLocation = 'Pickup location is required';
+    if (!formData.dropoffLocation.trim()) errors.dropoffLocation = 'Drop-off location is required';
+    if (!formData.tripDate) errors.tripDate = 'Trip date is required';
+    if (!formData.tripTime) errors.tripTime = 'Trip time is required';
+    if (!formData.passengerCount || formData.passengerCount < 1) errors.passengerCount = 'Valid passenger count is required';
+    if (!formData.destination.trim()) errors.destination = 'Destination is required';
+
+    // Date validation
+    if (formData.tripDate && selectedDate < new Date(today)) {
+      errors.tripDate = 'Trip date cannot be in the past';
+    }
+
+    // Passenger count validation based on vehicle type
+    const passengerLimits = {
+      '4 Seater Sedan': 4,
+      'Mini Bus Mercedes Viano': 6,
+      '15 Seater Quantum': 15,
+      '17 Seater Luxury Sprinter': 17,
+      '22 Seater Luxury Coach': 22,
+      '28 Seater Luxury Coach': 28,
+      '39 Seater Luxury Coach': 39,
+      '60 Seater Semi Luxury': 60,
+      '70 Seater Semi Luxury': 70
+    };
+
+    if (formData.passengerCount > passengerLimits[formData.vehicleType]) {
+      errors.passengerCount = `Passenger count exceeds ${formData.vehicleType} capacity (max: ${passengerLimits[formData.vehicleType]})`;
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle new booking submission - USING CORRECT ENDPOINT
   const handleSubmitBooking = async (e) => {
     e.preventDefault();
 
+    // Validate form
+    if (!validateForm()) {
+      showToastMessage('Please fix the form errors before submitting.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/quotes/request', {
+
+      // Prepare submission data matching the Quote page structure
+      const submissionData = {
+        tripPurpose: formData.tripPurpose,
+        tripType: formData.tripType,
+        destination: formData.destination,
+        pickupLocation: formData.pickupLocation,
+        dropoffLocation: formData.dropoffLocation,
+        vehicleType: formData.vehicleType,
+        isOneWay: true, // Default to one-way for simplicity
+        tripDate: formData.tripDate,
+        tripTime: formData.tripTime,
+        passengerCount: parseInt(formData.passengerCount),
+        specialRequests: formData.specialRequests,
+        // Customer info
+        customerName: currentUser?.name,
+        customerEmail: currentUser?.email,
+        customerPhone: currentUser?.phone,
+        customerCompany: '',
+        // User reference
+        userId: currentUser?.id
+      };
+
+      console.log('Submitting booking data:', submissionData);
+
+      const response = await fetch('http://localhost:5000/api/quotes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...formData,
-          customerId: currentUser?.id,
-          customerName: currentUser?.name,
-          customerEmail: currentUser?.email,
-          customerPhone: currentUser?.phone
-        })
+        body: JSON.stringify(submissionData)
       });
 
       const data = await response.json();
 
       if (data.success) {
-        showToastMessage('Booking request submitted successfully!');
+        showToastMessage('Booking request submitted successfully! We will contact you shortly.');
         setShowBookingForm(false);
+        // Reset form
         setFormData({
-          tripType: 'airport',
+          tripType: 'Airport Transfers',
+          tripPurpose: 'Personal Use',
+          destination: '',
           pickupLocation: '',
           dropoffLocation: '',
+          vehicleType: '4 Seater Sedan',
           tripDate: '',
           tripTime: '',
           passengerCount: 1,
-          vehicleType: 'sedan',
-          tripPurpose: '',
           specialRequests: ''
         });
+        setFormErrors({});
         fetchUserBookings(); // Refresh bookings
       } else {
-        showToastMessage('Failed to submit booking: ' + data.error);
+        showToastMessage('Failed to submit booking: ' + (data.error || 'Please try again.'));
       }
     } catch (error) {
       console.error('Submit booking error:', error);
-      showToastMessage('Failed to submit booking. Please try again.');
+      showToastMessage('Failed to submit booking. Please check your connection and try again.');
     }
   };
 
   // Handle booking cancellation
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) {
-      return;
-    }
+    const bookingToCancel = bookings.find(b => b._id === bookingId);
+    const confirmed = window.confirm(
+      `Are you sure you want to cancel this ${bookingToCancel?.tripType} booking?\n\n` +
+      `From: ${bookingToCancel?.pickupLocation}\n` +
+      `To: ${bookingToCancel?.dropoffLocation}\n` +
+      `Date: ${new Date(bookingToCancel?.tripDate).toLocaleDateString()}\n\n` +
+      `This action can be undone by contacting support.`
+    );
 
+    if (!confirmed) return;
+
+    setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/cancel`, {
@@ -154,19 +242,85 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     } catch (error) {
       console.error('Cancel booking error:', error);
       showToastMessage('Failed to cancel booking. Please try again.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   // Handle booking deletion
   const handleDeleteBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
-      return;
-    }
+    const bookingToDelete = bookings.find(b => b._id === bookingId);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this ${bookingToDelete?.tripType} booking?\n\n` +
+      `From: ${bookingToDelete?.pickupLocation}\n` +
+      `To: ${bookingToDelete?.dropoffLocation}\n` +
+      `Date: ${new Date(bookingToDelete?.tripDate).toLocaleDateString()}\n\n` +
+      `This action cannot be undone.`
+    );
 
+    if (!confirmed) return;
+
+    setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+
+      // Since your bookings come from /api/quotes/my-quotes, use quotes endpoint
+      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.success) {
+          showToastMessage('Booking deleted successfully!');
+          // Remove from local state immediately
+          setBookings(prev => prev.filter(booking => booking._id !== bookingId));
+          // Update next booking if needed
+          if (nextBooking && nextBooking._id === bookingId) {
+            // Find the new next booking
+            const newUpcoming = bookings
+              .filter(b => b._id !== bookingId)
+              .filter(b => ['confirmed', 'pending', 'booked'].includes(b.status))
+              .sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
+            setNextBooking(newUpcoming || null);
+          }
+        } else {
+          showToastMessage('Failed to delete booking: ' + (data.error || 'Unknown error'));
+        }
+      } else {
+        // If DELETE doesn't work, try updating status to 'cancelled'
+        await handleCancelBooking(bookingId);
+      }
+    } catch (error) {
+      console.error('Delete booking error:', error);
+      showToastMessage('Failed to delete booking. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle quote acceptance
+  const handleAcceptQuote = async (bookingId) => {
+    const bookingToAccept = bookings.find(b => b._id === bookingId);
+    const confirmed = window.confirm(
+      `Are you sure you want to accept this quote for a ${bookingToAccept?.tripType} trip?\n\n` +
+      `From: ${bookingToAccept?.pickupLocation}\n` +
+      `To: ${bookingToAccept?.dropoffLocation}\n` +
+      `Date: ${new Date(bookingToAccept?.tripDate).toLocaleDateString()}\n\n` +
+      `Accepting will confirm your booking.`
+    );
+
+    if (!confirmed) return;
+
+    setActionLoading(bookingId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/customer-accept`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -175,14 +329,59 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       const data = await response.json();
 
       if (data.success) {
-        showToastMessage('Booking deleted successfully!');
+        showToastMessage('Quote accepted successfully!');
         fetchUserBookings(); // Refresh the bookings
       } else {
-        showToastMessage('Failed to delete booking: ' + data.error);
+        showToastMessage('Failed to accept quote: ' + data.error);
       }
     } catch (error) {
-      console.error('Delete booking error:', error);
-      showToastMessage('Failed to delete booking. Please try again.');
+      console.error('Accept quote error:', error);
+      showToastMessage('Failed to accept quote. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle quote decline
+  const handleDeclineQuote = async (bookingId) => {
+    const bookingToDecline = bookings.find(b => b._id === bookingId);
+    const confirmed = window.confirm(
+      `Are you sure you want to decline this quote for a ${bookingToDecline?.tripType} trip?\n\n` +
+      `From: ${bookingToDecline?.pickupLocation}\n` +
+      `To: ${bookingToDecline?.dropoffLocation}\n` +
+      `Date: ${new Date(bookingToDecline?.tripDate).toLocaleDateString()}\n\n` +
+      `You will be asked to provide a reason.`
+    );
+
+    if (!confirmed) return;
+
+    const declineReason = prompt('Please provide a reason for declining this quote (optional):');
+
+    setActionLoading(bookingId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/customer-decline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ declineReason })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToastMessage('Quote declined successfully.');
+        fetchUserBookings(); // Refresh the bookings
+      } else {
+        showToastMessage('Failed to decline quote: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Decline quote error:', error);
+      showToastMessage('Failed to decline quote. Please try again.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -214,6 +413,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const formatPrice = (booking) => {
     return `R ${booking.finalPrice || booking.estimatedPrice || '0'}`;
   };
+
+  // Get today's date for min attribute
+  const today = new Date().toISOString().split('T')[0];
 
   // Render next upcoming trip card
   const renderNextUpcomingTrip = () => {
@@ -298,39 +500,79 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
               <form onSubmit={handleSubmitBooking}>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Trip Type</label>
+                    <label>Trip Type *</label>
                     <select
                       name="tripType"
                       value={formData.tripType}
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="airport">Airport Transfer</option>
-                      <option value="conference">Conference Shuttle</option>
-                      <option value="sports">Sports Tour</option>
-                      <option value="events">Events & Leisure</option>
-                      <option value="corporate">Corporate Travel</option>
+                      <option value="Airport Transfers">Airport Transfers</option>
+                      <option value="Conference Shuttles">Conference Shuttles</option>
+                      <option value="Sports Travel">Sports Travel</option>
+                      <option value="Events & Leisure">Events & Leisure</option>
+                      <option value="Corporate Travel">Corporate Travel</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Vehicle Type</label>
+                    <label>Trip Purpose *</label>
                     <select
-                      name="vehicleType"
-                      value={formData.vehicleType}
+                      name="tripPurpose"
+                      value={formData.tripPurpose}
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="sedan">Sedan (1-4 passengers)</option>
-                      <option value="suv">SUV (1-6 passengers)</option>
-                      <option value="minivan">Minivan (1-8 passengers)</option>
-                      <option value="minibus">Minibus (1-15 passengers)</option>
+                      <option value="Personal Use">Personal Use</option>
+                      <option value="Business / Corporate">Business / Corporate</option>
+                      <option value="School or University Trip">School or University Trip</option>
+                      <option value="Event / Wedding">Event / Wedding</option>
+                      <option value="Tourism or Sightseeing">Tourism or Sightseeing</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Pickup Location</label>
+                    <label>Vehicle Type *</label>
+                    <select
+                      name="vehicleType"
+                      value={formData.vehicleType}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="4 Seater Sedan">4 Seater Sedan</option>
+                      <option value="Mini Bus Mercedes Viano">Mini Bus Mercedes Viano</option>
+                      <option value="15 Seater Quantum">15 Seater Quantum</option>
+                      <option value="17 Seater Luxury Sprinter">17 Seater Luxury Sprinter</option>
+                      <option value="22 Seater Luxury Coach">22 Seater Luxury Coach</option>
+                      <option value="28 Seater Luxury Coach">28 Seater Luxury Coach</option>
+                      <option value="39 Seater Luxury Coach">39 Seater Luxury Coach</option>
+                      <option value="60 Seater Semi Luxury">60 Seater Semi Luxury</option>
+                      <option value="70 Seater Semi Luxury">70 Seater Semi Luxury</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Passengers *</label>
+                    <input
+                      type="number"
+                      name="passengerCount"
+                      value={formData.passengerCount}
+                      onChange={handleInputChange}
+                      min="1"
+                      max="70"
+                      required
+                      className={formErrors.passengerCount ? 'error' : ''}
+                    />
+                    {formErrors.passengerCount && (
+                      <span className="error-message">{formErrors.passengerCount}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Pickup Location *</label>
                     <input
                       type="text"
                       name="pickupLocation"
@@ -338,10 +580,14 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       onChange={handleInputChange}
                       placeholder="Enter pickup address"
                       required
+                      className={formErrors.pickupLocation ? 'error' : ''}
                     />
+                    {formErrors.pickupLocation && (
+                      <span className="error-message">{formErrors.pickupLocation}</span>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Drop-off Location</label>
+                    <label>Drop-off Location *</label>
                     <input
                       type="text"
                       name="dropoffLocation"
@@ -349,55 +595,62 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       onChange={handleInputChange}
                       placeholder="Enter destination"
                       required
+                      className={formErrors.dropoffLocation ? 'error' : ''}
                     />
+                    {formErrors.dropoffLocation && (
+                      <span className="error-message">{formErrors.dropoffLocation}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Trip Date</label>
+                    <label>Destination *</label>
+                    <input
+                      type="text"
+                      name="destination"
+                      value={formData.destination}
+                      onChange={handleInputChange}
+                      placeholder="City or main destination"
+                      required
+                      className={formErrors.destination ? 'error' : ''}
+                    />
+                    {formErrors.destination && (
+                      <span className="error-message">{formErrors.destination}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Trip Date *</label>
                     <input
                       type="date"
                       name="tripDate"
                       value={formData.tripDate}
                       onChange={handleInputChange}
                       required
-                      min={new Date().toISOString().split('T')[0]}
+                      min={today}
+                      className={formErrors.tripDate ? 'error' : ''}
                     />
+                    {formErrors.tripDate && (
+                      <span className="error-message">{formErrors.tripDate}</span>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Trip Time</label>
+                    <label>Trip Time *</label>
                     <input
                       type="time"
                       name="tripTime"
                       value={formData.tripTime}
                       onChange={handleInputChange}
                       required
+                      className={formErrors.tripTime ? 'error' : ''}
                     />
+                    {formErrors.tripTime && (
+                      <span className="error-message">{formErrors.tripTime}</span>
+                    )}
                   </div>
-                  <div className="form-group">
-                    <label>Passengers</label>
-                    <input
-                      type="number"
-                      name="passengerCount"
-                      value={formData.passengerCount}
-                      onChange={handleInputChange}
-                      min="1"
-                      max="15"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Trip Purpose</label>
-                  <input
-                    type="text"
-                    name="tripPurpose"
-                    value={formData.tripPurpose}
-                    onChange={handleInputChange}
-                    placeholder="Business meeting, vacation, etc."
-                  />
                 </div>
 
                 <div className="form-group">
@@ -525,34 +778,59 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                         <strong>Price:</strong> {formatPrice(booking)}
                       </div>
                     </div>
+                    {booking.destination && (
+                      <div className="detail-item">
+                        <i className="fas fa-map-pin"></i>
+                        <div>
+                          <strong>Destination:</strong> {booking.destination}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="booking-actions">
-                    {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                    {/* Show cancel button for active bookings */}
+                    {['pending', 'confirmed', 'booked'].includes(booking.status) && (
                       <button
                         className="btn-cancel"
                         onClick={() => handleCancelBooking(booking._id)}
+                        disabled={actionLoading === booking._id}
                       >
-                        <i className="fas fa-times"></i>
-                        Cancel
+                        <i className={`fas ${actionLoading === booking._id ? 'fa-spinner fa-spin' : 'fa-times'}`}></i>
+                        {actionLoading === booking._id ? 'Cancelling...' : 'Cancel'}
                       </button>
                     )}
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDeleteBooking(booking._id)}
-                    >
-                      <i className="fas fa-trash"></i>
-                      Delete
-                    </button>
+
+                    {/* Show delete button for all bookings except active ones */}
+                    {!['pending', 'confirmed', 'booked'].includes(booking.status) && (
+                      <button
+                        className="btn-delete"
+                        onClick={() => handleDeleteBooking(booking._id)}
+                        disabled={actionLoading === booking._id}
+                      >
+                        <i className={`fas ${actionLoading === booking._id ? 'fa-spinner fa-spin' : 'fa-trash'}`}></i>
+                        {actionLoading === booking._id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    )}
+
+                    {/* Show quote actions for pending customer quotes */}
                     {booking.quoteStatus === 'pending_customer' && (
                       <div className="quote-actions">
-                        <button className="btn-accept">
-                          <i className="fas fa-check"></i>
-                          Accept
+                        <button
+                          className="btn-accept"
+                          onClick={() => handleAcceptQuote(booking._id)}
+                          disabled={actionLoading === booking._id}
+                        >
+                          <i className={`fas ${actionLoading === booking._id ? 'fa-spinner fa-spin' : 'fa-check'}`}></i>
+                          {actionLoading === booking._id ? 'Accepting...' : 'Accept Quote'}
                         </button>
-                        <button className="btn-decline">
-                          <i className="fas fa-times"></i>
-                          Decline
+                        <button
+                          className="btn-decline"
+                          onClick={() => handleDeclineQuote(booking._id)}
+                          disabled={actionLoading === booking._id}
+                        >
+                          <i className={`fas ${actionLoading === booking._id ? 'fa-spinner fa-spin' : 'fa-times'}`}></i>
+                          {actionLoading === booking._id ? 'Declining...' : 'Decline'}
                         </button>
                       </div>
                     )}

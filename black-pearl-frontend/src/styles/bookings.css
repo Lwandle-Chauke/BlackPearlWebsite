@@ -293,7 +293,7 @@
 }
 
 .stat-item.confirmed {
-  border-top: 4px solid #28a745;
+  border-top: 44px solid #28a745;
 }
 
 .stat-item.pending {
@@ -707,4 +707,24 @@
     /* Increased gap */
     text-align: center;
   }
+}
+
+/* Error states for form validation */
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1) !important;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  display: block;
+  font-weight: 500;
+}
+
+.booking-form-card .form-group {
+  position: relative;
 }
