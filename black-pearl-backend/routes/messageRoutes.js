@@ -6,11 +6,30 @@ const router = express.Router();
 // POST new message
 router.post("/", async (req, res) => {
     try {
-        const newMessage = new Message(req.body);
-        await newMessage.save();
-        res.status(201).json({ success: true, message: "Message saved successfully" });
+        const { name, email, subject, message } = req.body;
+
+        const newMessage = new Message({
+            name,
+            email,
+            subject,
+            message,
+            status: 'UNREAD',
+            createdAt: new Date()
+        });
+
+        const savedMessage = await newMessage.save();
+        res.status(201).json({
+            success: true,
+            message: 'Message sent successfully',
+            data: savedMessage
+        });
+
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('Error saving message:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save message'
+        });
     }
 });
 

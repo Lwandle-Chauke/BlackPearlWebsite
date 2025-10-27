@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
-const Review = require('../models/Review');
+import { protect, authorize } from '../middleware/auth.js';
+import Review from '../models/Review.js';
 
 // Get all reviews (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
@@ -85,4 +85,4 @@ router.post('/:id/respond', protect, authorize('admin'), async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

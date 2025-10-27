@@ -29,17 +29,30 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     setSubmitMessage('');
 
     try {
+      console.log('Sending message data:', formData); // Debug log
+
       const res = await fetch("http://localhost:5000/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
+      console.log('Response status:', res.status); // Debug log
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to send message: ${res.status} ${errorText}`);
+      }
+
+      const responseData = await res.json();
+      console.log('Server response:', responseData); // Debug log
 
       setSubmitMessage("Thank you for your message! We will contact you shortly.");
       setFormData({ name: '', email: '', subject: '', message: '' });
+
     } catch (error) {
+      console.error('Submission error:', error);
       setSubmitMessage("Sorry, there was an error sending your message. Please try again.");
     } finally {
       setIsSubmitting(false);
