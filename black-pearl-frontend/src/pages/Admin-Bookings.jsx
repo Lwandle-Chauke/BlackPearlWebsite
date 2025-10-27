@@ -98,7 +98,7 @@ const AdminBookings = () => {
             if (data.success) {
                 setQuotes(prevQuotes => 
                     prevQuotes.map(quote => 
-                        quote._id === quoteId ? { ...quote, status: 'booked', finalPrice, bookingNotes } : quote
+                        quote._id === quoteId ? { ...quote, status: 'booked', quoteStatus: 'converted', finalPrice, bookingNotes } : quote
                     )
                 );
                 alert('Quote converted to booking successfully!');
@@ -143,7 +143,8 @@ const AdminBookings = () => {
         setShowQuoteModal(true);
     };
 
-    const handleConfirmQuote = () => {
+    // UPDATED: Send quote to customer (with email support)
+    const handleConfirmQuote = async () => {
         if (!selectedQuote) return;
 
         const finalPrice = document.getElementById('finalPrice').value;
@@ -154,9 +155,38 @@ const AdminBookings = () => {
             return;
         }
 
-        updateQuoteStatus(selectedQuote._id, 'confirmed', parseFloat(finalPrice), adminNotes);
-        setShowQuoteModal(false);
-        setSelectedQuote(null);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/quotes/${selectedQuote._id}/send-to-customer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    finalPrice: parseFloat(finalPrice),
+                    adminNotes
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (selectedQuote.userId) {
+                    alert('Quote sent to customer dashboard successfully!');
+                } else {
+                    alert('Quote sent to customer email successfully! The customer will receive an email with approval links.');
+                }
+                setShowQuoteModal(false);
+                setSelectedQuote(null);
+                fetchQuotes(); // Refresh the list
+            } else {
+                alert('Failed to send quote: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Send quote error:', error);
+            alert('Failed to send quote. Please try again.');
+        }
     };
 
     const handleConvertToBooking = () => {
@@ -233,6 +263,18 @@ const AdminBookings = () => {
         }
     };
 
+    const getQuoteStatusClass = (quoteStatus) => {
+        switch (quoteStatus) {
+            case 'pending_admin': return 'status-pending';
+            case 'pending_customer': return 'status-pending-customer';
+            case 'pending_email': return 'status-pending-email';
+            case 'accepted': return 'status-accepted';
+            case 'declined': return 'status-declined';
+            case 'converted': return 'status-converted';
+            default: return 'status-pending';
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -291,15 +333,27 @@ const AdminBookings = () => {
                         {/* Stats Overview */}
                         <div className="bookings-stats">
                             <div className="stat-card">
-                                <h3>Pending</h3>
+                                <h3>Pending Admin</h3>
                                 <span className="stat-number pending">
-                                    {quotes.filter(q => q.status === 'pending').length}
+                                    {quotes.filter(q => q.quoteStatus === 'pending_admin').length}
                                 </span>
                             </div>
                             <div className="stat-card">
-                                <h3>Confirmed</h3>
-                                <span className="stat-number confirmed">
-                                    {quotes.filter(q => q.status === 'confirmed').length}
+                                <h3>Pending Customer</h3>
+                                <span className="stat-number pending-customer">
+                                    {quotes.filter(q => q.quoteStatus === 'pending_customer').length}
+                                </span>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Pending Email</h3>
+                                <span className="stat-number pending-email">
+                                    {quotes.filter(q => q.quoteStatus === 'pending_email').length}
+                                </span>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Accepted</h3>
+                                <span className="stat-number accepted">
+                                    {quotes.filter(q => q.quoteStatus === 'accepted').length}
                                 </span>
                             </div>
                             <div className="stat-card">
@@ -327,13 +381,14 @@ const AdminBookings = () => {
                                         <th>Pickup/Dropoff</th>
                                         <th>Pricing</th>
                                         <th>Status</th>
+                                        <th>Quote Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {quotes.length === 0 ? (
                                         <tr>
-                                            <td colSpan="9" className="no-data">
+                                            <td colSpan="10" className="no-data">
                                                 No quote requests found
                                             </td>
                                         </tr>
@@ -350,9 +405,13 @@ const AdminBookings = () => {
                                                         <div className="customer-details">
                                                             {quote.customerPhone}
                                                         </div>
-                                                        {quote.userId && (
+                                                        {quote.userId ? (
                                                             <span className="registered-badge">
                                                                 Registered User
+                                                            </span>
+                                                        ) : (
+                                                            <span className="guest-badge">
+                                                                Guest User
                                                             </span>
                                                         )}
                                                     </div>
@@ -384,13 +443,26 @@ const AdminBookings = () => {
                                                         {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
                                                     </span>
                                                 </td>
+                                                <td>
+                                                    <span className={`status-badge ${getQuoteStatusClass(quote.quoteStatus)}`}>
+                                                        {quote.quoteStatus ? 
+                                                            quote.quoteStatus.replace('_', ' ').charAt(0).toUpperCase() + 
+                                                            quote.quoteStatus.replace('_', ' ').slice(1) 
+                                                            : 'Pending'
+                                                        }
+                                                    </span>
+                                                    {!quote.userId && quote.quoteStatus === 'pending_email' && (
+                                                        <div className="email-badge">📧 Email Sent</div>
+                                                    )}
+                                                </td>
                                                 <td className="action-buttons">
                                                     <button 
                                                         className="btn-send-quote"
                                                         onClick={() => handleSendQuote(quote)}
                                                         title="Send Quote"
+                                                        disabled={quote.quoteStatus === 'pending_customer' || quote.quoteStatus === 'pending_email'}
                                                     >
-                                                        💰 Quote
+                                                        {quote.quoteStatus === 'pending_customer' || quote.quoteStatus === 'pending_email' ? 'Sent' : 'Send Quote'}
                                                     </button>
                                                     <select 
                                                         value={quote.status}
@@ -429,9 +501,16 @@ const AdminBookings = () => {
                         <h3>Send Quote to Customer</h3>
                         <div className="quote-details">
                             <p><strong>Customer:</strong> {selectedQuote.customerName}</p>
+                            <p><strong>Email:</strong> {selectedQuote.customerEmail}</p>
                             <p><strong>Vehicle:</strong> {selectedQuote.vehicleType}</p>
                             <p><strong>Trip:</strong> {selectedQuote.pickupLocation} → {selectedQuote.dropoffLocation}</p>
                             <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
+                            <p><strong>User Type:</strong> {selectedQuote.userId ? 'Registered User' : 'Guest User'}</p>
+                            {!selectedQuote.userId && (
+                                <p className="email-notice">
+                                    <small>📧 This quote will be sent via email with approval links</small>
+                                </p>
+                            )}
                         </div>
                         <div className="form-group">
                             <label htmlFor="finalPrice">Final Price (R):</label>
@@ -457,7 +536,7 @@ const AdminBookings = () => {
                                 className="btn-confirm"
                                 onClick={handleConfirmQuote}
                             >
-                                Send Quote
+                                {selectedQuote.userId ? 'Send to Dashboard' : 'Send via Email'}
                             </button>
                             <button 
                                 className="btn-book"

@@ -86,6 +86,21 @@ const quoteSchema = new mongoose.Schema({
     default: 'pending'
   },
   
+  // NEW: Quote status for customer response
+  quoteStatus: {
+    type: String,
+    enum: ['pending_admin', 'pending_customer', 'pending_email', 'accepted', 'declined', 'converted'],
+    default: 'pending_admin'
+  },
+  
+  // NEW: Email approval fields
+  approvalToken: {
+    type: String
+  },
+  tokenExpires: {
+    type: Date
+  },
+  
   // Pricing Fields
   estimatedPrice: {
     type: Number,
@@ -119,6 +134,11 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  
+  // Timestamps
+  sentToCustomerAt: {
+    type: Date
+  },
   confirmedAt: {
     type: Date
   },
@@ -126,6 +146,9 @@ const quoteSchema = new mongoose.Schema({
     type: Date
   },
   completedAt: {
+    type: Date
+  },
+  customerRespondedAt: {
     type: Date
   },
   createdAt: {

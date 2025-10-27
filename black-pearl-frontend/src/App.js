@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react"; 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; 
+import './styles/style.css';
 
 // =======================================================
-// IMPORT ALL PAGES
+// IMPORT ALL PAGES (using correct file paths from file structure)
 // =======================================================
 // Guest Pages
 import Home from "./pages/Home";
@@ -17,12 +18,15 @@ import Profile from "./pages/Profile";
 import Bookings from "./pages/Bookings";
 import Dashboard from "./pages/Dashboard"; 
 
-// Admin Pages
+// Admin Pages (Using the exact filenames from your file structure)
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminMessages from "./pages/Admin-Messages";
-import AdminBookings from "./pages/Admin-Bookings";
-import AdminGallery from "./pages/Admin-Gallery";
-import AdminSettings from "./pages/Admin-Settings";
+import AdminMessages from "./pages/Admin-Messages"; // Corresponds to Admin-Messages.jsx
+import AdminBookings from "./pages/Admin-Bookings"; // Corresponds to Admin-Bookings.jsx
+import AdminGallery from "./pages/Admin-Gallery"; // Corresponds to Admin-Gallery.jsx
+import AdminSettings from "./pages/Admin-Settings"; // Corresponds to Admin-Settings.jsx
+
+// NEW: Quote Response Page for Email Links
+import QuoteResponse from "./pages/QuoteResponse";
 
 // Import AuthModal
 import AuthModal from "./components/AuthModal";
@@ -228,6 +232,11 @@ function App() {
                         onSignOut={handleSignOut}
                         currentUser={currentUser}
                     />
+                } />
+
+                {/* NEW: Quote Response Route (Public) */}
+                <Route path="/quote-response/:quoteId/:action" element={
+                    <QuoteResponse />
                 } />
 
                 {/* ======================================================= */}

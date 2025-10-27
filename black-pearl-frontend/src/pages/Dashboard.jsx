@@ -11,6 +11,8 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [userBookings, setUserBookings] = useState([]);
   const [nextBooking, setNextBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
 
   // Refresh user data function
   const refreshUserData = async () => {
@@ -66,6 +68,64 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       setUserBookings([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // NEW: Customer accepts quote
+  const handleAcceptQuote = async (quoteId) => {
+    if (!window.confirm('Are you sure you want to accept this quote? This will create a booking.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-accept`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Quote accepted! Your booking has been created.');
+        fetchUserBookings(); // Refresh the bookings
+      } else {
+        alert('Failed to accept quote: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Accept quote error:', error);
+      alert('Failed to accept quote. Please try again.');
+    }
+  };
+
+  // NEW: Customer declines quote
+  const handleDeclineQuote = async (quoteId) => {
+    const declineReason = prompt('Please provide a reason for declining this quote (optional):');
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-decline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ declineReason })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Quote declined successfully.');
+        fetchUserBookings(); // Refresh the bookings
+      } else {
+        alert('Failed to decline quote: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Decline quote error:', error);
+      alert('Failed to decline quote. Please try again.');
     }
   };
 
@@ -273,6 +333,11 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     );
   };
 
+  // Get pending quotes for the customer
+  const pendingQuotes = userBookings.filter(booking => 
+    booking.quoteStatus === 'pending_customer'
+  );
+
   return (
     <>
       <Header 
@@ -297,6 +362,64 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
           </div>
         </div>
       </section>
+
+      {/* PENDING QUOTES SECTION */}
+      {pendingQuotes.length > 0 && (
+        <section className="pending-quotes-section">
+          <div className="container">
+            <div className="section-title">Pending Quotes</div>
+            <p className="section-subtitle">You have {pendingQuotes.length} quote(s) waiting for your response</p>
+            <div className="pending-quotes-grid">
+              {pendingQuotes.map(quote => (
+                <div key={quote._id} className="pending-quote-card">
+                  <div className="quote-header">
+                    <h4>{quote.tripType}</h4>
+                    <span className="quote-badge">Quote Sent</span>
+                  </div>
+                  <div className="quote-details">
+                    <p><strong>Route:</strong> {quote.pickupLocation} → {quote.dropoffLocation}</p>
+                    <p><strong>Vehicle:</strong> {quote.vehicleType}</p>
+                    <p><strong>Date:</strong> {new Date(quote.tripDate).toLocaleDateString()}</p>
+                    <p><strong>Time:</strong> {quote.tripTime}</p>
+                    <p><strong>Final Price:</strong> R {quote.finalPrice || quote.estimatedPrice}</p>
+                    {quote.adminNotes && (
+                      <p><strong>Admin Notes:</strong> {quote.adminNotes}</p>
+                    )}
+                    {quote.sentToCustomerAt && (
+                      <p className="quote-sent-date">
+                        <small>Sent on: {new Date(quote.sentToCustomerAt).toLocaleDateString()}</small>
+                      </p>
+                    )}
+                  </div>
+                  <div className="quote-actions">
+                    <button 
+                      className="btn-accept"
+                      onClick={() => handleAcceptQuote(quote._id)}
+                    >
+                      Accept Quote
+                    </button>
+                    <button 
+                      className="btn-decline"
+                      onClick={() => handleDeclineQuote(quote._id)}
+                    >
+                      Decline
+                    </button>
+                    <button 
+                      className="btn-view-details"
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowQuoteModal(true);
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* SERVICES */}
       <section className="services-area">
@@ -406,12 +529,69 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         </div>
       </section>
 
-      {/* Floating chat icon */}
+      {/* Quote Details Modal */}
+      {showQuoteModal && selectedQuote && (
+        <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
+          <div className="modal-content quote-details-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Quote Details</h3>
+            <div className="quote-full-details">
+              <div className="detail-group">
+                <h4>Trip Information</h4>
+                <p><strong>Type:</strong> {selectedQuote.tripType}</p>
+                <p><strong>Purpose:</strong> {selectedQuote.tripPurpose}</p>
+                <p><strong>Destination:</strong> {selectedQuote.destination}</p>
+                <p><strong>Route:</strong> {selectedQuote.pickupLocation} → {selectedQuote.dropoffLocation}</p>
+                <p><strong>Vehicle:</strong> {selectedQuote.vehicleType}</p>
+                <p><strong>Date:</strong> {new Date(selectedQuote.tripDate).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> {selectedQuote.tripTime}</p>
+                <p><strong>Direction:</strong> {selectedQuote.isOneWay ? 'One Way' : 'Both Ways'}</p>
+              </div>
+              
+              <div className="detail-group">
+                <h4>Pricing</h4>
+                <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
+                <p><strong>Final Price:</strong> R {selectedQuote.finalPrice || selectedQuote.estimatedPrice}</p>
+                {selectedQuote.adminNotes && (
+                  <>
+                    <h4>Admin Notes</h4>
+                    <p>{selectedQuote.adminNotes}</p>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="btn-accept"
+                onClick={() => {
+                  handleAcceptQuote(selectedQuote._id);
+                  setShowQuoteModal(false);
+                }}
+              >
+                Accept Quote
+              </button>
+              <button 
+                className="btn-decline"
+                onClick={() => {
+                  handleDeclineQuote(selectedQuote._id);
+                  setShowQuoteModal(false);
+                }}
+              >
+                Decline Quote
+              </button>
+              <button 
+                className="btn-cancel"
+                onClick={() => setShowQuoteModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
-
-<ChatWidget />
-
-</>
+      <ChatWidget />
+    </>
   );
 };
 
