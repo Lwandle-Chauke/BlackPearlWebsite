@@ -4,6 +4,7 @@ import path from 'path';
 import Image from '../models/Image.js';
 import { protect, authorize } from '../middleware/auth.js'; // Assuming auth middleware exists
 import { fileURLToPath } from 'url';
+import fs from 'fs'; // Import file system module
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -116,6 +117,34 @@ router.put('/:id/status', protect, authorize('admin'), async (req, res) => {
         await image.save();
 
         res.json({ msg: `Image status updated to ${image.status}`, image });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+// @desc    Delete an image
+// @route   DELETE /api/images/:id
+// @access  Private (Admin)
+router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+    try {
+        const image = await Image.findById(req.params.id);
+
+        if (!image) {
+            return res.status(404).json({ msg: 'Image not found' });
+        }
+
+        // Delete image file from the server
+        const imagePath = path.join(__dirname, '../public', image.url);
+        fs.unlink(imagePath, async (err) => {
+            if (err) {
+                console.error(`Error deleting image file: ${err}`);
+                // Even if file deletion fails, try to remove from DB
+            }
+            await image.deleteOne();
+            res.json({ msg: 'Image removed' });
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');

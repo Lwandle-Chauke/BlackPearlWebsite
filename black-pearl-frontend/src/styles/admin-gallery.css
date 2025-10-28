@@ -109,7 +109,8 @@
 }
 
 .btn-approve,
-.btn-decline {
+.btn-decline,
+.btn-delete {
     padding: 0.6rem 1rem;
     border: none;
     border-radius: 5px;
@@ -138,14 +139,53 @@
     background-color: #da190b;
 }
 
-.error-message {
-    color: #f44336;
-    background-color: #ffebee;
-    border: 1px solid #f44336;
+.btn-delete {
+    background-color: #dc3545;
+    /* Bootstrap danger color */
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.message {
     padding: 1rem;
     border-radius: 5px;
     margin-top: 1rem;
     text-align: center;
+    font-weight: 600;
+}
+
+.error-message {
+    color: #f44336;
+    background-color: #ffebee;
+    border: 1px solid #f44336;
+}
+
+.success-message {
+    color: #4CAF50;
+    background-color: #e8f5e9;
+    border: 1px solid #4CAF50;
+}
+
+.info-message {
+    color: #2196F3;
+    background-color: #e3f2fd;
+    border: 1px solid #2196F3;
+}
+
+.image-preview-container {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.image-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border: 1px solid var(--light-gray);
+    border-radius: 5px;
+    object-fit: cover;
 }
 
 /* Image Upload Section */
@@ -230,15 +270,6 @@
     cursor: not-allowed;
 }
 
-.success-message {
-    color: #4CAF50;
-    background-color: #e8f5e9;
-    border: 1px solid #4CAF50;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-top: 1rem;
-    text-align: center;
-}
 
 /* Responsive adjustments for upload section */
 @media (max-width: 768px) {

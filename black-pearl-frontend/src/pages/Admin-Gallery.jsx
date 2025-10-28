@@ -3,7 +3,8 @@ import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css';
 import '../styles/admin-gallery.css';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
+import { API_BASE_URL, IMAGE_BASE_URL } from '../utils/config';
 
 const AdminGallery = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -16,13 +17,24 @@ const AdminGallery = () => {
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [imagePreview, setImagePreview] = useState(null); // New state for image preview
 
     useEffect(() => {
         fetchImages();
     }, []);
 
     const handleFileChange = (e) => {
-        setSelectedFile(e.target.files[0]);
+        const file = e.target.files[0];
+        setSelectedFile(file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setImagePreview(null);
+        }
     };
 
     const handleAltTextChange = (e) => {
@@ -52,7 +64,7 @@ const AdminGallery = () => {
                     'Authorization': `Bearer ${token}`
                 }
             };
-            await axios.post('http://localhost:5000/api/upload/images', formData, config);
+            await axios.post(`${API_BASE_URL}/upload/images`, formData, config);
             setUploadSuccess(true);
             setSelectedFile(null);
             setAltText('');
@@ -76,10 +88,10 @@ const AdminGallery = () => {
                 }
             };
 
-            const pendingRes = await axios.get('http://localhost:5000/api/images/pending', config);
+            const pendingRes = await axios.get(`${API_BASE_URL}/images/pending`, config);
             setPendingImages(pendingRes.data);
 
-            const approvedRes = await axios.get('http://localhost:5000/api/images/approved', config);
+            const approvedRes = await axios.get(`${API_BASE_URL}/images/approved`, config);
             setApprovedImages(approvedRes.data);
 
         } catch (err) {
@@ -107,7 +119,7 @@ const AdminGallery = () => {
                     'Authorization': `Bearer ${token}`
                 }
             };
-            await axios.put(`http://localhost:5000/api/images/${id}/status`, { status }, config);
+            await axios.put(`${API_BASE_URL}/images/${id}/status`, { status }, config);
             alert(`Image ${status} successfully!`);
             fetchImages(); // Refresh images
         } catch (err) {
@@ -116,23 +128,51 @@ const AdminGallery = () => {
         }
     };
 
+    const handleDeleteImage = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            await axios.delete(`${API_BASE_URL}/images/${id}`, config);
+            alert('Image deleted successfully!');
+            fetchImages(); // Refresh images
+        } catch (err) {
+            console.error('Error deleting image:', err);
+            alert(err.response?.data?.msg || 'Failed to delete image');
+        }
+    };
+
     const ImageCard = ({ image, type }) => (
         <div className="image-card">
-            <img src={`http://localhost:5000${image.url}`} alt={image.altText} />
+            <img src={`${IMAGE_BASE_URL}${image.url}`} alt={image.altText} />
             <div className="image-info">
                 <p><strong>Uploaded By:</strong> {image.uploadedBy?.name || 'N/A'}</p>
                 <p><strong>Alt Text:</strong> {image.altText}</p>
                 <p><strong>Status:</strong> <span className={`status-${image.status}`}>{image.status}</span></p>
-                {type === 'pending' && (
-                    <div className="image-actions">
-                        <button className="btn-approve" onClick={() => handleStatusUpdate(image._id, 'approved')}>
-                            Approve
+                <div className="image-actions">
+                    {type === 'pending' && (
+                        <>
+                            <button className="btn-approve" onClick={() => handleStatusUpdate(image._id, 'approved')}>
+                                Approve
+                            </button>
+                            <button className="btn-decline" onClick={() => handleStatusUpdate(image._id, 'declined')}>
+                                Decline
+                            </button>
+                        </>
+                    )}
+                    {type === 'approved' && (
+                        <button className="btn-delete" onClick={() => handleDeleteImage(image._id)}>
+                            Delete
                         </button>
-                        <button className="btn-decline" onClick={() => handleStatusUpdate(image._id, 'declined')}>
-                            Decline
-                        </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -169,6 +209,11 @@ const AdminGallery = () => {
                                         required
                                     />
                                 </div>
+                                {imagePreview && (
+                                    <div className="image-preview-container">
+                                        <img src={imagePreview} alt="Image Preview" className="image-preview" />
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label htmlFor="altText">Alt Text (for accessibility):</label>
                                     <input
@@ -183,15 +228,15 @@ const AdminGallery = () => {
                                 <button type="submit" className="btn-upload" disabled={uploading}>
                                     {uploading ? 'Uploading...' : 'Upload Image'}
                                 </button>
-                                {uploadError && <p className="error-message">{uploadError}</p>}
-                                {uploadSuccess && <p className="success-message">Image uploaded successfully! Awaiting approval.</p>}
+                                {uploadError && <p className="message error-message">{uploadError}</p>}
+                                {uploadSuccess && <p className="message success-message">Image uploaded successfully! Awaiting approval.</p>}
                             </form>
                         </section>
 
                         {loading ? (
-                            <p>Loading images...</p>
+                            <p className="message info-message">Loading images...</p>
                         ) : error ? (
-                            <p className="error-message">{error}</p>
+                            <p className="message error-message">{error}</p>
                         ) : (
                             <>
                                 <section className="pending-images-section">
