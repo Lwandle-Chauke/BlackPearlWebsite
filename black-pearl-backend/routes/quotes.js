@@ -1080,4 +1080,53 @@ router.post('/fix-loyalty-points', protect, async (req, res) => {
   }
 });
 
+
+// Cancel a quote (user or admin)
+router.post('/:id/cancel', protect, async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
+
+    // Check if the user is the owner of the quote or an admin
+    if (quote.userId && quote.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to cancel this quote'
+      });
+    }
+
+    // Update both status and quoteStatus
+    const updateData = {
+      status: 'cancelled',
+      quoteStatus: 'cancelled',
+      cancelledAt: new Date(),
+      cancelledBy: req.user.id
+    };
+
+    const updatedQuote = await Quote.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Quote cancelled successfully',
+      data: updatedQuote
+    });
+  } catch (error) {
+    console.error('Cancel quote error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cancel quote: ' + error.message
+    });
+  }
+});
+
 export default router;

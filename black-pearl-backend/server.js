@@ -6,12 +6,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import messageRoutes from "./routes/messageRoutes.js";
-import feedbackRoutes from "./routes/feedbackRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
-import reviewRoutes from './routes/reviewRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
+
 import { protect, authorize } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,12 +50,9 @@ connectDB();
 
 // Routes
 app.use("/api/messages", messageRoutes);
-app.use("/api/feedback", feedbackRoutes);
 app.use("/api/users", userRoutes); // Use user routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quotes', quoteRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/uploads', uploadRoutes);
 
 // Test route for reviews (simple version)
 app.get('/api/reviews', (req, res) => {

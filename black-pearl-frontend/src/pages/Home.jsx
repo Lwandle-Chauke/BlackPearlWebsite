@@ -77,6 +77,24 @@ const Home = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             </Link>
             <br />
           </div>
+
+          {/* Terms and Conditions Section - ADDED AFTER TOURS */}
+          <div className="terms-section">
+            <div className="section-title">
+              <h2>TERMS & CONDITIONS</h2>
+            </div>
+
+            <p>
+              Please review our comprehensive Terms and Conditions of Hire before booking our services. Our terms cover important information about payments, cancellations, refund policies, liabilities, and your responsibilities as a customer.
+            </p>
+
+            <button 
+              className="terms-pdf-btn"
+              onClick={() => window.open('/documents/terms-and-conditions.pdf', '_blank')}
+            >
+              📄 View Terms and Conditions PDF
+            </button>
+          </div>
         </section> {/* </section> now closes the entire content block */}
 
         {/* spacer - Keeping for layout */}
@@ -85,10 +103,8 @@ const Home = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
       {/* Floating chat icon - Now uses Home.css for styling */}
       <Footer />
-
-<ChatWidget />
-
-</>
+      <ChatWidget />
+    </>
   );
 };
 

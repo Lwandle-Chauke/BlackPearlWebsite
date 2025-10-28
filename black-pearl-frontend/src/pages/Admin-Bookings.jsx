@@ -4,6 +4,12 @@ import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css';
 import '../styles/admin-bookings.css';
 
+// Import Recharts components
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+
 const AdminBookings = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [quotes, setQuotes] = useState([]);
@@ -12,6 +18,7 @@ const AdminBookings = () => {
     const [showAddBookingModal, setShowAddBookingModal] = useState(false);
     const [selectedQuote, setSelectedQuote] = useState(null);
     const [showQuoteModal, setShowQuoteModal] = useState(false);
+    const [timeFilter, setTimeFilter] = useState('30days'); // '7days', '30days', '90days'
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -44,6 +51,102 @@ const AdminBookings = () => {
             setLoading(false);
         }
     };
+
+    // Calculate filtered data based on time filter
+    const getFilteredData = () => {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        return quotes.filter(quote => new Date(quote.createdAt) >= startDate);
+    };
+
+    // Generate booking trends data for charts
+    const getBookingTrendsData = () => {
+        const filteredData = getFilteredData();
+        const trends = {};
+        
+        filteredData.forEach(quote => {
+            const date = new Date(quote.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            if (!trends[date]) {
+                trends[date] = {
+                    date,
+                    bookings: 0,
+                    revenue: 0
+                };
+            }
+            
+            trends[date].bookings += 1;
+            trends[date].revenue += (quote.finalPrice || quote.estimatedPrice || 0);
+        });
+        
+        return Object.values(trends).sort((a, b) => new Date(a.date) - new Date(b.date));
+    };
+
+    // Get vehicle type statistics
+    const getVehicleTypeData = () => {
+        const filteredData = getFilteredData();
+        const vehicleCounts = {};
+        
+        filteredData.forEach(quote => {
+            const vehicle = quote.vehicleType;
+            vehicleCounts[vehicle] = (vehicleCounts[vehicle] || 0) + 1;
+        });
+        
+        return Object.entries(vehicleCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5); // Top 5 vehicle types
+    };
+
+    // Get route statistics
+    const getRouteData = () => {
+        const filteredData = getFilteredData();
+        const routeCounts = {};
+        
+        filteredData.forEach(quote => {
+            const route = `${quote.pickupLocation} → ${quote.dropoffLocation}`;
+            routeCounts[route] = (routeCounts[route] || 0) + 1;
+        });
+        
+        return Object.entries(routeCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5); // Top 5 routes
+    };
+
+    // Get status distribution for pie chart
+    const getStatusDistribution = () => {
+        const filteredData = getFilteredData();
+        const statusCounts = {};
+        
+        filteredData.forEach(quote => {
+            const status = quote.status;
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        
+        return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+    };
+
+    // Colors for charts
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
     const updateQuoteStatus = async (quoteId, newStatus, finalPrice = null, adminNotes = '') => {
         try {
@@ -143,7 +246,6 @@ const AdminBookings = () => {
         setShowQuoteModal(true);
     };
 
-    // UPDATED: Send quote to customer (with email support)
     const handleConfirmQuote = async () => {
         if (!selectedQuote) return;
 
@@ -179,7 +281,7 @@ const AdminBookings = () => {
                 }
                 setShowQuoteModal(false);
                 setSelectedQuote(null);
-                fetchQuotes(); // Refresh the list
+                fetchQuotes();
             } else {
                 alert('Failed to send quote: ' + data.error);
             }
@@ -242,7 +344,7 @@ const AdminBookings = () => {
             if (data.success) {
                 alert('Manual booking created successfully!');
                 setShowAddBookingModal(false);
-                fetchQuotes(); // Refresh the quotes list
+                fetchQuotes();
             } else {
                 alert('Failed to create booking: ' + data.error);
             }
@@ -310,6 +412,12 @@ const AdminBookings = () => {
         );
     }
 
+    const filteredData = getFilteredData();
+    const bookingTrendsData = getBookingTrendsData();
+    const vehicleTypeData = getVehicleTypeData();
+    const routeData = getRouteData();
+    const statusDistributionData = getStatusDistribution();
+
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
 
@@ -330,37 +438,121 @@ const AdminBookings = () => {
                     <div className="main-content">
                         <h2>Manage Bookings & Quotes</h2>
 
+                        {/* Time Filter */}
+                        <div className="time-filter-section">
+                            <label htmlFor="timeFilter">Show data for: </label>
+                            <select 
+                                id="timeFilter"
+                                value={timeFilter} 
+                                onChange={(e) => setTimeFilter(e.target.value)}
+                                className="time-filter-select"
+                            >
+                                <option value="7days">Last 7 Days</option>
+                                <option value="30days">Last 30 Days</option>
+                                <option value="90days">Last 90 Days</option>
+                            </select>
+                        </div>
+
                         {/* Stats Overview */}
                         <div className="bookings-stats">
                             <div className="stat-card">
                                 <h3>Pending Admin</h3>
                                 <span className="stat-number pending">
-                                    {quotes.filter(q => q.quoteStatus === 'pending_admin').length}
+                                    {filteredData.filter(q => q.quoteStatus === 'pending_admin').length}
                                 </span>
                             </div>
                             <div className="stat-card">
                                 <h3>Pending Customer</h3>
                                 <span className="stat-number pending-customer">
-                                    {quotes.filter(q => q.quoteStatus === 'pending_customer').length}
-                                </span>
-                            </div>
-                            <div className="stat-card">
-                                <h3>Pending Email</h3>
-                                <span className="stat-number pending-email">
-                                    {quotes.filter(q => q.quoteStatus === 'pending_email').length}
-                                </span>
-                            </div>
-                            <div className="stat-card">
-                                <h3>Accepted</h3>
-                                <span className="stat-number accepted">
-                                    {quotes.filter(q => q.quoteStatus === 'accepted').length}
+                                    {filteredData.filter(q => q.quoteStatus === 'pending_customer').length}
                                 </span>
                             </div>
                             <div className="stat-card">
                                 <h3>Booked</h3>
                                 <span className="stat-number booked">
-                                    {quotes.filter(q => q.status === 'booked').length}
+                                    {filteredData.filter(q => q.status === 'booked').length}
                                 </span>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Total Bookings</h3>
+                                <span className="stat-number total">
+                                    {filteredData.length}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Charts Section */}
+                        <div className="charts-section">
+                            <div className="chart-row">
+                                {/* Booking Trends Chart */}
+                                <div className="chart-card">
+                                    <h3>Booking Trends</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <LineChart data={bookingTrendsData}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="date" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Line type="monotone" dataKey="bookings" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                            <Line type="monotone" dataKey="revenue" stroke="#82ca9d" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                {/* Status Distribution */}
+                                <div className="chart-card">
+                                    <h3>Status Distribution</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={statusDistributionData}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                                outerRadius={80}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {statusDistributionData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            <div className="chart-row">
+                                {/* Top Vehicle Types */}
+                                <div className="chart-card">
+                                    <h3>Top Vehicle Types</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={vehicleTypeData}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Bar dataKey="count" fill="#8884d8" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                {/* Most Common Routes */}
+                                <div className="chart-card">
+                                    <h3>Most Common Routes</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={routeData} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis type="number" />
+                                            <YAxis type="category" dataKey="name" width={100} />
+                                            <Tooltip />
+                                            <Bar dataKey="count" fill="#82ca9d" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </div>
 

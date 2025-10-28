@@ -92,6 +92,7 @@ const quoteSchema = new mongoose.Schema({
     enum: ['pending_admin', 'pending_customer', 'pending_email', 'accepted', 'declined', 'converted'],
     default: 'pending_admin'
   },
+  
 
   // NEW: Email approval fields
   approvalToken: {
@@ -135,7 +136,16 @@ const quoteSchema = new mongoose.Schema({
     trim: true
   },
 
-  // Timestamps
+  // Cancellation Fields (Previously outside schema)
+  cancelledAt: {
+    type: Date
+  },
+  cancelledBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  // Timestamps (Manual timestamps removed in favor of built-in option)
   sentToCustomerAt: {
     type: Date
   },
@@ -150,22 +160,15 @@ const quoteSchema = new mongoose.Schema({
   },
   customerRespondedAt: {
     type: Date
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
+}, 
+// Added Mongoose timestamps option for cleaner management of createdAt and updatedAt
+{ 
+    timestamps: true 
 });
 
-// Update the updatedAt field before saving
-quoteSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
+
+// Removed manual pre('save') hook, as 'timestamps: true' handles createdAt and updatedAt.
 
 // Add text index for search
 quoteSchema.index({

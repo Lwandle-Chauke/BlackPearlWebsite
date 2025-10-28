@@ -12,19 +12,14 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [userQuotes, setUserQuotes] = useState([]);
   const [loadingQuotes, setLoadingQuotes] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    loyaltyPoints: 0,
-    tripsCompleted: 0,
     memberSince: "2025",
-    profilePicture: "",
-    discountEarned: 0,
-    tier: ""
+    profilePicture: ""
   });
 
   const generateInitials = (firstName, lastName) => {
@@ -38,79 +33,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
     return `https://placehold.co/120x120/000/fff?text=${initials}`;
   };
 
-  // Refresh user data
-  const refreshUserData = async () => {
-    try {
-      setRefreshing(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && onUserUpdate) {
-          onUserUpdate(data.user); // Update parent component
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const fixLoyaltyPoints = async () => {
-  try {
-    setRefreshing(true);
-    const token = localStorage.getItem('token');
-    const response = await fetch('http://localhost:5000/api/quotes/fix-loyalty-points', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      alert(`✅ Loyalty points fixed!\nNew points: ${result.data.pointsAdded}\nNew tier: ${result.data.newTier}`);
-      
-      // Update local state so the UI reflects new values immediately
-      const updatedProfile = {
-        ...profileData,
-        loyaltyPoints: result.data.newPoints,
-        tier: result.data.newTier
-      };
-      setProfileData(updatedProfile);
-    } else {
-      alert('❌ Failed to fix points: ' + result.error);
-    }
-  } catch (error) {
-    console.error('Fix points error:', error);
-    alert('❌ Error fixing points: ' + error.message);
-  } finally {
-    setRefreshing(false);
-  }
-};
-
-
-  // Auto-fix loyalty points if they don't match completed trips
-  useEffect(() => {
-    if (currentUser && userQuotes.length > 0) {
-      const completedTrips = userQuotes.filter(quote => quote.status === 'completed').length;
-      const hasCompletedTrips = completedTrips > 0;
-      const hasNoPoints = currentUser.loyaltyPoints === 0;
-      
-      if (hasCompletedTrips && hasNoPoints) {
-        // Auto-fix if user has completed trips but zero points
-        fixLoyaltyPoints();
-      }
-    }
-  }, [currentUser, userQuotes]);
-
-  // Fetch quotes and calculate REAL data like Dashboard does
+  // Fetch quotes and calculate data
   useEffect(() => {
     if (!currentUser) return;
 
@@ -122,9 +45,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
       email: currentUser.email || "",
       phone: currentUser.phone || "",
       profilePicture: currentUser.profilePicture || "",
-      loyaltyPoints: currentUser.loyaltyPoints || 0,
-      memberSince: currentUser.memberSince || "2025",
-      tier: currentUser.tier || "bronze"
+      memberSince: currentUser.memberSince || "2025"
     }));
 
     fetchUserQuotes();
@@ -141,7 +62,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
       if (data.success) {
         setUserQuotes(data.data);
         
-        // Calculate REAL trips completed exactly like Dashboard does
+        // Calculate REAL trips completed
         const completedTrips = data.data.filter(booking => 
           booking.status === 'completed'
         ).length;
@@ -155,7 +76,6 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
         setProfileData(prev => ({
           ...prev,
           tripsCompleted: completedTrips,
-          discountEarned: calculateDiscountValue(prev.loyaltyPoints),
           totalSpent: totalSpent
         }));
       } else {
@@ -166,12 +86,6 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
     } finally {
       setLoadingQuotes(false);
     }
-  };
-
-  // Calculate discount value based on loyalty points (same logic as loyaltyService)
-  const calculateDiscountValue = (points) => {
-    const discountAmount = Math.floor(points / 100) * 10;
-    return Math.min(discountAmount, 500); // Max R500 discount
   };
 
   const handleChangePasswordClick = () => setShowChangePasswordModal(true);
@@ -224,7 +138,7 @@ Thank you for choosing Black Pearl Tours!
     URL.revokeObjectURL(url);
   };
 
-  // Calculate real stats from quotes data (like Dashboard does)
+  // Calculate real stats from quotes data
   const completedTrips = userQuotes.filter(quote => quote.status === 'completed').length;
   const totalBookings = userQuotes.length;
   const upcomingTrips = userQuotes.filter(quote => 
@@ -246,13 +160,11 @@ Thank you for choosing Black Pearl Tours!
           <div className="profile-header">
             <h2>My Profile</h2>
             <p>View your personal details and account information</p>
-            {refreshing && <div style={{color: '#666', fontSize: '0.9rem'}}>Updating loyalty points...</div>}
           </div>
 
           <div className="profile-pic-section">
             <img src={profilePicture} alt={`${profileData.firstName}'s Profile`} className="profile-pic" />
             <div className="profile-name">{profileData.firstName} {profileData.lastName}</div>
-            <div className="profile-tier">{profileData.tier.charAt(0).toUpperCase() + profileData.tier.slice(1)} Member</div>
           </div>
 
           <div className="profile-info-static">
@@ -263,18 +175,7 @@ Thank you for choosing Black Pearl Tours!
                 <div className="info-item"><label>Last Name</label><div className="info-value">{profileData.lastName || "Not set"}</div></div>
                 <div className="info-item"><label>Email</label><div className="info-value">{profileData.email || "Not set"}</div></div>
                 <div className="info-item"><label>Phone</label><div className="info-value">{profileData.phone || "Not set"}</div></div>
-                <div className="info-item">
-  <label>Member Since</label>
-  <div className="info-value">{profileData.memberSince}</div>
-</div>
-<div className="info-item">
-  <label>Membership Tier</label>
-  <div className="info-value">
-    {profileData.tier.charAt(0).toUpperCase() + profileData.tier.slice(1)}
-  </div>
-</div>
-
-                 </div>
+              </div>
             </div>
 
             <div className="info-section">
@@ -329,58 +230,38 @@ Thank you for choosing Black Pearl Tours!
                 <button 
                   className="password-reset-btn"
                   onClick={handleChangePasswordClick}
-                  disabled={refreshing}
                 >
                   Change Password
                 </button>
                 <button 
                   className="contact-support-btn"
                   onClick={() => alert("Please email support@blackpearltours.com for profile changes.")}
-                  disabled={refreshing}
                 >
                   Request Profile Changes
-                </button>
-                {/* Manual fix button for testing */}
-                <button 
-                  className="password-reset-btn"
-                  onClick={fixLoyaltyPoints}
-                  disabled={refreshing}
-                  style={{background: '#ff6b35'}}
-                >
-                  {refreshing ? 'Fixing...' : 'Calculate Loyalty Points'}
                 </button>
               </div>
             </div>
           </div>
 
-          
           {/* Stats Section - Using REAL calculated data */}
-<div className="stats-section">
-  <div className="stat-card">
-    <h3>{profileData?.loyaltyPoints || 0}</h3>
-    <p>Loyalty Points</p>
-  </div>
-  <div className="stat-card">
-    <h3>{completedTrips}</h3>
-    <p>Trips Completed</p>
-  </div>
-  <div className="stat-card">
-    <h3>{totalBookings}</h3>
-    <p>Total Bookings</p>
-  </div>
-  <div className="stat-card">
-    <h3>{upcomingTrips}</h3>
-    <p>Upcoming Trips</p>
-  </div>
-  <div className="stat-card">
-    <h3>R {calculateDiscountValue(profileData?.loyaltyPoints || 0).toFixed(0)}</h3>
-    <p>Available Discount</p>
-  </div>
-  <div className="stat-card">
-    <h3>{profileData.memberSince}</h3>
-    <p>Member Since</p>
-  </div>
-</div>
+          <div className="stats-section">
+            <div className="stat-card">
+              <h3>{completedTrips}</h3>
+              <p>Trips Completed</p>
+            </div>
+            <div className="stat-card">
+              <h3>{totalBookings}</h3>
+              <p>Total Bookings</p>
+            </div>
+            <div className="stat-card">
+              <h3>{upcomingTrips}</h3>
+              <p>Upcoming Trips</p>
+            </div>
+            <div className="stat-card">
+              <h3>{profileData.memberSince}</h3>
+              <p>Member Since</p>
+            </div>
+          </div>
 
         </section>
       </main>

@@ -5,8 +5,14 @@ import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css';
 import '../styles/admin-dashboard.css';
 
+// Import Recharts components
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+
 const AdminDashboard = () => {
-    const location = useLocation(); // Keep useLocation from HEAD
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [analyticsData, setAnalyticsData] = useState({
         totalBookings: 0,
@@ -15,8 +21,11 @@ const AdminDashboard = () => {
         activeUsers: 0
     });
     const [recentBookings, setRecentBookings] = useState([]);
+    const [quotes, setQuotes] = useState([]);
+    const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(''); // Use string for error from Anele
+    const [error, setError] = useState('');
+    const [timeFilter, setTimeFilter] = useState('30days'); // '7days', '30days', '90days'
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -25,7 +34,7 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            setError(''); // Clear previous errors
+            setError('');
             const token = localStorage.getItem('token');
 
             // Fetch quotes data
@@ -35,14 +44,23 @@ const AdminDashboard = () => {
                 }
             });
 
-            if (!quotesResponse.ok) {
+            // Fetch messages data
+            const messagesResponse = await fetch('http://localhost:5000/api/messages', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!quotesResponse.ok || !messagesResponse.ok) {
                 throw new Error('Failed to fetch data');
             }
 
             const quotesData = await quotesResponse.json();
+            const messagesData = await messagesResponse.json();
 
             if (quotesData.success) {
                 const quotes = quotesData.data;
+                setQuotes(quotes);
 
                 // Calculate analytics from real data
                 const totalBookings = quotes.filter(q =>
@@ -88,9 +106,12 @@ const AdminDashboard = () => {
                     }));
 
                 setRecentBookings(recent);
-            } else {
-                setError('Failed to load dashboard data');
             }
+
+            if (messagesData) {
+                setMessages(messagesData);
+            }
+
         } catch (error) {
             console.error('Dashboard fetch error:', error);
             setError('Failed to connect to server. Please check if backend is running.');
@@ -102,6 +123,143 @@ const AdminDashboard = () => {
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    // Calculate filtered data based on time filter
+    const getFilteredData = () => {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        return quotes.filter(quote => new Date(quote.createdAt) >= startDate);
+    };
+
+    // Generate booking trends data for charts
+    const getBookingTrendsData = () => {
+        const filteredData = getFilteredData();
+        const trends = {};
+        
+        filteredData.forEach(quote => {
+            const date = new Date(quote.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            if (!trends[date]) {
+                trends[date] = {
+                    date,
+                    bookings: 0,
+                    revenue: 0
+                };
+            }
+            
+            trends[date].bookings += 1;
+            trends[date].revenue += (quote.finalPrice || quote.estimatedPrice || 0);
+        });
+        
+        return Object.values(trends).sort((a, b) => new Date(a.date) - new Date(b.date));
+    };
+
+    // Generate message trends data
+    const getMessageTrendsData = () => {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        const filteredMessages = messages.filter(message => new Date(message.createdAt) >= startDate);
+        const trends = {};
+        
+        filteredMessages.forEach(message => {
+            const date = new Date(message.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            if (!trends[date]) {
+                trends[date] = {
+                    date,
+                    messages: 0
+                };
+            }
+            
+            trends[date].messages += 1;
+        });
+        
+        return Object.values(trends).sort((a, b) => new Date(a.date) - new Date(b.date));
+    };
+
+    // Get status distribution for pie chart
+    const getStatusDistribution = () => {
+        const filteredData = getFilteredData();
+        const statusCounts = {};
+        
+        filteredData.forEach(quote => {
+            const status = quote.status;
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        
+        return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+    };
+
+    // Get message status distribution
+    const getMessageStatusDistribution = () => {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        const filteredMessages = messages.filter(message => new Date(message.createdAt) >= startDate);
+        const statusCounts = {
+            UNREAD: 0,
+            READ: 0
+        };
+        
+        filteredMessages.forEach(message => {
+            statusCounts[message.status] = (statusCounts[message.status] || 0) + 1;
+        });
+        
+        return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+    };
+
+    // Colors for charts
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
     const getStatusClass = (status) => {
         switch (status?.toLowerCase()) {
@@ -186,6 +344,11 @@ const AdminDashboard = () => {
         );
     }
 
+    const bookingTrendsData = getBookingTrendsData();
+    const messageTrendsData = getMessageTrendsData();
+    const statusDistributionData = getStatusDistribution();
+    const messageStatusDistributionData = getMessageStatusDistribution();
+
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             <AdminSidebar
@@ -200,6 +363,21 @@ const AdminDashboard = () => {
                 />
 
                 <main className="dashboard-page-content">
+                    {/* Time Filter */}
+                    <div className="time-filter-section">
+                        <label htmlFor="timeFilter">Show data for: </label>
+                        <select 
+                            id="timeFilter"
+                            value={timeFilter} 
+                            onChange={(e) => setTimeFilter(e.target.value)}
+                            className="time-filter-select"
+                        >
+                            <option value="7days">Last 7 Days</option>
+                            <option value="30days">Last 30 Days</option>
+                            <option value="90days">Last 90 Days</option>
+                        </select>
+                    </div>
+
                     {/* Analytics cards with REAL data */}
                     <div className="analytics-grid">
                         <div className="analytics-card">
@@ -217,6 +395,100 @@ const AdminDashboard = () => {
                         <div className="analytics-card">
                             <h3>{analyticsData.activeUsers}</h3>
                             <p>Active Users</p>
+                        </div>
+                        <div className="analytics-card">
+                            <h3>{messages.length}</h3>
+                            <p>Total Messages</p>
+                        </div>
+                        <div className="analytics-card">
+                            <h3>{messages.filter(m => m.status === 'UNREAD').length}</h3>
+                            <p>Unread Messages</p>
+                        </div>
+                    </div>
+
+                    {/* Charts Section */}
+                    <div className="charts-section">
+                        <div className="chart-row">
+                            {/* Booking Trends Chart */}
+                            <div className="chart-card">
+                                <h3>Booking Trends</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <LineChart data={bookingTrendsData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="date" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line type="monotone" dataKey="bookings" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                        <Line type="monotone" dataKey="revenue" stroke="#82ca9d" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Message Trends Chart */}
+                            <div className="chart-card">
+                                <h3>Message Trends</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <LineChart data={messageTrendsData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="date" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line type="monotone" dataKey="messages" stroke="#ff8042" activeDot={{ r: 8 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="chart-row">
+                            {/* Booking Status Distribution */}
+                            <div className="chart-card">
+                                <h3>Booking Status Distribution</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={statusDistributionData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {statusDistributionData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Message Status Distribution */}
+                            <div className="chart-card">
+                                <h3>Message Status Distribution</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={messageStatusDistributionData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {messageStatusDistributionData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={index === 0 ? '#0088FE' : '#00C49F'} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
                     </div>
 
@@ -238,7 +510,7 @@ const AdminDashboard = () => {
                                 <div className="stat-item" style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
-                                    padding: '0.5rem 0',
+                                    padding: '0.5rem',
                                     borderBottom: '1px solid #eee'
                                 }}>
                                     <span className="stat-label" style={{ color: '#666' }}>Today's Bookings:</span>
@@ -256,7 +528,7 @@ const AdminDashboard = () => {
                                 <div className="stat-item" style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
-                                    padding: '0.5rem 0',
+                                    padding: '0.5rem',
                                     borderBottom: '1px solid #eee'
                                 }}>
                                     <span className="stat-label" style={{ color: '#666' }}>This Week:</span>
@@ -267,13 +539,25 @@ const AdminDashboard = () => {
                                 <div className="stat-item" style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
-                                    padding: '0.5rem 0',
+                                    padding: '0.5rem',
                                     borderBottom: '1px solid #eee'
                                 }}>
                                     <span className="stat-label" style={{ color: '#666' }}>Avg. Booking:</span>
                                     <span className="stat-value" style={{ fontWeight: 'bold' }}>
                                         R {analyticsData.totalBookings > 0 ?
                                             Math.round(analyticsData.totalRevenue / analyticsData.totalBookings) : 0}
+                                    </span>
+                                </div>
+                                <div className="stat-item" style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    padding: '0.5rem',
+                                    borderBottom: '1px solid #eee'
+                                }}>
+                                    <span className="stat-label" style={{ color: '#666' }}>Response Rate:</span>
+                                    <span className="stat-value" style={{ fontWeight: 'bold' }}>
+                                        {messages.length > 0 ? 
+                                            Math.round((messages.filter(m => m.status === 'READ').length / messages.length) * 100) : 0}%
                                     </span>
                                 </div>
                             </div>

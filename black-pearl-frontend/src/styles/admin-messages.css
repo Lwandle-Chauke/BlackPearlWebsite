@@ -28,31 +28,127 @@
     padding-bottom: 10px;
 }
 
-/* Tab Styles */
-.admin-tabs {
+/* Time Filter Section */
+.time-filter-section {
+    margin-bottom: 1.5rem;
     display: flex;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #eee;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.tab-button {
-    padding: 12px 24px;
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.time-filter-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
 }
 
-.tab-button.active {
-    border-bottom-color: var(--primary-blue);
-    color: var(--primary-blue);
-    font-weight: 600;
+/* Messages Stats */
+.messages-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
-.tab-button:hover {
+.messages-stats .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.messages-stats .stat-card h3 {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+}
+
+.messages-stats .stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.stat-number.total { color: #6c757d; }
+.stat-number.unread { color: #e74c3c; }
+.stat-number.response-rate { color: #27ae60; }
+.stat-number.daily { color: #3498db; }
+
+/* Charts Section */
+.charts-section {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.chart-card h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+/* Message Analytics */
+.message-analytics {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.analytics-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
     background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.analytics-item .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.analytics-item .value {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-card {
+        padding: 1rem;
+    }
+    
+    .time-filter-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .messages-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* Table Styles - Ensure horizontal scroll on mobile */
@@ -112,11 +208,6 @@
     /* Green */
 }
 
-.status-rejected {
-    background: var(--rejected);
-    color: var(--white);
-}
-
 .action-icons i {
     cursor: pointer;
     margin-right: 10px;
@@ -142,112 +233,14 @@
     color: var(--admin-icon-delete-hover);
 }
 
-/* Review-specific styles */
-.review-comment {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.review-photo-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.review-photo-thumb:hover {
-    transform: scale(1.1);
-}
-
-.no-photo {
-    color: #999;
-    font-style: italic;
-}
-
-.rating-stars {
-    color: #ffc107;
-    font-size: 1.1rem;
-}
-
-.user-info {
-    font-size: 0.9rem;
-}
-
-.user-info strong {
-    display: block;
-    margin-bottom: 2px;
-}
-
-.user-info small {
-    color: #666;
-}
-
-.loading {
+.no-data-message {
     text-align: center;
-    padding: 2rem;
+    padding: 3rem;
     color: #666;
-}
-
-/* Photo upload styles for dashboard */
-.photo-upload-section {
-    margin: 15px 0;
-}
-
-.photo-upload-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    background: #f8f9fa;
-    border: 2px dashed #dee2e6;
+    font-size: 1.1rem;
+    background: white;
     border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.photo-upload-label:hover {
-    background: #e9ecef;
-    border-color: #007bff;
-}
-
-.photo-preview {
-    position: relative;
-    display: inline-block;
-    margin-top: 10px;
-}
-
-.photo-preview img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 2px solid #007bff;
-}
-
-.remove-photo {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.uploading-text {
-    color: #007bff;
-    font-style: italic;
-    margin-top: 5px;
+    border: 2px dashed #ddd;
 }
 
 /* Responsive adjustments */
@@ -275,36 +268,5 @@
     .action-icons i {
         font-size: 1em;
         margin-right: 8px;
-    }
-
-    /* Tab buttons on mobile */
-    .admin-tabs {
-        flex-direction: column;
-    }
-
-    .tab-button {
-        width: 100%;
-        text-align: left;
-        margin-bottom: 5px;
-        border-bottom: 1px solid #eee;
-        border-left: 3px solid transparent;
-    }
-
-    .tab-button.active {
-        border-left-color: var(--primary-blue);
-        border-bottom-color: #eee;
-    }
-
-    /* Adjust review table for mobile */
-    .review-comment {
-        max-width: 120px;
-    }
-
-    .user-info strong {
-        font-size: 0.8rem;
-    }
-
-    .user-info small {
-        font-size: 0.7rem;
     }
 }

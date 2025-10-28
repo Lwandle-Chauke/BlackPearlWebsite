@@ -17,8 +17,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingBookingId, setEditingBookingId] = useState(null);
-  const [actionLoading, setActionLoading] = useState(null); // New state for loading actions
+  const [actionLoading, setActionLoading] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formData, setFormData] = useState({
     tripType: 'Airport Transfers',
     tripPurpose: 'Personal Use',
@@ -145,6 +146,11 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       return;
     }
 
+    if (!acceptedTerms) {
+      showToastMessage('Please accept the Terms and Conditions to proceed.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
 
@@ -214,6 +220,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         setFormErrors({});
         setIsEditing(false);
         setEditingBookingId(null);
+        setAcceptedTerms(false);
         fetchUserBookings(); // Refresh bookings
       } else {
         showToastMessage('Failed to submit booking: ' + (data.error || 'Please try again.'));
@@ -224,7 +231,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     }
   };
 
-  // Handle booking cancellation
+  // Handle booking cancellation - UPDATED to use quotes endpoint
   const handleCancelBooking = async (bookingId) => {
     const bookingToCancel = bookings.find(b => b._id === bookingId);
     const confirmed = window.confirm(
@@ -240,7 +247,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/cancel`, {
+      
+      // Use quotes endpoint instead of bookings endpoint
+      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/cancel`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -288,6 +297,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setIsEditing(true);
     setEditingBookingId(booking._id);
     setShowBookingForm(true);
+    setAcceptedTerms(true); // Assume they already accepted terms for existing booking
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -710,7 +720,32 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                   />
                 </div>
 
-                <button type="submit" className="btn-submit-booking">
+                {/* Terms and Conditions Acceptance */}
+                <div className="terms-acceptance">
+                  <div className="terms-header">
+                    <button 
+                      type="button"
+                      className="terms-pdf-btn"
+                      onClick={() => window.open('/documents/terms-and-conditions.pdf', '_blank')}
+                    >
+                      📄 Read Terms and Conditions
+                    </button>
+                  </div>
+                  
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      required
+                    />
+                    <span>
+                      I confirm that I have read and agree to the Terms and Conditions *
+                    </span>
+                  </label>
+                </div>
+
+                <button type="submit" className="btn-submit-booking" disabled={!acceptedTerms}>
                   <i className="fas fa-paper-plane"></i>
                   Submit Booking Request
                 </button>
@@ -721,26 +756,6 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
 
         {/* Upcoming Booking Summary */}
         {renderNextUpcomingTrip()}
-
-        {/* User Booking Stats */}
-        <div className="booking-stats">
-          <div className="stat-item total">
-            <span className="stat-number">{stats.total}</span>
-            <span className="stat-label">Total Bookings</span>
-          </div>
-          <div className="stat-item confirmed">
-            <span className="stat-number">{stats.confirmed}</span>
-            <span className="stat-label">Confirmed</span>
-          </div>
-          <div className="stat-item pending">
-            <span className="stat-number">{stats.pending}</span>
-            <span className="stat-label">Pending</span>
-          </div>
-          <div className="stat-item completed">
-            <span className="stat-number">{stats.completed}</span>
-            <span className="stat-label">Completed</span>
-          </div>
-        </div>
 
         {/* Search & Filter */}
         <div className="search-filter-section">
@@ -801,9 +816,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       </div>
                     </div>
                     <div className="detail-item">
-                      <i className="fas fa-clock"></i>
+                      <i className="fas fa-calendar-alt"></i> 
                       <div>
-                        <strong>Time:</strong> {booking.tripTime}
+                        <strong>Date & Time:</strong> {new Date(booking.tripDate).toLocaleDateString()} at {booking.tripTime}
                       </div>
                     </div>
                     <div className="detail-item">

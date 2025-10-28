@@ -1,14 +1,24 @@
 /* ==========================================================
-   DASHBOARD CONTENT STYLES
+   DASHBOARD CONTENT STYLES - UPDATED TO MATCH MESSAGES PAGE
 ========================================================== */
 .dashboard-page-content {
+    padding: 20px;
+    background-color: var(--admin-bg-light);
+    border-radius: 8px;
+    box-shadow: var(--admin-shadow);
+    margin-top: 20px;
     width: 100%;
-    max-width: 1200px; /* Keep content from stretching too far on large screens */
-    margin: 20px auto; /* Center content */
-    padding: 0 15px; /* Small horizontal padding */
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Space between main sections */
+    gap: 30px;
+}
+
+.dashboard-page-content h2 {
+    color: var(--admin-text-dark);
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    border-bottom: 2px solid var(--admin-border-color);
+    padding-bottom: 10px;
 }
 
 /* Analytics Grid */
@@ -21,83 +31,212 @@
 /* Analytics Cards */
 .analytics-card {
     background: var(--white);
-    padding: 20px;
+    padding: 25px;
     border-radius: 8px;
     box-shadow: 0 3px 8px rgba(0,0,0,0.05);
     text-align: center;
     transition: transform 0.2s ease;
+    border: 1px solid #e0e0e0;
 }
 .analytics-card:hover {
     transform: translateY(-3px);
 }
 
 .analytics-card h3 {
-    font-size: 2rem;
-    margin-bottom: 5px;
+    font-size: 2.2rem;
+    margin-bottom: 8px;
     color: var(--dark-gray);
     font-weight: 700;
 }
 .analytics-card p {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #666;
     margin: 0;
+    font-weight: 500;
 }
 
-/* Data Snippet / Chart Section */
-.data-snippet-section {
+/* Time Filter Section */
+.time-filter-section {
+    margin-bottom: 1.5rem;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--white);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-}
-
-/* Recent Bookings Table */
-.recent-section h2 {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    color: var(--dark-gray);
-}
-
-.data-table-container {
-    background: var(--white);
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
     padding: 15px;
     border-radius: 8px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-    overflow-x: auto; /* Make table scrollable on mobile */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
+}
+
+.time-filter-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9rem;
+}
+
+/* Charts Section */
+.charts-section {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+}
+
+.chart-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.chart-card h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Data Snippet Section - Updated to match messages style */
+.data-snippet-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.data-snippet-section h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #3498db;
+}
+
+.stat-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Recent Bookings Section - Updated to match messages style */
+.recent-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--admin-text-dark);
+    font-size: 1.5em;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.refresh-btn {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background: #219653;
+}
+
+/* Data Table Container - Updated to match messages style */
+.data-table-container {
+    overflow-x: auto;
+    margin-top: 0;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px; /* Table scroll on small screens */
+    background-color: transparent;
+    border-radius: 0;
 }
-.data-table th, .data-table td {
-    padding: 12px 10px;
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #eee;
-    font-size: 0.9rem;
-    color: var(--text-dark);
+    border-bottom: 1px solid var(--admin-border-color);
+    color: var(--admin-text-dark);
 }
+
 .data-table th {
+    background-color: var(--admin-header-bg);
+    color: var(--admin-header-text);
     font-weight: 600;
-    color: #666;
     text-transform: uppercase;
+    font-size: 0.9em;
 }
-.data-table tr:last-child td {
-    border-bottom: none;
+
+.data-table tbody tr:hover {
+    background-color: var(--admin-hover-bg);
 }
 
 /* Status badges */
 .status-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--white);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
     display: inline-block;
+    min-width: 80px;
+    text-align: center;
 }
 
 /* ==========================================================
@@ -125,49 +264,115 @@
 .loading-state, .error-state {
     text-align: center;
     padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
 }
 
 .error-state {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
 }
 
 /* ==========================================================
-   RESPONSIVE
+   RESPONSIVE ADJUSTMENTS
 ========================================================== */
 @media (max-width: 1024px) {
-    .dashboard-page-content {
-        gap: 25px;
-        padding: 0 10px;
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-card {
+        padding: 1.25rem;
     }
 }
 
 @media (max-width: 768px) {
-    .analytics-grid {
-        gap: 15px;
-    }
-    .analytics-card {
+    .dashboard-page-content {
         padding: 15px;
     }
-    .data-table th, .data-table td {
-        padding: 8px 6px;
-        font-size: 0.75rem;
+
+    .dashboard-page-content h2 {
+        font-size: 1.5em;
+    }
+
+    .analytics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .analytics-card {
+        padding: 20px;
+    }
+    
+    .analytics-card h3 {
+        font-size: 1.8rem;
+    }
+
+    .chart-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .chart-card {
+        padding: 1rem;
+    }
+    
+    .time-filter-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .refresh-btn {
+        align-self: stretch;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px;
+        font-size: 0.85em;
+    }
+
+    .status-badge {
+        padding: 3px 8px;
+        font-size: 0.7em;
+        min-width: 60px;
     }
 }
 
 @media (max-width: 480px) {
     .dashboard-page-content {
-        padding: 0 5px;
+        padding: 10px;
         gap: 20px;
     }
+    
+    .analytics-card {
+        padding: 15px;
+    }
+    
     .analytics-card h3 {
         font-size: 1.5rem;
     }
+    
     .analytics-card p {
         font-size: 0.8rem;
     }
-    .data-snippet-section {
+    
+    .data-snippet-section,
+    .recent-section {
         padding: 15px;
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import '../styles/style.css';
+import '../styles/style.css'; 
 import '../styles/dashboard.css';
 import ChatWidget from "../chatbot/ChatWidget";
 
@@ -13,27 +13,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [reviewPhoto, setReviewPhoto] = useState(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
-  // Refresh user data function
-  const refreshUserData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && onUserUpdate) {
-          onUserUpdate(data.user);
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
-  };
 
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
@@ -54,12 +33,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       if (response.ok) {
         const data = await response.json();
         setUserBookings(data.data || []);
-
+        
         // Find next upcoming booking
-        const upcoming = data.data?.filter(booking =>
+        const upcoming = data.data?.filter(booking => 
           booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
         ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
-
+        
         setNextBooking(upcoming || null);
       } else {
         console.error('Failed to fetch user bookings');
@@ -73,86 +52,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // NEW: Photo upload function
-  const handlePhotoUpload = async (file) => {
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append('photo', file);
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/uploads/review-photo', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setReviewPhoto(data.photoUrl);
-        return data.photoUrl;
-      }
-      return null;
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      return null;
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  // NEW: Submit review with photo
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    const rating = e.target.rating.value;
-    const text = e.target.testimonial.value.trim();
-
-    if (!rating) {
-      alert("Please choose a rating.");
-      return;
-    }
-
-    try {
-      let photoUrl = reviewPhoto;
-      const photoFile = e.target.photo?.files[0];
-
-      if (photoFile) {
-        photoUrl = await handlePhotoUpload(photoFile);
-      }
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/reviews', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          rating: parseInt(rating),
-          comment: text,
-          photo: photoUrl,
-          booking: nextBooking?._id // Link to current booking if available
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(`Thanks for your ${rating}-star review! Your feedback has been submitted.`);
-        e.target.reset();
-        setReviewPhoto(null);
-      } else {
-        alert('Failed to submit review. Please try again.');
-      }
-    } catch (error) {
-      console.error('Review submission error:', error);
-      alert('Failed to submit review. Please try again.');
-    }
-  };
-
-  // Customer accepts quote
+  // NEW: Customer accepts quote
   const handleAcceptQuote = async (quoteId) => {
     if (!window.confirm('Are you sure you want to accept this quote? This will create a booking.')) {
       return;
@@ -181,10 +81,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // Customer declines quote
+  // NEW: Customer declines quote
   const handleDeclineQuote = async (quoteId) => {
     const declineReason = prompt('Please provide a reason for declining this quote (optional):');
-
+    
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-decline`, {
@@ -210,15 +110,9 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // Calculate discount value based on loyalty points (same logic as loyaltyService)
-  const calculateDiscountValue = (points) => {
-    const discountAmount = Math.floor(points / 100) * 10;
-    return Math.min(discountAmount, 500); // Max R500 discount
-  };
-
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
-    const completedTrips = userBookings.filter(booking =>
+    const completedTrips = userBookings.filter(booking => 
       booking.status === 'completed'
     ).length;
 
@@ -227,74 +121,42 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       .filter(booking => booking.status === 'completed' && booking.finalPrice)
       .reduce((total, booking) => total + (booking.finalPrice || 0), 0);
 
-    // Use actual user data from backend - ALWAYS use currentUser directly
+    // Use actual user data from backend
     return {
       name: currentUser?.name || "Guest",
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
-      loyaltyPoints: currentUser?.loyaltyPoints || 0,
       tripsCompleted: completedTrips,
-      totalTrips: currentUser?.totalTrips || 0,
       totalSpent: totalSpent,
-      tier: currentUser?.tier || 'bronze',
       memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
-      upcomingTrips: userBookings.filter(booking =>
+      upcomingTrips: userBookings.filter(booking => 
         booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
-      ).length,
-      availableDiscount: calculateDiscountValue(currentUser?.loyaltyPoints || 0)
+      ).length
     };
   };
 
   const userData = calculateUserData();
-
+  
   // Personal highlights based on REAL user activity
   const getPersonalHighlights = () => {
     const highlights = [
-      {
-        badge: '🏅',
-        stat: `${userData.tripsCompleted} Trips Completed`,
-        desc: `You've completed ${userData.tripsCompleted} trips with us!`
+      { 
+        badge: '🏅', 
+        stat: `${userData.tripsCompleted} Trips Completed`, 
+        desc: `You've completed ${userData.tripsCompleted} trips with us!` 
       },
-      {
-        badge: '💰',
-        stat: `${userData.loyaltyPoints} Points`,
-        desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.`
+      { 
+        badge: '⏱️', 
+        stat: `${userData.tripsCompleted * 3} Hours Saved`, 
+        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` 
       },
-      {
-        badge: '⏱️',
-        stat: `${userData.tripsCompleted * 3} Hours Saved`,
-        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.`
-      },
-      {
-        badge: '🧭',
-        stat: `${userData.tripsCompleted * 240} km Traveled`,
-        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.`
+      { 
+        badge: '🧭', 
+        stat: `${userData.tripsCompleted * 240} km Traveled`, 
+        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
       },
     ];
-
-    // Add tier-based highlights
-    const tierEmoji = {
-      bronze: '🥉',
-      silver: '🥈',
-      gold: '🥇',
-      platinum: '💎'
-    };
-
-    highlights.push({
-      badge: tierEmoji[userData.tier] || '🥉',
-      stat: `${userData.tier.charAt(0).toUpperCase() + userData.tier.slice(1)} Member`,
-      desc: `You are a ${userData.tier} level member with special benefits!`
-    });
-
-    // Add discount highlight
-    if (userData.availableDiscount > 0) {
-      highlights.push({
-        badge: '💎',
-        stat: `R ${userData.availableDiscount} Discount`,
-        desc: `You have R ${userData.availableDiscount} available to use on your next trip!`
-      });
-    }
 
     // Add spending highlight
     if (userData.totalSpent > 0) {
@@ -307,10 +169,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
-      highlights.push({
-        badge: '🎖️',
-        stat: 'VIP Member',
-        desc: "You are now a VIP member!"
+      highlights.push({ 
+        badge: '🎖️', 
+        stat: 'VIP Member', 
+        desc: "You are now a VIP member!" 
       });
     }
 
@@ -330,12 +192,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     if (nextBooking) {
       alert(`${nextBooking.tripType || nextBooking.title}\nDate: ${new Date(nextBooking.tripDate).toLocaleDateString()}\nStatus: ${nextBooking.status}\nPickup: ${nextBooking.pickupLocation}\nDropoff: ${nextBooking.dropoffLocation}`);
     } else {
-      navigate('/bookings'); // Changed from /quote to /bookings
+      navigate('/quote');
     }
   };
 
   const handleRequestQuote = () => {
-    navigate('/bookings'); // Changed from /quote to /bookings
+    navigate('/quote');
   };
 
   const highlights = getPersonalHighlights();
@@ -398,15 +260,15 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   };
 
   // Get pending quotes for the customer
-  const pendingQuotes = userBookings.filter(booking =>
+  const pendingQuotes = userBookings.filter(booking => 
     booking.quoteStatus === 'pending_customer'
   );
 
   return (
     <>
-      <Header
-        onAuthClick={onSignOut}
-        isLoggedIn={isLoggedIn}
+      <Header 
+        onAuthClick={onSignOut} 
+        isLoggedIn={isLoggedIn} 
         user={currentUser}
         onSignOut={onSignOut}
       />
@@ -456,19 +318,19 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                     )}
                   </div>
                   <div className="quote-actions">
-                    <button
+                    <button 
                       className="btn-accept"
                       onClick={() => handleAcceptQuote(quote._id)}
                     >
                       Accept Quote
                     </button>
-                    <button
+                    <button 
                       className="btn-decline"
                       onClick={() => handleDeclineQuote(quote._id)}
                     >
                       Decline
                     </button>
-                    <button
+                    <button 
                       className="btn-view-details"
                       onClick={() => {
                         setSelectedQuote(quote);
@@ -484,32 +346,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
           </div>
         </section>
       )}
-
-      {/* SERVICES */}
-      <section className="services-area">
-        <div className="services-row container">
-          <div className="service-card">
-            <h4>Airport Transfers</h4>
-            <p>Enjoy hassle-free airport pick-ups and drop-offs with professional drivers and reliable, comfortable rides.</p>
-          </div>
-          <div className="service-card">
-            <h4>Conference Shuttle Hire</h4>
-            <p>Keep events running smoothly with daily shuttle services between venues and hotels — on time and comfortable.</p>
-          </div>
-          <div className="service-card">
-            <h4>Sports Tours</h4>
-            <p>Travel stress-free with transport for teams and supporters to stadiums and events. Safe and coordinated.</p>
-          </div>
-          <div className="service-card">
-            <h4>Events & Leisure Travel</h4>
-            <p>Whether weddings or private functions, we arrange travel that combines comfort, style and safety.</p>
-          </div>
-        </div>
-
-        <div className="quote-cta-wrap">
-          <button className="request-cta" onClick={handleRequestQuote}>REQUEST A QUOTE</button>
-        </div>
-      </section>
 
       {/* PERSONAL HIGHLIGHTS */}
       <section className="highlights">
@@ -559,90 +395,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         </section>
       )}
 
-      {/* REVIEWS WITH PHOTO UPLOAD */}
-      <section className="reviews-wrap" aria-labelledby="reviewsTitle">
-        <div className="container">
-          <div id="reviewsTitle" className="section-title review-section-title">
-            {userData.tripsCompleted > 0 ? 'Leave us a review' : 'Share your expectations'}
-          </div>
-          <p className="reviews-sub">
-            {userData.tripsCompleted > 0
-              ? 'How was your last trip? Share your experience with a photo!'
-              : 'Tell us what you\'re looking forward to!'
-            }
-          </p>
-          <form className="review-form" onSubmit={handleReviewSubmit}>
-            <select name="rating" required>
-              <option value="">Rating...</option>
-              <option value="5">5 - Excellent</option>
-              <option value="4">4 - Good</option>
-              <option value="3">3 - Okay</option>
-              <option value="2">2 - Poor</option>
-              <option value="1">1 - Bad</option>
-            </select>
-
-            <textarea
-              name="testimonial"
-              placeholder={
-                userData.tripsCompleted > 0
-                  ? "Share your experience with your recent trip..."
-                  : "What are you most excited about for your upcoming travel?"
-              }
-            ></textarea>
-
-            {/* Photo Upload Section */}
-            <div className="photo-upload-section">
-              <label htmlFor="review-photo" className="photo-upload-label">
-                <i className="fas fa-camera"></i>
-                {reviewPhoto ? 'Photo Selected ✓' : 'Add Photo (Optional)'}
-              </label>
-              <input
-                type="file"
-                id="review-photo"
-                name="photo"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files[0]) {
-                    const file = e.target.files[0];
-                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                      alert('Photo must be less than 5MB');
-                      e.target.value = '';
-                      return;
-                    }
-                    setReviewPhoto(URL.createObjectURL(file));
-                  }
-                }}
-                style={{ display: 'none' }}
-              />
-
-              {reviewPhoto && (
-                <div className="photo-preview">
-                  <img src={reviewPhoto} alt="Review preview" />
-                  <button
-                    type="button"
-                    className="remove-photo"
-                    onClick={() => {
-                      setReviewPhoto(null);
-                      document.getElementById('review-photo').value = '';
-                    }}
-                  >
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-              )}
-
-              {uploadingPhoto && (
-                <div className="uploading-text">Uploading photo...</div>
-              )}
-            </div>
-
-            <button type="submit" className="review-submit" disabled={uploadingPhoto}>
-              {uploadingPhoto ? 'UPLOADING...' : 'SUBMIT REVIEW'}
-            </button>
-          </form>
-        </div>
-      </section>
-
       {/* Quote Details Modal */}
       {showQuoteModal && selectedQuote && (
         <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
@@ -660,7 +412,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                 <p><strong>Time:</strong> {selectedQuote.tripTime}</p>
                 <p><strong>Direction:</strong> {selectedQuote.isOneWay ? 'One Way' : 'Both Ways'}</p>
               </div>
-
+              
               <div className="detail-group">
                 <h4>Pricing</h4>
                 <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
@@ -674,7 +426,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               </div>
             </div>
             <div className="modal-actions">
-              <button
+              <button 
                 className="btn-accept"
                 onClick={() => {
                   handleAcceptQuote(selectedQuote._id);
@@ -683,7 +435,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               >
                 Accept Quote
               </button>
-              <button
+              <button 
                 className="btn-decline"
                 onClick={() => {
                   handleDeclineQuote(selectedQuote._id);
@@ -692,7 +444,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               >
                 Decline Quote
               </button>
-              <button
+              <button 
                 className="btn-cancel"
                 onClick={() => setShowQuoteModal(false)}
               >
