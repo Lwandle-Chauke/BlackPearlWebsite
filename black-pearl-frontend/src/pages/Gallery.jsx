@@ -82,7 +82,6 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             {galleryImages.map(item => (
               <div key={item._id} className="card" onClick={() => openLightbox(item)}>
                 <img src={`${IMAGE_BASE_URL}${item.url}`} alt={item.altText} />
-                {item.uploadedBy?.name && <p>Uploaded by: {item.uploadedBy.name}</p>}
               </div>
             ))}
           </div>
@@ -97,7 +96,6 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             <img src={`${IMAGE_BASE_URL}${selectedImage.url}`} alt={selectedImage.altText} className="lightbox-image" />
             <button className="lightbox-nav next" onClick={() => navigateLightbox(1)}>&#10095;</button>
             {selectedImage.altText && <p className="lightbox-alt-text">{selectedImage.altText}</p>}
-            {selectedImage.uploadedBy?.name && <p className="lightbox-uploaded-by">Uploaded by: {selectedImage.uploadedBy.name}</p>}
           </div>
         </div>
       )}

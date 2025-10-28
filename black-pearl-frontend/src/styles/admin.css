@@ -2,16 +2,50 @@
    COLOR VARIABLES
    ========================================================== */
 :root {
+    /* Light Theme Variables */
+    --background-color: #f8f8f8;
+    --text-color: #333;
+    --card-background: #ffffff;
+    --border-color: #eee;
+    --header-background: #ffffff;
+    --sidebar-background: #4a4a4a;
+    --sidebar-text-color: #ccc;
+    --sidebar-active-background: #ffffff;
+    --sidebar-active-text-color: #333;
+    --primary-blue: #3498db;
+    --dark-gray: #4a4a4a;
+    --light-gray: #f8f8f8;
     --white: #ffffff;
-    --dark-gray: #4a4a4a; /* Dark background color for header/sidebar */
-    --light-gray: #f8f8f8; /* Background for main content area */
-    --primary-blue: #3498db; /* Accent blue */
-    --text-dark: #333;
     --silver: #aaa;
+
     /* Status Colors */
-    --status-confirmed: #2ecc71; /* Green */
-    --status-pending: #f39c12; /* Orange */
-    --status-completed: #2c3e50; /* Dark Blue/Black */
+    --status-confirmed: #2ecc71;
+    /* Green */
+    --status-pending: #f39c12;
+    /* Orange */
+    --status-completed: #2c3e50;
+    /* Dark Blue/Black */
+}
+
+[data-theme="dark"] {
+    --background-color: #2c2c2c;
+    --text-color: #f0f0f0;
+    --card-background: #3c3c3c;
+    --border-color: #555;
+    --header-background: #3c3c3c;
+    --sidebar-background: #222222;
+    --sidebar-text-color: #aaa;
+    --sidebar-active-background: #555555;
+    --sidebar-active-text-color: #ffffff;
+    --primary-blue: #5dade2;
+    /* Slightly lighter blue for dark mode */
+    --dark-gray: #f0f0f0;
+    /* Invert for dark mode */
+    --light-gray: #3c3c3c;
+    /* Invert for dark mode */
+    --white: #2c2c2c;
+    /* Invert for dark mode */
+    --silver: #777;
 }
 
 /* ==========================================================
@@ -22,22 +56,29 @@
     min-height: 100vh;
     font-family: "Poppins", sans-serif;
     margin: 0;
-    background: var(--light-gray);
-    color: var(--text-dark);
+    background: var(--background-color);
+    /* Use theme variable */
+    color: var(--text-color);
+    /* Use theme variable */
+    transition: background-color 0.3s, color 0.3s;
+    /* Smooth transition */
 }
 
 /* Main Content Area */
 #content-wrapper {
-    flex-grow: 1; 
+    flex-grow: 1;
     padding: 20px;
-    margin-left: 250px; /* Offset for fixed sidebar width */
-    padding-top: 80px; /* Space for fixed top bar */
+    margin-left: 250px;
+    /* Offset for fixed sidebar width */
+    padding-top: 80px;
+    /* Space for fixed top bar */
     transition: margin-left 0.3s;
     width: 100%;
     box-sizing: border-box;
     /* Ensure content on the bookings page uses the space correctly */
-    display: flex; 
-    flex-direction: column; /* Allows main/footer to stack */
+    display: flex;
+    flex-direction: column;
+    /* Allows main/footer to stack */
 }
 
 /* ==========================================================
@@ -49,11 +90,13 @@
     top: 0;
     left: 0;
     bottom: 0;
-    background: var(--dark-gray);
-    color: white;
+    background: var(--sidebar-background);
+    /* Use theme variable */
+    color: var(--sidebar-text-color);
+    /* Use theme variable */
     padding-top: 20px;
     z-index: 1000;
-    transition: transform 0.3s, width 0.3s;
+    transition: transform 0.3s, width 0.3s, background 0.3s, color 0.3s;
 }
 
 /* ... (Include all other sidebar styles from the previous Admin.css) ... */
@@ -86,7 +129,8 @@
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    color: #ccc;
+    color: var(--sidebar-text-color);
+    /* Use theme variable */
     text-decoration: none;
     font-weight: 500;
     transition: background 0.2s, color 0.2s;
@@ -103,8 +147,10 @@
 }
 
 .sidebar ul li a.active {
-    background: var(--white);
-    color: var(--text-dark);
+    background: var(--sidebar-active-background);
+    /* Use theme variable */
+    color: var(--sidebar-active-text-color);
+    /* Use theme variable */
     font-weight: 600;
     border-right: 4px solid var(--primary-blue);
 }
@@ -116,28 +162,33 @@
     position: fixed;
     top: 0;
     right: 0;
-    left: 250px; /* Starts after the sidebar on desktop */
+    left: 250px;
+    /* Starts after the sidebar on desktop */
     height: 60px;
-    background: var(--white);
+    background: var(--header-background);
+    /* Use theme variable */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 999;
     padding: 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: left 0.3s;
+    transition: left 0.3s, background 0.3s;
 }
 
 .hamburger-menu {
-    display: none; /* Hidden by default on Desktop */
+    display: none;
+    /* Hidden by default on Desktop */
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: var(--text-dark);
+    color: var(--text-color);
+    /* Use theme variable */
     cursor: pointer;
     padding: 0;
     margin-right: 15px;
-    order: -1; /* Place it first on mobile */
+    order: -1;
+    /* Place it first on mobile */
 }
 
 /* ... (Include other top-bar, analytics, and status styles here) ... */
@@ -146,14 +197,16 @@
     margin: 0;
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-color);
+    /* Use theme variable */
 }
 
 .admin-info {
     display: flex;
     align-items: center;
     font-size: 1rem;
-    color: var(--text-dark);
+    color: var(--text-color);
+    /* Use theme variable */
 }
 
 .admin-info i {
@@ -161,9 +214,17 @@
     font-size: 1.2rem;
 }
 
-.status-confirmed { background: var(--status-confirmed); }
-.status-pending { background: var(--status-pending); }
-.status-completed { background: var(--status-completed); }
+.status-confirmed {
+    background: var(--status-confirmed);
+}
+
+.status-pending {
+    background: var(--status-pending);
+}
+
+.status-completed {
+    background: var(--status-completed);
+}
 
 /* ==========================================================
    RESPONSIVE (Mobile Adaptation - Below 768px)
@@ -180,12 +241,14 @@
     opacity: 0;
     transition: opacity 0.3s;
 }
+
 .sidebar-overlay.visible {
     display: block;
     opacity: 1;
 }
 
 @media (max-width: 768px) {
+
     /* Show Hamburger on Mobile */
     .hamburger-menu {
         display: block;
@@ -194,28 +257,35 @@
     /* Sidebar Hidden by default on Mobile */
     .sidebar {
         width: 250px;
-        transform: translateX(-250px); /* Hide off-screen */
+        transform: translateX(-250px);
+        /* Hide off-screen */
         box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
     }
-    
+
     /* When 'sidebar-open' class is applied to .admin-layout, slide in the sidebar */
     .admin-layout.sidebar-open .sidebar {
-        transform: translateX(0); 
+        transform: translateX(0);
     }
 
     /* Top Bar adjustments */
     .top-bar {
-        left: 0; /* Top bar starts at the left edge */
+        left: 0;
+        /* Top bar starts at the left edge */
         padding: 0 10px;
-        justify-content: flex-start; /* Move title/icon to the left */
+        justify-content: flex-start;
+        /* Move title/icon to the left */
     }
+
     .top-bar .admin-info {
-        margin-left: auto; /* Push admin info to the right */
-        padding-left: 10px; /* Space between title and info */
+        margin-left: auto;
+        /* Push admin info to the right */
+        padding-left: 10px;
+        /* Space between title and info */
     }
 
     /* Content and Footer adjust to full width */
-    #content-wrapper, .footer {
+    #content-wrapper,
+    .footer {
         margin-left: 0;
         padding-top: 70px;
         left: 0;
@@ -225,23 +295,33 @@
 /* Mid-Size Tablet (Collapsed Sidebar) */
 @media (min-width: 769px) and (max-width: 992px) {
     .sidebar {
-        width: 60px; /* Collapsed sidebar */
+        width: 60px;
+        /* Collapsed sidebar */
     }
+
     .sidebar span {
-        display: none; /* Hide text on collapsed sidebar */
+        display: none;
+        /* Hide text on collapsed sidebar */
     }
+
     .sidebar ul li a {
         justify-content: center;
         padding: 15px 0;
     }
+
     .sidebar-logo img {
-        display: none; 
+        display: none;
     }
+
     .sidebar ul li a i {
         margin: 0;
     }
-    #content-wrapper, .top-bar, .footer {
-        margin-left: 60px; /* Adjust offset for collapsed sidebar */
+
+    #content-wrapper,
+    .top-bar,
+    .footer {
+        margin-left: 60px;
+        /* Adjust offset for collapsed sidebar */
         left: 60px;
     }
 }

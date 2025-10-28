@@ -158,21 +158,24 @@
 }
 
 .error-message {
-    color: #f44336;
+    color: #d32f2f;
+    /* Darker red for better visibility */
     background-color: #ffebee;
-    border: 1px solid #f44336;
+    border: 1px solid #d32f2f;
 }
 
 .success-message {
-    color: #4CAF50;
+    color: #388e3c;
+    /* Darker green for better visibility */
     background-color: #e8f5e9;
-    border: 1px solid #4CAF50;
+    border: 1px solid #388e3c;
 }
 
 .info-message {
-    color: #2196F3;
+    color: #1976d2;
+    /* Darker blue for better visibility */
     background-color: #e3f2fd;
-    border: 1px solid #2196F3;
+    border: 1px solid #1976d2;
 }
 
 .image-preview-container {
@@ -220,7 +223,8 @@
 .form-group label {
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: var(--black);
+    color: #333;
+    /* Darker color for better visibility */
 }
 
 .form-group input[type="file"],
@@ -229,7 +233,8 @@
     border: 1px solid var(--light-gray);
     border-radius: 5px;
     font-size: 1rem;
-    color: var(--dark-gray);
+    color: #333;
+    /* Darker color for better visibility */
     background-color: #fdfdfd;
 }
 
@@ -249,7 +254,7 @@
 }
 
 .btn-upload {
-    background-color: var(--primary-color);
+    background-color: black;
     color: white;
     padding: 0.8rem 1.5rem;
     border: none;
@@ -262,7 +267,8 @@
 }
 
 .btn-upload:hover {
-    background-color: var(--primary-dark);
+    background-color: #333333;
+    /* A slightly lighter black for hover effect */
 }
 
 .btn-upload:disabled {

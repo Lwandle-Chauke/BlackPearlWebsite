@@ -1034,3 +1034,60 @@ body {
 .btn-upload-image i {
     font-size: 18px;
 }
+
+/* Image Upload Modal Buttons */
+.upload-modal .modal-actions .btn-upload {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    /* Primary blue */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 120px;
+}
+
+.upload-modal .modal-actions .btn-upload:hover {
+    background: linear-gradient(135deg, #0056b3, #003d7a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.upload-modal .modal-actions .btn-upload:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.upload-modal .modal-actions .btn-cancel {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    /* Neutral gray */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 120px;
+}
+
+.upload-modal .modal-actions .btn-cancel:hover {
+    background: linear-gradient(135deg, #5a6268, #495057);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.upload-modal .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    /* Align buttons to the right */
+}

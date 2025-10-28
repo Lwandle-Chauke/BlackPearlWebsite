@@ -18,9 +18,11 @@ const AdminGallery = () => {
     const [uploadError, setUploadError] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [imagePreview, setImagePreview] = useState(null); // New state for image preview
+    const [testimonials, setTestimonials] = useState([]);
 
     useEffect(() => {
         fetchImages();
+        fetchTestimonials();
     }, []);
 
     const handleFileChange = (e) => {
@@ -68,6 +70,7 @@ const AdminGallery = () => {
             setUploadSuccess(true);
             setSelectedFile(null);
             setAltText('');
+            setImagePreview(null); // Clear image preview after successful upload
             fetchImages(); // Refresh images after upload
         } catch (err) {
             console.error('Error uploading image:', err);
@@ -149,33 +152,63 @@ const AdminGallery = () => {
         }
     };
 
-    const ImageCard = ({ image, type }) => (
-        <div className="image-card">
-            <img src={`${IMAGE_BASE_URL}${image.url}`} alt={image.altText} />
-            <div className="image-info">
-                <p><strong>Uploaded By:</strong> {image.uploadedBy?.name || 'N/A'}</p>
-                <p><strong>Alt Text:</strong> {image.altText}</p>
-                <p><strong>Status:</strong> <span className={`status-${image.status}`}>{image.status}</span></p>
-                <div className="image-actions">
-                    {type === 'pending' && (
-                        <>
-                            <button className="btn-approve" onClick={() => handleStatusUpdate(image._id, 'approved')}>
-                                Approve
-                            </button>
-                            <button className="btn-decline" onClick={() => handleStatusUpdate(image._id, 'declined')}>
-                                Decline
-                            </button>
-                        </>
+    const fetchTestimonials = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            const res = await axios.get(`${API_BASE_URL}/reviews`, config);
+            // Filter for approved reviews
+            setTestimonials(res.data.data.filter(review => review.status === 'approved'));
+        } catch (err) {
+            console.error('Error fetching testimonials:', err);
+        }
+    };
+
+    const getRandomTestimonial = () => {
+        if (testimonials.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * testimonials.length);
+        return testimonials[randomIndex];
+    };
+
+    const ImageCard = ({ image, type }) => {
+        const testimonial = getRandomTestimonial();
+        return (
+            <div className="image-card">
+                <img src={`${IMAGE_BASE_URL}${image.url}`} alt={image.altText} />
+                <div className="image-info">
+                    <p><strong>Alt Text:</strong> {image.altText}</p>
+                    <p><strong>Status:</strong> <span className={`status-${image.status}`}>{image.status}</span></p>
+                    {testimonial && (
+                        <div className="testimonial-display">
+                            <p><strong>Testimonial:</strong> "{testimonial.comment}"</p>
+                            <p>- {testimonial.user?.name || 'Anonymous'}</p>
+                        </div>
                     )}
-                    {type === 'approved' && (
-                        <button className="btn-delete" onClick={() => handleDeleteImage(image._id)}>
-                            Delete
-                        </button>
-                    )}
+                    <div className="image-actions">
+                        {type === 'pending' && (
+                            <>
+                                <button className="btn-approve" onClick={() => handleStatusUpdate(image._id, 'approved')}>
+                                    Approve
+                                </button>
+                                <button className="btn-decline" onClick={() => handleStatusUpdate(image._id, 'declined')}>
+                                    Decline
+                                </button>
+                            </>
+                        )}
+                        {type === 'approved' && (
+                            <button className="btn-delete" onClick={() => handleDeleteImage(image._id)}>
+                                Delete
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>

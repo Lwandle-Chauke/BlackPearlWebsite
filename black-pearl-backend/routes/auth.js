@@ -6,8 +6,8 @@ import { protect } from '../middleware/auth.js'; // Use ES module import
 const router = express.Router();
 
 // Generate JWT Token
-const signToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+const signToken = (userId, role) => {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h'
   });
 };
@@ -15,7 +15,7 @@ const signToken = (userId) => {
 // Send token response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
-  const token = signToken(user._id);
+  const token = signToken(user._id, user.role);
 
   res.status(statusCode).json({
     success: true,
