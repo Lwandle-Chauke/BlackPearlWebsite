@@ -194,6 +194,55 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// Allow a user to edit their own quote/booking when it's still pending
+router.put('/:id/edit', protect, async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({ success: false, error: 'Quote not found' });
+    }
+
+    // Only the owner can edit and only when status is 'pending'
+    if (quote.userId?.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, error: 'Not authorized to edit this quote' });
+    }
+
+    if (quote.status !== 'pending') {
+      return res.status(403).json({ success: false, error: 'Cannot edit a quote that is already confirmed or processed' });
+    }
+
+    // Only allow updating safe fields
+    const allowed = [
+      'tripPurpose',
+      'tripType',
+      'destination',
+      'pickupLocation',
+      'dropoffLocation',
+      'vehicleType',
+      'isOneWay',
+      'tripDate',
+      'tripTime',
+      'passengerCount',
+      'specialRequests',
+      'customerName',
+      'customerEmail',
+      'customerPhone'
+    ];
+
+    allowed.forEach((field) => {
+      if (req.body[field] !== undefined) quote[field] = req.body[field];
+    });
+
+    await quote.save();
+
+    res.json({ success: true, message: 'Quote updated successfully', data: quote });
+  } catch (error) {
+    console.error('User edit quote error:', error);
+    res.status(500).json({ success: false, error: 'Failed to edit quote: ' + error.message });
+  }
+});
+
 // Delete quote (admin only)
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {

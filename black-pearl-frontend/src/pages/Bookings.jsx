@@ -15,6 +15,8 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [nextBooking, setNextBooking] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingBookingId, setEditingBookingId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // New state for loading actions
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
@@ -169,20 +171,32 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       };
 
       console.log('Submitting booking data:', submissionData);
-
-      const response = await fetch('http://localhost:5000/api/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(submissionData)
-      });
+      // If we're editing an existing booking, call the edit endpoint
+      let response;
+      if (isEditing && editingBookingId) {
+        response = await fetch(`http://localhost:5000/api/quotes/${editingBookingId}/edit`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(submissionData)
+        });
+      } else {
+        response = await fetch('http://localhost:5000/api/quotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(submissionData)
+        });
+      }
 
       const data = await response.json();
 
       if (data.success) {
-        showToastMessage('Booking request submitted successfully! We will contact you shortly.');
+        showToastMessage(isEditing ? 'Booking updated successfully!' : 'Booking request submitted successfully! We will contact you shortly.');
         setShowBookingForm(false);
         // Reset form
         setFormData({
@@ -198,6 +212,8 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           specialRequests: ''
         });
         setFormErrors({});
+        setIsEditing(false);
+        setEditingBookingId(null);
         fetchUserBookings(); // Refresh bookings
       } else {
         showToastMessage('Failed to submit booking: ' + (data.error || 'Please try again.'));
@@ -247,6 +263,34 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     }
   };
 
+  // Open edit form for a pending booking
+  const openEditBooking = (booking) => {
+    // Only allow editing pending bookings
+    if (booking.status !== 'pending') {
+      showToastMessage('Only pending bookings can be edited.');
+      return;
+    }
+
+    setFormData({
+      tripType: booking.tripType || 'Airport Transfers',
+      tripPurpose: booking.tripPurpose || 'Personal Use',
+      destination: booking.destination || '',
+      pickupLocation: booking.pickupLocation || '',
+      dropoffLocation: booking.dropoffLocation || '',
+      vehicleType: booking.vehicleType || '4 Seater Sedan',
+      isOneWay: booking.isOneWay !== undefined ? booking.isOneWay : true,
+      tripDate: booking.tripDate ? booking.tripDate.split('T')[0] : '',
+      tripTime: booking.tripTime || '',
+      passengerCount: booking.passengerCount || 1,
+      specialRequests: booking.specialRequests || ''
+    });
+
+    setIsEditing(true);
+    setEditingBookingId(booking._id);
+    setShowBookingForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Handle booking deletion
   const handleDeleteBooking = async (bookingId) => {
     const bookingToDelete = bookings.find(b => b._id === bookingId);
@@ -291,9 +335,11 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         } else {
           showToastMessage('Failed to delete booking: ' + (data.error || 'Unknown error'));
         }
-      } else {
-        // If DELETE doesn't work, try updating status to 'cancelled'
+      } else if (response.status === 401) {
+        // If unauthorized, try cancelling instead of deleting
         await handleCancelBooking(bookingId);
+      } else {
+        showToastMessage('Failed to delete booking. Please try again.');
       }
     } catch (error) {
       console.error('Delete booking error:', error);
@@ -801,8 +847,19 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       </button>
                     )}
 
-                    {/* Show delete button for all bookings except active ones */}
-                    {!['pending', 'confirmed', 'booked'].includes(booking.status) && (
+                    {/* Show edit button for pending bookings (owner) */}
+                    {booking.status === 'pending' && (booking.userId?.toString() === currentUser?.id || !booking.userId) && (
+                      <button
+                        className="btn-edit"
+                        onClick={() => openEditBooking(booking)}
+                      >
+                        <i className="fas fa-edit"></i>
+                        Edit
+                      </button>
+                    )}
+
+                    {/* Show delete button only for admins */}
+                    {currentUser?.role === 'admin' && !['pending', 'confirmed', 'booked'].includes(booking.status) && (
                       <button
                         className="btn-delete"
                         onClick={() => handleDeleteBooking(booking._id)}
