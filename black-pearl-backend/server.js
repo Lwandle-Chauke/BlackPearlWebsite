@@ -9,6 +9,7 @@ import messageRoutes from "./routes/messageRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
+import imageRoutes from './routes/imageRoutes.js'; // Import image routes
 
 import { protect, authorize } from './middleware/auth.js';
 
@@ -53,6 +54,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes); // Use user routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quotes', quoteRoutes);
+app.use('/api/images', imageRoutes); // Use image routes
 
 // Test route for reviews (simple version)
 app.get('/api/reviews', (req, res) => {

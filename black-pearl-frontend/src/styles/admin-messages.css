@@ -55,7 +55,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
@@ -71,10 +71,21 @@
     font-weight: bold;
 }
 
-.stat-number.total { color: #6c757d; }
-.stat-number.unread { color: #e74c3c; }
-.stat-number.response-rate { color: #27ae60; }
-.stat-number.daily { color: #3498db; }
+.stat-number.total {
+    color: #6c757d;
+}
+
+.stat-number.unread {
+    color: #e74c3c;
+}
+
+.stat-number.response-rate {
+    color: #27ae60;
+}
+
+.stat-number.daily {
+    color: #3498db;
+}
 
 /* Charts Section */
 .charts-section {
@@ -94,7 +105,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
 }
 
@@ -136,16 +147,16 @@
     .chart-row {
         grid-template-columns: 1fr;
     }
-    
+
     .chart-card {
         padding: 1rem;
     }
-    
+
     .time-filter-section {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .messages-stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -186,6 +197,17 @@
     background-color: var(--admin-hover-bg);
 }
 
+.data-table tbody tr.unread-row {
+    background-color: #fff3cd;
+    /* Light yellow for unread rows */
+    font-weight: bold;
+}
+
+.data-table tbody tr.unread-row:hover {
+    background-color: #ffeeba;
+    /* Slightly darker yellow on hover */
+}
+
 .status-badge {
     padding: 5px 10px;
     border-radius: 15px;
@@ -199,12 +221,12 @@
 }
 
 .status-unread {
-    background-color: var(--admin-status-unread);
+    background-color: var(--unread);
     /* Red */
 }
 
 .status-read {
-    background-color: var(--admin-status-read);
+    background-color: var(--read);
     /* Green */
 }
 
@@ -268,5 +290,207 @@
     .action-icons i {
         font-size: 1em;
         margin-right: 8px;
+    }
+}
+
+/* Modal Styles for Message Details */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.message-detail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.message-field label {
+    font-weight: 600;
+    color: #333;
+    min-width: 120px;
+    margin: 0;
+}
+
+.message-field span {
+    color: #555;
+    flex: 1;
+}
+
+.message-field.full-width {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.message-field.full-width label {
+    margin-bottom: 0.5rem;
+}
+
+.message-subject {
+    font-weight: 600;
+    color: #333 !important;
+    font-size: 1.1rem;
+}
+
+.message-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.modal-footer button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Enhanced action icons */
+.action-icons .fa-envelope-open {
+    color: #28a745;
+}
+
+.action-icons .fa-envelope-open:hover {
+    color: #218838;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 1rem;
+    }
+
+    .message-field {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message-field label {
+        min-width: auto;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer button {
+        justify-content: center;
     }
 }

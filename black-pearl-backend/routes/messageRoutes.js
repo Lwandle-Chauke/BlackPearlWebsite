@@ -1,5 +1,6 @@
 import express from "express";
 import Message from "../models/Message.js";
+import emailService from "../services/emailService.js"; // Import email service
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.post("/", async (req, res) => {
             email,
             subject,
             message,
-            status: 'UNREAD',
+            read: false,
             createdAt: new Date()
         });
 
@@ -48,7 +49,7 @@ router.patch("/:id", async (req, res) => {
     try {
         const message = await Message.findByIdAndUpdate(
             req.params.id,
-            { status: req.body.status },
+            { read: req.body.read },
             { new: true }
         );
         res.json(message);
@@ -64,6 +65,42 @@ router.delete("/:id", async (req, res) => {
         res.json({ success: true, message: "Message deleted" });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// POST admin reply to a message
+router.post("/:id/reply", async (req, res) => {
+    try {
+        const { replyContent } = req.body;
+        const messageId = req.params.id;
+
+        const originalMessage = await Message.findById(messageId);
+
+        if (!originalMessage) {
+            return res.status(404).json({ success: false, error: "Original message not found" });
+        }
+
+        await emailService.sendAdminReplyEmail(
+            originalMessage.email,
+            originalMessage.subject,
+            replyContent
+        );
+
+        // Optionally, mark the original message as replied or update its status
+        // For now, we'll just mark it as read if it wasn't already
+        if (!originalMessage.read) {
+            originalMessage.read = true;
+            await originalMessage.save();
+        }
+
+        res.status(200).json({ success: true, message: "Admin reply sent successfully" });
+
+    } catch (error) {
+        console.error('Error sending admin reply:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send admin reply'
+        });
     }
 });
 

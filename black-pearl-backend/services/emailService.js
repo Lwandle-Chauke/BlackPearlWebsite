@@ -68,8 +68,8 @@ class EmailService {
   async sendBookingConfirmation(quote, action) {
     if (!this.transporter) return null;
 
-    const subject = action === 'accepted' 
-      ? 'Booking Confirmed - Black Pearl Tours' 
+    const subject = action === 'accepted'
+      ? 'Booking Confirmed - Black Pearl Tours'
       : 'Quote Declined - Black Pearl Tours';
 
     const termsPath = path.join(__dirname, '../public/terms-and-conditions.pdf');
@@ -95,6 +95,72 @@ class EmailService {
       console.error(`❌ Failed to send ${action} confirmation email:`, error);
       throw error;
     }
+  }
+
+  async sendAdminReplyEmail(toEmail, subject, replyContent) {
+    if (!this.transporter) {
+      console.log('Email transporter not available');
+      return null;
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'noreply@blackpearltours.co.za',
+      to: toEmail,
+      subject: `RE: ${subject}`,
+      html: this.getAdminReplyEmailTemplate(replyContent),
+    };
+
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('📧 Admin reply email sent! Message ID:', info.messageId);
+      if (process.env.EMAIL_HOST === 'smtp.ethereal.email') {
+        console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
+      }
+      return info;
+    } catch (error) {
+      console.error('❌ Failed to send admin reply email:', error);
+      throw error;
+    }
+  }
+
+  getAdminReplyEmailTemplate(replyContent) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+          .content { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #7f8c8d; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Black Pearl Tours</h1>
+            <h2>Response to your Message</h2>
+          </div>
+          
+          <div class="content">
+            <p>Dear Customer,</p>
+            <p>Thank you for contacting us. Here is a response from our administration team:</p>
+            <div style="background: white; padding: 15px; border-left: 4px solid #2c3e50; margin: 15px 0;">
+              <p>${replyContent}</p>
+            </div>
+            <p>We hope this addresses your query. If you have any further questions, please do not hesitate to reply to this email or contact us through our website.</p>
+          </div>
+
+          <div class="footer">
+            <p>Sincerely,</p>
+            <p>The Black Pearl Tours Team</p>
+            <p>Contact: ${process.env.CONTACT_EMAIL || 'mathapelom@blackpearltours.co.za'} | 011 762 1858</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   }
 
   getQuoteEmailTemplate(quote, finalPrice, adminNotes, acceptLink, dashboardLink) {
@@ -192,7 +258,7 @@ class EmailService {
 
   getConfirmationEmailTemplate(quote, action) {
     const isAccepted = action === 'accepted';
-    
+
     return `
       <!DOCTYPE html>
       <html>

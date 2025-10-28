@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import '../styles/style.css'; 
+import '../styles/style.css';
 import '../styles/dashboard.css';
 import ChatWidget from "../chatbot/ChatWidget";
+import axios from 'axios'; // Import axios
 
 const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => {
   const navigate = useNavigate();
@@ -13,6 +14,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false); // New state for upload modal
+  const [selectedFiles, setSelectedFiles] = useState([]); // New state for selected files
+  const [altText, setAltText] = useState(''); // New state for alt text
+  const [uploading, setUploading] = useState(false); // New state for upload status
 
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
@@ -33,12 +38,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       if (response.ok) {
         const data = await response.json();
         setUserBookings(data.data || []);
-        
+
         // Find next upcoming booking
-        const upcoming = data.data?.filter(booking => 
+        const upcoming = data.data?.filter(booking =>
           booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
         ).sort((a, b) => new Date(a.tripDate) - new Date(b.tripDate))[0];
-        
+
         setNextBooking(upcoming || null);
       } else {
         console.error('Failed to fetch user bookings');
@@ -49,6 +54,43 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       setUserBookings([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle image file selection
+  const handleFileChange = (e) => {
+    setSelectedFiles(Array.from(e.target.files));
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+
+    const formData = new FormData();
+    selectedFiles.forEach(file => {
+      formData.append('images', file);
+    });
+    formData.append('altText', altText);
+
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        },
+      };
+      const res = await axios.post('http://localhost:5000/api/images/upload', formData, config);
+      alert(res.data.msg);
+      setSelectedFiles([]);
+      setAltText('');
+      setShowUploadModal(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || 'Image upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -84,7 +126,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   // NEW: Customer declines quote
   const handleDeclineQuote = async (quoteId) => {
     const declineReason = prompt('Please provide a reason for declining this quote (optional):');
-    
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-decline`, {
@@ -112,7 +154,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
-    const completedTrips = userBookings.filter(booking => 
+    const completedTrips = userBookings.filter(booking =>
       booking.status === 'completed'
     ).length;
 
@@ -130,31 +172,31 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       totalSpent: totalSpent,
       memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
-      upcomingTrips: userBookings.filter(booking => 
+      upcomingTrips: userBookings.filter(booking =>
         booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
       ).length
     };
   };
 
   const userData = calculateUserData();
-  
+
   // Personal highlights based on REAL user activity
   const getPersonalHighlights = () => {
     const highlights = [
-      { 
-        badge: '🏅', 
-        stat: `${userData.tripsCompleted} Trips Completed`, 
-        desc: `You've completed ${userData.tripsCompleted} trips with us!` 
+      {
+        badge: '🏅',
+        stat: `${userData.tripsCompleted} Trips Completed`,
+        desc: `You've completed ${userData.tripsCompleted} trips with us!`
       },
-      { 
-        badge: '⏱️', 
-        stat: `${userData.tripsCompleted * 3} Hours Saved`, 
-        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.` 
+      {
+        badge: '⏱️',
+        stat: `${userData.tripsCompleted * 3} Hours Saved`,
+        desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.`
       },
-      { 
-        badge: '🧭', 
-        stat: `${userData.tripsCompleted * 240} km Traveled`, 
-        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.` 
+      {
+        badge: '🧭',
+        stat: `${userData.tripsCompleted * 240} km Traveled`,
+        desc: `You've traveled ${userData.tripsCompleted * 240} km with us.`
       },
     ];
 
@@ -169,10 +211,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
     // Add VIP status if user has enough trips
     if (userData.tripsCompleted >= 5) {
-      highlights.push({ 
-        badge: '🎖️', 
-        stat: 'VIP Member', 
-        desc: "You are now a VIP member!" 
+      highlights.push({
+        badge: '🎖️',
+        stat: 'VIP Member',
+        desc: "You are now a VIP member!"
       });
     }
 
@@ -260,15 +302,15 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   };
 
   // Get pending quotes for the customer
-  const pendingQuotes = userBookings.filter(booking => 
+  const pendingQuotes = userBookings.filter(booking =>
     booking.quoteStatus === 'pending_customer'
   );
 
   return (
     <>
-      <Header 
-        onAuthClick={onSignOut} 
-        isLoggedIn={isLoggedIn} 
+      <Header
+        onAuthClick={onSignOut}
+        isLoggedIn={isLoggedIn}
         user={currentUser}
         onSignOut={onSignOut}
       />
@@ -318,19 +360,19 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                     )}
                   </div>
                   <div className="quote-actions">
-                    <button 
+                    <button
                       className="btn-accept"
                       onClick={() => handleAcceptQuote(quote._id)}
                     >
                       Accept Quote
                     </button>
-                    <button 
+                    <button
                       className="btn-decline"
                       onClick={() => handleDeclineQuote(quote._id)}
                     >
                       Decline
                     </button>
-                    <button 
+                    <button
                       className="btn-view-details"
                       onClick={() => {
                         setSelectedQuote(quote);
@@ -368,6 +410,13 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
             ))}
           </tbody>
         </table>
+        {isLoggedIn && (
+          <div className="upload-image-section">
+            <button className="btn-upload-image" onClick={() => setShowUploadModal(true)}>
+              <i className="fas fa-cloud-upload-alt"></i> Upload Gallery Images
+            </button>
+          </div>
+        )}
       </section>
 
       {/* RECENT TRIPS - Only show if user has trips */}
@@ -412,7 +461,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                 <p><strong>Time:</strong> {selectedQuote.tripTime}</p>
                 <p><strong>Direction:</strong> {selectedQuote.isOneWay ? 'One Way' : 'Both Ways'}</p>
               </div>
-              
+
               <div className="detail-group">
                 <h4>Pricing</h4>
                 <p><strong>Estimated Price:</strong> R {selectedQuote.estimatedPrice}</p>
@@ -426,7 +475,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               </div>
             </div>
             <div className="modal-actions">
-              <button 
+              <button
                 className="btn-accept"
                 onClick={() => {
                   handleAcceptQuote(selectedQuote._id);
@@ -435,7 +484,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               >
                 Accept Quote
               </button>
-              <button 
+              <button
                 className="btn-decline"
                 onClick={() => {
                   handleDeclineQuote(selectedQuote._id);
@@ -444,13 +493,54 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
               >
                 Decline Quote
               </button>
-              <button 
+              <button
                 className="btn-cancel"
                 onClick={() => setShowQuoteModal(false)}
               >
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Upload Modal */}
+      {showUploadModal && (
+        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Upload Images to Gallery</h3>
+            <form onSubmit={handleImageUpload}>
+              <div className="form-group">
+                <label htmlFor="image-files">Select Images:</label>
+                <input
+                  type="file"
+                  id="image-files"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="alt-text">Alt Text (optional):</label>
+                <input
+                  type="text"
+                  id="alt-text"
+                  value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                  placeholder="Describe your images"
+                  disabled={uploading}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn-upload" disabled={selectedFiles.length === 0 || uploading}>
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+                <button type="button" className="btn-cancel" onClick={() => setShowUploadModal(false)} disabled={uploading}>
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
