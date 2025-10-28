@@ -71,8 +71,7 @@ body {
   overflow: hidden;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: 100%;
-  /* Ensure cards take full height in grid item */
+  padding-bottom: 1rem;
 }
 
 .card:hover {
@@ -88,19 +87,51 @@ body {
   display: block;
 }
 
-.card p {
+.image-reviews {
   padding: 1rem;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  flex-grow: 1;
+  /* Allow reviews section to grow */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* Distribute space between reviews */
+}
+
+.review-item {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.review-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.review-comment {
   font-size: 0.95rem;
   color: #555;
   line-height: 1.4;
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+  white-space: normal;
+  /* Ensure text wraps naturally */
+  overflow: visible;
+  /* Ensure all content is visible */
+  text-overflow: unset;
+  /* Remove any potential text truncation */
+}
+
+.review-author {
+  font-size: 0.85rem;
+  color: var(--dark-gray);
+  font-weight: 600;
   margin: 0;
-  flex-grow: 1;
-  /* Allow text to take available space */
-  display: flex;
-  align-items: center;
-  /* Center text vertically */
-  justify-content: center;
-  /* Center text horizontally */
+  text-align: right;
 }
 
 .message {

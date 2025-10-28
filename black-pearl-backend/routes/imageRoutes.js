@@ -81,7 +81,15 @@ router.post('/upload', protect, async (req, res) => {
 // @access  Public
 router.get('/approved', async (req, res) => {
     try {
-        const images = await Image.find({ status: 'approved' }).populate('uploadedBy', 'name');
+        const images = await Image.find({ status: 'approved' })
+            .populate('uploadedBy', 'name')
+            .populate({
+                path: 'reviews',
+                populate: {
+                    path: 'user',
+                    select: 'name' // Only select the name of the user
+                }
+            });
         res.json(images);
     } catch (error) {
         console.error(error);

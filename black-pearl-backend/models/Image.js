@@ -23,6 +23,12 @@ const imageSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    reviews: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Review',
+        },
+    ],
 });
 
 const Image = mongoose.model('Image', imageSchema);

@@ -80,8 +80,18 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         ) : (
           <div className="gallery-grid">
             {galleryImages.map(item => (
-              <div key={item._id} className="card" onClick={() => openLightbox(item)}>
-                <img src={`${IMAGE_BASE_URL}${item.url}`} alt={item.altText} />
+              <div key={item._id} className="card">
+                <img src={`${IMAGE_BASE_URL}${item.url}`} alt={item.altText} onClick={() => openLightbox(item)} />
+                {item.reviews && item.reviews.length > 0 && (
+                  <div className="image-reviews">
+                    {item.reviews.map(review => (
+                      <div key={review._id} className="review-item">
+                        <p className="review-comment">"{review.comment}"</p>
+                        {review.user && <p className="review-author">- {review.user.name}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
