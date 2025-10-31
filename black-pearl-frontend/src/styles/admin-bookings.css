@@ -58,6 +58,136 @@
 .data-table th:last-child, .data-table td:last-child {
     text-align: center; /* Center actions column */
 }
+/* Add these styles to your existing admin-bookings.css */
+
+/* Email Status Styles */
+.email-sent-status {
+    text-align: center;
+}
+
+.email-sent-badge {
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.email-pending-badge {
+    background: #fff3cd;
+    color: #856404;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.email-sent-date {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+}
+
+/* Quote Status Badges */
+.status-pending-customer {
+  background: #ffc107;
+  color: #212529;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-accepted {
+  background: #28a745;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-declined {
+  background: #dc3545;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-converted {
+  background: #17a2b8;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-pending-email {
+  background: #17a2b8;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* Stats for pending customer quotes */
+.stat-card .stat-number.pending-customer {
+  color: #ffc107;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-card .stat-number.pending-email {
+  color: #17a2b8;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-card .stat-number.accepted {
+  color: #28a745;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-card .stat-number.booked {
+  color: #28a745;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Disabled send quote button */
+.btn-send-quote:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.email-badge {
+  background: #17a2b8;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  display: inline-block;
+}
+
+/* Responsive table adjustments */
+@media (max-width: 1200px) {
+  .data-table-container {
+    overflow-x: auto;
+  }
+  
+  .data-table {
+    min-width: 1100px;
+  }
+}
 
 /* Action Icons */
 .action-icons {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -330,12 +331,12 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     if (nextBooking) {
       alert(`${nextBooking.tripType || nextBooking.title}\nDate: ${new Date(nextBooking.tripDate).toLocaleDateString()}\nStatus: ${nextBooking.status}\nPickup: ${nextBooking.pickupLocation}\nDropoff: ${nextBooking.dropoffLocation}`);
     } else {
-      navigate('/bookings'); // Changed from /quote to /bookings
+      navigate('/quote'); // CHANGED: Navigate to quote page instead of bookings
     }
   };
 
   const handleRequestQuote = () => {
-    navigate('/bookings'); // Changed from /quote to /bookings
+    navigate('/quote'); // CHANGED: Navigate to quote page instead of bookings
   };
 
   const highlights = getPersonalHighlights();

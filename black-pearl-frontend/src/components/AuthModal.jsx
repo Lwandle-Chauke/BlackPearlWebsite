@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 
 const AuthModal = ({ onClose, onAuthSuccess }) => {
@@ -16,6 +17,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -46,6 +48,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     e.preventDefault();
     setForgotPasswordLoading(true);
     setForgotPasswordMessage('');
+    setForgotPasswordSuccess(false);
 
     if (!forgotPasswordEmail) {
       setForgotPasswordMessage('Please enter your email address');
@@ -80,6 +83,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
       console.log('Forgot password response:', data);
 
       if (response.ok && data.success) {
+        setForgotPasswordSuccess(true);
         setForgotPasswordMessage(`Temporary password sent to: ${forgotPasswordEmail}\n\nYour temporary password: ${data.temporaryPassword}\n\nPlease use this password to log in and change it immediately.`);
       } else {
         setForgotPasswordMessage(data.error || data.message || 'Failed to reset password');
@@ -296,6 +300,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     setError('');
     setForgotPasswordEmail('');
     setForgotPasswordMessage('');
+    setForgotPasswordSuccess(false);
   };
 
   const handleTabChange = (tab) => {
@@ -308,6 +313,32 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     setIsForgotPassword(false);
     setForgotPasswordEmail('');
     setForgotPasswordMessage('');
+    setForgotPasswordSuccess(false);
+    // Pre-fill the email in signin form if we have it from forgot password
+    if (forgotPasswordEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: forgotPasswordEmail
+      }));
+    }
+  };
+
+  const handleUseTemporaryPassword = () => {
+    setIsForgotPassword(false);
+    // Pre-fill the email in signin form
+    if (forgotPasswordEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: forgotPasswordEmail
+      }));
+    }
+    // Focus on password field for user to enter the temporary password
+    setTimeout(() => {
+      const passwordInput = document.getElementById('signinPassword');
+      if (passwordInput) {
+        passwordInput.focus();
+      }
+    }, 100);
   };
 
   return (
@@ -482,48 +513,78 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
           /* Forgot Password Form */
           <div className="forgot-password-form">
             <h2>Forgot Password</h2>
-            <p>Enter your email address and we'll send you a temporary password.</p>
             
-            {forgotPasswordMessage && (
-              <div className={`forgot-password-message ${forgotPasswordMessage.includes('temporary password') ? 'success' : 'error'}`}>
-                {forgotPasswordMessage.split('\n').map((line, index) => (
-                  <div key={index}>{line}</div>
-                ))}
+            {!forgotPasswordSuccess ? (
+              <>
+                <p>Enter your email address and we'll send you a temporary password.</p>
+                
+                {forgotPasswordMessage && (
+                  <div className="forgot-password-message error">
+                    {forgotPasswordMessage}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPassword}>
+                  <div className="form-group">
+                    <label htmlFor="forgotPasswordEmail">Email Address</label>
+                    <input 
+                      type="email" 
+                      id="forgotPasswordEmail" 
+                      value={forgotPasswordEmail}
+                      onChange={handleForgotPasswordEmailChange}
+                      placeholder="Enter your email address" 
+                      required 
+                      disabled={forgotPasswordLoading}
+                    />
+                  </div>
+
+                  <div className="forgot-password-actions">
+                    <button 
+                      type="button" 
+                      className="back-to-signin-btn"
+                      onClick={handleBackToSignIn}
+                      disabled={forgotPasswordLoading}
+                    >
+                      Back to Sign In
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn-auth"
+                      disabled={forgotPasswordLoading}
+                    >
+                      {forgotPasswordLoading ? 'Sending...' : 'Send Temporary Password'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              /* Success State after sending temporary password */
+              <div className="forgot-password-success">
+                <div className="success-icon">✓</div>
+                <div className="forgot-password-message success">
+                  {forgotPasswordMessage.split('\n').map((line, index) => (
+                    <div key={index}>{line}</div>
+                  ))}
+                </div>
+                
+                <div className="forgot-password-success-actions">
+                  <button 
+                    type="button" 
+                    className="btn-auth primary"
+                    onClick={handleUseTemporaryPassword}
+                  >
+                    Use Temporary Password to Sign In
+                  </button>
+                  <button 
+                    type="button" 
+                    className="back-to-signin-btn"
+                    onClick={handleBackToSignIn}
+                  >
+                    Back to Regular Sign In
+                  </button>
+                </div>
               </div>
             )}
-
-            <form onSubmit={handleForgotPassword}>
-              <div className="form-group">
-                <label htmlFor="forgotPasswordEmail">Email Address</label>
-                <input 
-                  type="email" 
-                  id="forgotPasswordEmail" 
-                  value={forgotPasswordEmail}
-                  onChange={handleForgotPasswordEmailChange}
-                  placeholder="Enter your email address" 
-                  required 
-                  disabled={forgotPasswordLoading}
-                />
-              </div>
-
-              <div className="forgot-password-actions">
-                <button 
-                  type="button" 
-                  className="back-to-signin-btn"
-                  onClick={handleBackToSignIn}
-                  disabled={forgotPasswordLoading}
-                >
-                  Back to Sign In
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-auth"
-                  disabled={forgotPasswordLoading}
-                >
-                  {forgotPasswordLoading ? 'Sending...' : 'Send Temporary Password'}
-                </button>
-              </div>
-            </form>
           </div>
         )}
       </div>

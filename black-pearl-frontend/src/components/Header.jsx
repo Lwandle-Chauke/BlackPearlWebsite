@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -95,20 +96,15 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
                 </Link>
               </li>
             ))}
-            
-            {/* The Sign In/Out button is REMOVED from the <ul> */}
           </ul>
         </nav>
         
         {/* Navigation Actions - BUTTON ADDED HERE */}
         <div className="nav-actions">
-          
-          {/* Sign In/Out button is placed here, where the CSS expects it. 
-              We use the intended .btn-sign class for styling. */}
+          {/* Sign In/Out button is placed here, where the CSS expects it. */}
           <button 
             className="btn-sign" 
             onClick={handleAuthButtonClick}
-            // All inline styles are removed to rely on CSS
           >
             {authButtonText}
           </button>
@@ -140,11 +136,15 @@ const Header = ({ isLoggedIn, onAuthClick, user, onSignOut }) => {
           
           <hr style={{margin: '10px 20px'}} />
           
-          
+          {/* Mobile auth button */}
+          <button 
+            className="btn-sign mobile" 
+            onClick={handleAuthButtonClick}
+          >
+            {authButtonText.toUpperCase()}
+          </button>
         </div>
       )}
-
-      
     </header>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import "../styles/quote.css";
@@ -12,6 +13,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Form state - all fields managed by React
   const [formData, setFormData] = useState({
@@ -57,6 +59,14 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+
     // Special handling for destination
     if (name === 'destination') {
       const showCustom = value === "Other (Specify Below)";
@@ -66,6 +76,14 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         showCustomDestination: showCustom,
         customDestination: showCustom ? prev.customDestination : ""
       }));
+      
+      // Clear custom destination error when destination changes
+      if (fieldErrors.customDestination) {
+        setFieldErrors(prev => ({
+          ...prev,
+          customDestination: ""
+        }));
+      }
     }
   };
 
@@ -115,7 +133,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
   // Enhanced validation
   const validateForm = () => {
-    const errors = [];
+    const errors = {};
     const {
       tripPurpose, tripType, destination, pickupLocation, dropoffLocation,
       vehicleType, tripDate, tripTime, customerName, customerEmail, customerPhone,
@@ -123,24 +141,24 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     } = formData;
 
     // Required fields validation
-    if (!tripPurpose) errors.push("Trip purpose is required");
-    if (!tripType) errors.push("Trip type is required");
-    if (!destination) errors.push("Destination is required");
-    if (showCustomDestination && !customDestination) errors.push("Please specify your custom destination");
-    if (!pickupLocation) errors.push("Pickup location is required");
-    if (!dropoffLocation) errors.push("Drop-off location is required");
-    if (!vehicleType) errors.push("Vehicle type is required");
-    if (!tripDate) errors.push("Trip date is required");
-    if (!tripTime) errors.push("Trip time is required");
-    if (!customerName) errors.push("Name is required");
-    if (!customerEmail) errors.push("Email is required");
-    if (!customerPhone) errors.push("Phone is required");
-    if (tripDirection === "both-ways" && !returnDate) errors.push("Return date is required for round trips");
+    if (!tripPurpose) errors.tripPurpose = "Trip purpose is required";
+    if (!tripType) errors.tripType = "Trip type is required";
+    if (!destination) errors.destination = "Destination is required";
+    if (showCustomDestination && !customDestination) errors.customDestination = "Please specify your custom destination";
+    if (!pickupLocation) errors.pickupLocation = "Pickup location is required";
+    if (!dropoffLocation) errors.dropoffLocation = "Drop-off location is required";
+    if (!vehicleType) errors.vehicleType = "Vehicle type is required";
+    if (!tripDate) errors.tripDate = "Trip date is required";
+    if (!tripTime) errors.tripTime = "Trip time is required";
+    if (!customerName) errors.customerName = "Name is required";
+    if (!customerEmail) errors.customerEmail = "Email is required";
+    if (!customerPhone) errors.customerPhone = "Phone is required";
+    if (tripDirection === "both-ways" && !returnDate) errors.returnDate = "Return date is required for round trips";
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (customerEmail && !emailRegex.test(customerEmail)) {
-      errors.push("Please enter a valid email address");
+      errors.customerEmail = "Please enter a valid email address";
     }
 
     // Date validation
@@ -148,14 +166,14 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(tripDate);
     if (selectedDate < today) {
-      errors.push("Trip date cannot be in the past");
+      errors.tripDate = "Trip date cannot be in the past";
     }
 
     if (tripDirection === "both-ways" && returnDate) {
       const returnDateObj = new Date(returnDate);
       const tripDateObj = new Date(tripDate);
       if (returnDateObj < tripDateObj) {
-        errors.push("Return date cannot be before trip date");
+        errors.returnDate = "Return date cannot be before trip date";
       }
     }
 
@@ -166,12 +184,14 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setFieldErrors({});
 
     // Validate form
     const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
+    if (Object.keys(validationErrors).length > 0) {
       setMessageType("error");
-      setMessage(validationErrors.join(". "));
+      setMessage("Please fix the errors below before submitting.");
+      setFieldErrors(validationErrors);
       setLoading(false);
       return;
     }
@@ -224,6 +244,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
           customerCompany: ""
         });
         setEstimatedPrice(0);
+        setFieldErrors({});
       } else {
         setMessageType("error");
         setMessage(data.error || "Failed to submit quote. Please try again.");
@@ -281,8 +302,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             </div>
           )}
 
+          {/* Success/Error Messages */}
           {message && (
-            <div className={`message ${messageType}`}>
+            <div className={messageType === "success" ? "success-message" : "error-message"}>
               {message}
             </div>
           )}
@@ -300,6 +322,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   name="tripPurpose"
                   value={formData.tripPurpose}
                   onChange={handleInputChange}
+                  className={fieldErrors.tripPurpose ? "input-error" : ""}
                   required
                 >
                   <option value="">Select Purpose *</option>
@@ -310,6 +333,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   <option value="Tourism or Sightseeing">Tourism or Sightseeing</option>
                   <option value="Other">Other</option>
                 </select>
+                {fieldErrors.tripPurpose && <span className="error-text">{fieldErrors.tripPurpose}</span>}
               </div>
 
               {/* Trip Type */}
@@ -320,6 +344,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   name="tripType"
                   value={formData.tripType}
                   onChange={handleInputChange}
+                  className={fieldErrors.tripType ? "input-error" : ""}
                   required
                 >
                   <option value="">Select Trip Type *</option>
@@ -329,6 +354,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   <option value="Events & Leisure">Events & Leisure</option>
                   <option value="Custom Trip">Custom Trip</option>
                 </select>
+                {fieldErrors.tripType && <span className="error-text">{fieldErrors.tripType}</span>}
               </div>
 
               {/* Destination */}
@@ -339,6 +365,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   name="destination"
                   value={formData.destination}
                   onChange={handleInputChange}
+                  className={fieldErrors.destination ? "input-error" : ""}
                   required
                 >
                   <option value="">Select Destination *</option>
@@ -350,18 +377,23 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   <option value="Port Elizabeth">Port Elizabeth</option>
                   <option value="Other (Specify Below)">Other (Specify Below)</option>
                 </select>
+                {fieldErrors.destination && <span className="error-text">{fieldErrors.destination}</span>}
               </div>
 
               {/* Custom Destination */}
               {formData.showCustomDestination && (
-                <input
-                  type="text"
-                  name="customDestination"
-                  placeholder="Please specify your destination *"
-                  value={formData.customDestination}
-                  onChange={handleInputChange}
-                  required
-                />
+                <div className="input-group">
+                  <input
+                    type="text"
+                    name="customDestination"
+                    placeholder="Please specify your destination *"
+                    value={formData.customDestination}
+                    onChange={handleInputChange}
+                    className={fieldErrors.customDestination ? "input-error" : ""}
+                    required
+                  />
+                  {fieldErrors.customDestination && <span className="error-text">{fieldErrors.customDestination}</span>}
+                </div>
               )}
 
               {/* Pickup & Drop-off */}
@@ -372,6 +404,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="Pickup Location *"
                   value={formData.pickupLocation}
                   onChange={handleInputChange}
+                  className={fieldErrors.pickupLocation ? "input-error" : ""}
                   required
                 />
                 <input
@@ -380,8 +413,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="Drop-off Location *"
                   value={formData.dropoffLocation}
                   onChange={handleInputChange}
+                  className={fieldErrors.dropoffLocation ? "input-error" : ""}
                   required
                 />
+                {fieldErrors.pickupLocation && <span className="error-text">{fieldErrors.pickupLocation}</span>}
+                {fieldErrors.dropoffLocation && <span className="error-text">{fieldErrors.dropoffLocation}</span>}
               </div>
 
               {/* Vehicle Type */}
@@ -392,6 +428,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   name="vehicleType"
                   value={formData.vehicleType}
                   onChange={handleInputChange}
+                  className={fieldErrors.vehicleType ? "input-error" : ""}
                   required
                 >
                   <option value="">Select Vehicle Type *</option>
@@ -405,6 +442,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   <option value="60 Seater Semi Luxury">60 Seater Semi Luxury</option>
                   <option value="70 Seater Semi Luxury">70 Seater Semi Luxury</option>
                 </select>
+                {fieldErrors.vehicleType && <span className="error-text">{fieldErrors.vehicleType}</span>}
               </div>
 
               {/* Trip Direction Radio Buttons */}
@@ -442,6 +480,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   value={formData.tripDate}
                   onChange={handleInputChange}
                   min={today}
+                  className={fieldErrors.tripDate ? "input-error" : ""}
                   required
                 />
                 <input
@@ -449,8 +488,11 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   name="tripTime"
                   value={formData.tripTime}
                   onChange={handleInputChange}
+                  className={fieldErrors.tripTime ? "input-error" : ""}
                   required
                 />
+                {fieldErrors.tripDate && <span className="error-text">{fieldErrors.tripDate}</span>}
+                {fieldErrors.tripTime && <span className="error-text">{fieldErrors.tripTime}</span>}
               </div>
 
               {/* Return Date for Both Ways */}
@@ -463,8 +505,10 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     value={formData.returnDate}
                     onChange={handleInputChange}
                     min={formData.tripDate || today}
+                    className={fieldErrors.returnDate ? "input-error" : ""}
                     required
                   />
+                  {fieldErrors.returnDate && <span className="error-text">{fieldErrors.returnDate}</span>}
                 </div>
               )}
             </div>
@@ -481,6 +525,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="Name *"
                   value={formData.customerName}
                   onChange={handleInputChange}
+                  className={fieldErrors.customerName ? "input-error" : ""}
                   required
                 />
                 <input
@@ -489,6 +534,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="Email *"
                   value={formData.customerEmail}
                   onChange={handleInputChange}
+                  className={fieldErrors.customerEmail ? "input-error" : ""}
                   required
                 />
                 <input
@@ -497,6 +543,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="Phone *"
                   value={formData.customerPhone}
                   onChange={handleInputChange}
+                  className={fieldErrors.customerPhone ? "input-error" : ""}
                   required
                 />
                 <input
@@ -506,6 +553,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   value={formData.customerCompany}
                   onChange={handleInputChange}
                 />
+                {fieldErrors.customerName && <span className="error-text">{fieldErrors.customerName}</span>}
+                {fieldErrors.customerEmail && <span className="error-text">{fieldErrors.customerEmail}</span>}
+                {fieldErrors.customerPhone && <span className="error-text">{fieldErrors.customerPhone}</span>}
               </div>
             </div>
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
@@ -9,11 +10,12 @@ import ChatWidget from "../chatbot/ChatWidget";
 const Home = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   return (
     <>
-      {/* FIXED: Pass all the required props to Header */}
+      {/* FIXED: Added missing onSignOut prop */}
       <Header 
         onAuthClick={onAuthClick} 
         isLoggedIn={isLoggedIn} 
         user={currentUser}
+        onSignOut={onSignOut}
       />
       
       {/* HERO - Uses styles from Home.css */}

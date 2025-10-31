@@ -1,3 +1,4 @@
+
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -5,6 +6,13 @@ import dotenv from "dotenv";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables FIRST, before any other imports
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// Now import routes after environment variables are loaded
 import messageRoutes from "./routes/messageRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -12,12 +20,7 @@ import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-import { protect, authorize } from './middleware/auth.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
 // Middleware
@@ -35,7 +38,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    console.log('MONGODB_URI:', process.env.MONGODB_URI); // Added for debugging
+    console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ Missing');
+    console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✓ Loaded' : '✗ Missing');
+    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✓ Loaded' : '✗ Missing');
+    
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours', {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
@@ -91,6 +97,7 @@ app.get('/api', (req, res) => res.json({ success: true, message: 'Black Pearl To
 app.get('/api/health', (req, res) => res.json({
   status: 'OK',
   database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+  email: process.env.EMAIL_USER ? 'Configured' : 'Not Configured',
   timestamp: new Date()
 }));
 
@@ -119,4 +126,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 API: http://localhost:${PORT}/api`);
   console.log(`📁 Uploads: http://localhost:${PORT}/uploads`);
+  console.log(`📧 Email Service: ${process.env.EMAIL_USER ? '✅ Nodemailer Configured' : '❌ Email Not Configured'}`);
 });

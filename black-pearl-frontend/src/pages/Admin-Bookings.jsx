@@ -175,7 +175,7 @@ const AdminBookings = () => {
                 if (selectedQuote.userId) {
                     alert('Quote sent to customer dashboard successfully!');
                 } else {
-                    alert('Quote sent to customer email successfully! The customer will receive an email with approval links.');
+                    alert('Quote sent to customer email successfully! The customer will receive a professional email with accept/decline buttons.');
                 }
                 setShowQuoteModal(false);
                 setSelectedQuote(null);
@@ -284,6 +284,17 @@ const AdminBookings = () => {
         });
     };
 
+    const formatDateTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     const handleAddBooking = () => {
         setShowAddBookingModal(true);
     };
@@ -382,13 +393,14 @@ const AdminBookings = () => {
                                         <th>Pricing</th>
                                         <th>Status</th>
                                         <th>Quote Status</th>
+                                        <th>Email Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {quotes.length === 0 ? (
                                         <tr>
-                                            <td colSpan="10" className="no-data">
+                                            <td colSpan="11" className="no-data">
                                                 No quote requests found
                                             </td>
                                         </tr>
@@ -455,6 +467,22 @@ const AdminBookings = () => {
                                                         <div className="email-badge">📧 Email Sent</div>
                                                     )}
                                                 </td>
+                                                <td>
+                                                    {quote.sentToCustomerAt ? (
+                                                        <div className="email-sent-status">
+                                                            <div className="email-sent-badge">
+                                                                ✅ Sent
+                                                            </div>
+                                                            <div className="email-sent-date">
+                                                                {formatDateTime(quote.sentToCustomerAt)}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="email-pending-badge">
+                                                            ⏳ Not Sent
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="action-buttons">
                                                     <button
                                                         className="btn-send-quote"
@@ -508,7 +536,7 @@ const AdminBookings = () => {
                             <p><strong>User Type:</strong> {selectedQuote.userId ? 'Registered User' : 'Guest User'}</p>
                             {!selectedQuote.userId && (
                                 <p className="email-notice">
-                                    <small>📧 This quote will be sent via email with approval links</small>
+                                    <small>📧 This quote will be sent via email with professional formatting and clear Accept/Decline buttons</small>
                                 </p>
                             )}
                         </div>
@@ -536,7 +564,7 @@ const AdminBookings = () => {
                                 className="btn-confirm"
                                 onClick={handleConfirmQuote}
                             >
-                                {selectedQuote.userId ? 'Send to Dashboard' : 'Send via Email'}
+                                {selectedQuote.userId ? 'Send to Dashboard' : 'Send Professional Email'}
                             </button>
                             <button
                                 className="btn-book"

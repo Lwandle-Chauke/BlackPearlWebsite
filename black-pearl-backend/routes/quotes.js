@@ -1,53 +1,15 @@
+
 import express from 'express';
 const router = express.Router();
 import Quote from '../models/quote.js';
 import User from '../models/User.js';
 import { protect, authorize } from '../middleware/auth.js';
 import LoyaltyService from '../services/loyaltyService.js';
-
-// Try to import nodemailer, but don't crash if it's not available
-let nodemailer;
-let transporter;
-
-try {
-  nodemailer = (await import('nodemailer')).default;
-
-  // Check if email credentials are available
-  const hasEmailCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
-
-  if (hasEmailCredentials) {
-    // Create transporter with environment variables - FIXED: Using Ethereal credentials
-    transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
-      port: process.env.EMAIL_PORT || 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
-
-    // Verify transporter configuration
-    transporter.verify(function (error, success) {
-      if (error) {
-        console.log('❌ Email transporter error:', error);
-        console.log('Email functionality will be disabled');
-      } else {
-        console.log('✅ Email server is ready to send messages');
-        console.log('📧 Using Ethereal email for testing');
-        console.log('📧 Login at https://ethereal.email to view test emails');
-      }
-    });
-  } else {
-    console.log('Email credentials missing. Email functionality disabled.');
-    console.log('Please set EMAIL_USER and EMAIL_PASSWORD environment variables');
-  }
-} catch (error) {
-  console.log('Nodemailer not available. Email functionality disabled.');
-  console.log('To enable emails, run: npm install nodemailer');
-}
-
 import crypto from 'crypto';
+import sendQuoteEmail from '../services/emailService.js'; // Fixed import
+
+// Formspree configuration (fallback)
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xpwojyqq';
 
 // Get all quotes (admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
@@ -251,13 +213,33 @@ router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, re
       { new: true }
     );
 
-    // Send email to unregistered users if email is configured
-    if (!quote.userId && transporter) {
+    // Send email using the new professional email service
+    try {
+      const emailData = {
+        name: quote.customerName,
+        tripType: quote.tripType,
+        vehicle: quote.vehicleType,
+        route: `${quote.pickupLocation} → ${quote.dropoffLocation}`,
+        date: quote.tripDate,
+        time: quote.tripTime,
+        price: finalPrice,
+        acceptLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quote-accept/${quote._id}?token=${approvalToken}`,
+        declineLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quote-decline/${quote._id}?token=${approvalToken}`,
+        loginLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+        websiteLink: process.env.FRONTEND_URL || 'http://localhost:3000'
+      };
+
+      await sendQuoteEmail(quote.customerEmail, emailData);
+      console.log('✅ Professional quote email sent successfully via Nodemailer');
+      
+    } catch (emailError) {
+      console.error('❌ Failed to send professional email, falling back to Formspree:', emailError);
+      
+      // Fallback to Formspree
       try {
-        await sendQuoteEmail(quote, finalPrice, adminNotes, approvalToken);
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-        // Don't fail the request if email fails
+        await sendQuoteEmailFormspree(quote, finalPrice, adminNotes, approvalToken);
+      } catch (fallbackError) {
+        console.error('❌ Formspree fallback also failed:', fallbackError);
       }
     }
 
@@ -265,7 +247,7 @@ router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, re
       success: true,
       message: quote.userId
         ? 'Quote sent to customer dashboard successfully'
-        : (transporter ? 'Quote sent to customer email successfully' : 'Quote updated (email not configured)'),
+        : 'Quote sent to customer email successfully',
       data: updatedQuote
     });
   } catch (error) {
@@ -381,13 +363,11 @@ router.post('/:id/accept-quote', async (req, res) => {
       { new: true }
     );
 
-    // Send confirmation email if configured
-    if (transporter) {
-      try {
-        await sendConfirmationEmail(quote, 'accepted');
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-      }
+    // Send confirmation email
+    try {
+      await sendConfirmationEmail(quote, 'accepted');
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
     }
 
     res.json({
@@ -459,12 +439,10 @@ router.post('/:id/accept-with-registration', async (req, res) => {
     );
 
     // Send confirmation email
-    if (transporter) {
-      try {
-        await sendConfirmationEmail(updatedQuote, 'accepted');
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-      }
+    try {
+      await sendConfirmationEmail(updatedQuote, 'accepted');
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
     }
 
     res.json({
@@ -522,13 +500,11 @@ router.post('/:id/decline-quote', async (req, res) => {
       { new: true }
     );
 
-    // Send confirmation email if configured
-    if (transporter) {
-      try {
-        await sendConfirmationEmail(quote, 'declined');
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-      }
+    // Send confirmation email
+    try {
+      await sendConfirmationEmail(quote, 'declined');
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
     }
 
     res.json({
@@ -727,140 +703,140 @@ router.post('/estimate-price', async (req, res) => {
   }
 });
 
-// Email sending functions (only if transporter is available)
-async function sendQuoteEmail(quote, finalPrice, adminNotes, approvalToken) {
-  if (!transporter) {
-    console.log('Email transporter not available. Skipping email send.');
-    return;
-  }
+// Formspree Email sending functions (fallback)
+async function sendQuoteEmailFormspree(quote, finalPrice, adminNotes, approvalToken) {
+  const acceptLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quote-accept/${quote._id}?token=${approvalToken}`;
+  const declineLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/quote-decline/${quote._id}?token=${approvalToken}`;
 
-  const acceptLink = `${process.env.FRONTEND_URL}/quote-accept/${quote._id}?token=${approvalToken}`;
+  const emailData = {
+    _subject: `Your Quote from Black Pearl Tours - R ${finalPrice}`,
+    name: quote.customerName,
+    email: quote.customerEmail,
+    message: `
+Black Pearl Tours
+Your Quote - R ${finalPrice}
 
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: quote.customerEmail,
-    subject: `Your Quote from Black Pearl Tours - R ${finalPrice}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Black Pearl Tours - Your Quote</h2>
-        
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #2c3e50; margin-top: 0;">Quote Details</h3>
-          <p><strong>Customer:</strong> ${quote.customerName}</p>
-          <p><strong>Trip Type:</strong> ${quote.tripType}</p>
-          <p><strong>Route:</strong> ${quote.pickupLocation} → ${quote.dropoffLocation}</p>
-          <p><strong>Vehicle:</strong> ${quote.vehicleType}</p>
-          <p><strong>Date:</strong> ${new Date(quote.tripDate).toLocaleDateString()}</p>
-          <p><strong>Time:</strong> ${quote.tripTime}</p>
-          <p><strong>Final Price:</strong> R ${finalPrice}</p>
-          ${adminNotes ? `<p><strong>Notes:</strong> ${adminNotes}</p>` : ''}
-        </div>
+Dear ${quote.customerName},
 
-        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #27ae60; margin-top: 0;">Ready to proceed?</h3>
-          <p><strong>You'll need to create an account to accept this quote.</strong> This allows you to:</p>
-          <ul>
-            <li>Manage your booking online</li>
-            <li>Receive loyalty points</li>
-            <li>Track your trip history</li>
-            <li>Get special offers</li>
-          </ul>
-          
-          <div style="margin: 20px 0;">
-            <a href="${acceptLink}" style="background: #27ae60; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin-right: 10px;">
-              Create Account & Accept Quote
-            </a>
-          </div>
-          
-          <p style="font-size: 14px; color: #666;">
-            Already have an account? <a href="${process.env.FRONTEND_URL}/login">Log in here</a> first, then visit your dashboard to accept the quote.
-          </p>
-        </div>
+Thank you for requesting a quote with Black Pearl Tours. We're pleased to provide you with the following quote for your upcoming trip:
 
-        <p style="color: #7f8c8d; font-size: 12px;">
-          If the button doesn't work, you can copy and paste this link in your browser:<br>
-          ${acceptLink}
-        </p>
+Quote Details
+Trip Type: ${quote.tripType}
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
-          <p style="color: #7f8c8d;">Thank you for considering Black Pearl Tours!</p>
-        </div>
-      </div>
-    `
+Vehicle: ${quote.vehicleType}
+
+Route: ${quote.pickupLocation} → ${quote.dropoffLocation}
+
+Date: ${new Date(quote.tripDate).toLocaleDateString()}
+
+Time: ${quote.tripTime}
+
+Final Price: R ${finalPrice}
+${adminNotes ? `\nAdmin Notes: ${adminNotes}\n` : ''}
+
+Important: You'll need to create an account to accept this quote. This allows you to:
+
+Manage your booking online
+Receive loyalty points
+Track your trip history
+Get special offers and discounts
+
+Accept & Register: ${acceptLink}
+Decline Quote: ${declineLink}
+
+Already have an account? Log in here first, then visit your dashboard to accept the quote: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/login
+
+If the buttons don't work, you can use these links:
+Accept: ${acceptLink}
+Decline: ${declineLink}
+
+Thank you for considering Black Pearl Tours!
+    `.trim()
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('📧 Quote email sent! Message ID:', info.messageId);
-    console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
-    return info;
+    const response = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (response.ok) {
+      console.log('✅ Quote email sent successfully via Formspree (fallback)');
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Formspree email error:', errorText);
+      return false;
+    }
   } catch (error) {
-    console.error('❌ Failed to send quote email:', error);
-    throw error;
+    console.error('❌ Failed to send quote email via Formspree:', error);
+    return false;
   }
 }
 
 async function sendConfirmationEmail(quote, action) {
-  if (!transporter) {
-    console.log('Email transporter not available. Skipping confirmation email.');
-    return;
-  }
-
   const subject = action === 'accepted'
     ? 'Booking Confirmed - Black Pearl Tours'
     : 'Quote Declined - Black Pearl Tours';
 
   const message = action === 'accepted'
-    ? `Your booking has been confirmed! We look forward to serving you on ${new Date(quote.tripDate).toLocaleDateString()}.`
-    : `Your quote has been declined. We hope to serve you in the future!`;
+    ? `
+Dear ${quote.customerName},
 
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: quote.customerEmail,
-    subject: subject,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Black Pearl Tours</h2>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: ${action === 'accepted' ? '#27ae60' : '#e74c3c'}; margin-top: 0;">
-            ${action === 'accepted' ? '✅ Booking Confirmed' : '❌ Quote Declined'}
-          </h3>
-          <p>${message}</p>
-          
-          ${action === 'accepted' ? `
-          <div style="margin-top: 20px;">
-            <h4>Booking Details:</h4>
-            <p><strong>Customer:</strong> ${quote.customerName}</p>
-            <p><strong>Trip:</strong> ${quote.tripType}</p>
-            <p><strong>Route:</strong> ${quote.pickupLocation} → ${quote.dropoffLocation}</p>
-            <p><strong>Date:</strong> ${new Date(quote.tripDate).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${quote.tripTime}</p>
-            <p><strong>Price:</strong> R ${quote.finalPrice}</p>
-          </div>
-          ` : ''}
-        </div>
-        
-        ${action === 'accepted' ? `
-        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <p><strong>Manage Your Booking:</strong> You can view and manage your booking by logging into your account at <a href="${process.env.FRONTEND_URL}">${process.env.FRONTEND_URL}</a></p>
-        </div>
-        ` : ''}
-        
-        <p style="color: #7f8c8d;">
-          If you have any questions, please contact us at ${process.env.CONTACT_EMAIL}
-        </p>
-      </div>
-    `
+Your booking has been confirmed! We look forward to serving you.
+
+Booking Details:
+Trip: ${quote.tripType}
+Route: ${quote.pickupLocation} → ${quote.dropoffLocation}
+Date: ${new Date(quote.tripDate).toLocaleDateString()}
+Time: ${quote.tripTime}
+Vehicle: ${quote.vehicleType}
+Price: R ${quote.finalPrice}
+
+You can manage your booking by logging into your account at: ${process.env.FRONTEND_URL || 'http://localhost:3000'}
+
+Thank you for choosing Black Pearl Tours!
+    `.trim()
+    : `
+Dear ${quote.customerName},
+
+Your quote request has been declined. We hope to serve you in the future!
+
+If this was a mistake or you'd like to discuss alternative options, please contact us.
+
+Thank you for considering Black Pearl Tours!
+    `.trim();
+
+  const emailData = {
+    _subject: subject,
+    name: quote.customerName,
+    email: quote.customerEmail,
+    message: message
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`📧 Confirmation email sent (${action}):`, info.messageId);
-    console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
-    return info;
+    const response = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (response.ok) {
+      console.log(`✅ Confirmation email sent (${action}) via Formspree`);
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error(`❌ Formspree confirmation email error (${action}):`, errorText);
+      return false;
+    }
   } catch (error) {
-    console.error(`❌ Failed to send ${action} confirmation email:`, error);
-    throw error;
+    console.error(`❌ Failed to send ${action} confirmation email via Formspree:`, error);
+    return false;
   }
 }
 

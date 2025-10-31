@@ -1,3 +1,4 @@
+
 (function() {
   const hamburger = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobileMenu');
@@ -11,53 +12,63 @@
   // Function to update navigation based on login status
   function updateNavigation() {
     // Clear existing nav items
-    desktopNavList.innerHTML = '';
-    mobileMenuContent.innerHTML = '';
+    if (desktopNavList) desktopNavList.innerHTML = '';
+    if (mobileMenuContent) mobileMenuContent.innerHTML = '';
 
     if (isLoggedIn) {
       // Logged-in navigation
-      desktopNavList.innerHTML = `
-        <li><a href="travel-Dashboard.html">Dashboard</a></li>
-        <li><a href="about.html">About Us</a></li>
-        <li><a href="fleet.html">Our Fleet</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="bookings.html">Bookings</a></li>
-        <li><a href="quote.html">Quote</a></li>
-        <li><a href="Profile.html">Profile</a></li>
-        <li><button id="signOutBtn" class="btn-header-signin">Sign Out</button></li>
-      `;
-      mobileMenuContent.innerHTML = `
-        <a href="travel-Dashboard.html">DASHBOARD</a>
-        <a href="about.html">ABOUT US</a>
-        <a href="fleet.html">OUR FLEET</a>
-        <a href="gallery.html">GALLERY</a>
-        <a href="bookings.html">BOOKINGS</a>
-        <a href="quote.html">QUOTE</a>
-        <a href="Profile.html">PROFILE</a>
-        <hr />
-        <a href="#" id="signOutBtnMobile" class="btn-sign">SIGN OUT</a>
-      `;
+      if (desktopNavList) {
+        desktopNavList.innerHTML = `
+          <li><a href="travel-Dashboard.html">Dashboard</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="fleet.html">Our Fleet</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="bookings.html">Bookings</a></li>
+          <li><a href="quote.html">Quote</a></li>
+          <li><a href="Profile.html">Profile</a></li>
+          <li><button id="signOutBtn" class="btn-header-signin">Sign Out</button></li>
+        `;
+      }
+      
+      if (mobileMenuContent) {
+        mobileMenuContent.innerHTML = `
+          <a href="travel-Dashboard.html">DASHBOARD</a>
+          <a href="about.html">ABOUT US</a>
+          <a href="fleet.html">OUR FLEET</a>
+          <a href="gallery.html">GALLERY</a>
+          <a href="bookings.html">BOOKINGS</a>
+          <a href="quote.html">QUOTE</a>
+          <a href="Profile.html">PROFILE</a>
+          <hr />
+          <a href="#" id="signOutBtnMobile" class="btn-sign">SIGN OUT</a>
+        `;
+      }
     } else {
       // Logged-out navigation
-      desktopNavList.innerHTML = `
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About Us</a></li>
-        <li><a href="fleet.html">Our Fleet</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="quote.html">Quote</a></li>
-        <li><a href="contact.html">Contact Us</a></li>
-        <li><button id="signInBtn" class="btn-header-signin">Sign In</button></li>
-      `;
-      mobileMenuContent.innerHTML = `
-        <a href="index.html">HOME</a>
-        <a href="about.html">ABOUT US</a>
-        <a href="fleet.html">OUR FLEET</a>
-        <a href="gallery.html">GALLERY</a>
-        <a href="quote.html">QUOTE</a>
-        <a href="contact.html">CONTACT US</a>
-        <hr />
-        <a href="#" id="signInBtnMobile" class="btn-sign">SIGN IN</a>
-      `;
+      if (desktopNavList) {
+        desktopNavList.innerHTML = `
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="fleet.html">Our Fleet</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="quote.html">Quote</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><button id="signInBtn" class="btn-header-signin">Sign In</button></li>
+        `;
+      }
+      
+      if (mobileMenuContent) {
+        mobileMenuContent.innerHTML = `
+          <a href="index.html">HOME</a>
+          <a href="about.html">ABOUT US</a>
+          <a href="fleet.html">OUR FLEET</a>
+          <a href="gallery.html">GALLERY</a>
+          <a href="quote.html">QUOTE</a>
+          <a href="contact.html">CONTACT US</a>
+          <hr />
+          <a href="#" id="signInBtnMobile" class="btn-sign">SIGN IN</a>
+        `;
+      }
     }
 
     // Re-attach event listeners for sign-in/sign-out buttons after updating HTML
@@ -91,16 +102,22 @@
     if (signInBtnDesktop) {
       signInBtnDesktop.onclick = (e) => {
         e.preventDefault();
-        document.getElementById("authOverlay").style.display = "flex";
-        document.body.style.overflow = "hidden";
+        const authOverlay = document.getElementById("authOverlay");
+        if (authOverlay) {
+          authOverlay.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        }
         // simulateLogin(); // For testing dynamic nav change
       };
     }
     if (signInBtnMobile) {
       signInBtnMobile.onclick = (e) => {
         e.preventDefault();
-        document.getElementById("authOverlay").style.display = "flex";
-        document.body.style.overflow = "hidden";
+        const authOverlay = document.getElementById("authOverlay");
+        if (authOverlay) {
+          authOverlay.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        }
         // simulateLogin(); // For testing dynamic nav change
       };
     }
@@ -147,11 +164,11 @@
   // =====================
   function applyNavDisplay() {
     if (window.innerWidth >= 720) {
-      mainNav.style.display = 'flex';
-      mobileMenu.classList.remove('active');
-      hamburger.classList.remove('active');
+      if (mainNav) mainNav.style.display = 'flex';
+      if (mobileMenu) mobileMenu.classList.remove('active');
+      if (hamburger) hamburger.classList.remove('active');
     } else {
-      mainNav.style.display = 'none';
+      if (mainNav) mainNav.style.display = 'none';
     }
   }
 
@@ -161,11 +178,13 @@
   // =====================
   // TOGGLE MOBILE MENU
   // =====================
-  hamburger.addEventListener('click', function() {
-    const isActive = mobileMenu.classList.toggle('active');
-    hamburger.classList.toggle('active', isActive);
-    mobileMenu.setAttribute('aria-hidden', !isActive);
-  });
+  if (hamburger) {
+    hamburger.addEventListener('click', function() {
+      const isActive = mobileMenu.classList.toggle('active');
+      hamburger.classList.toggle('active', isActive);
+      mobileMenu.setAttribute('aria-hidden', !isActive);
+    });
+  }
 
   // =====================
   // HIGHLIGHT CURRENT PAGE
@@ -183,7 +202,9 @@
   // =====================
   document.addEventListener('click', function(e) {
     if (
+      mobileMenu && 
       !mobileMenu.contains(e.target) &&
+      hamburger &&
       !hamburger.contains(e.target) &&
       window.innerWidth < 720
     ) {
@@ -202,8 +223,8 @@
         ev.preventDefault();
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (window.innerWidth < 720) {
-          mobileMenu.classList.remove('active');
-          hamburger.classList.remove('active');
+          if (mobileMenu) mobileMenu.classList.remove('active');
+          if (hamburger) hamburger.classList.remove('active');
         }
       }
     });
@@ -214,7 +235,6 @@
 // AUTH POPUP HANDLING
 // =====================
 document.addEventListener("DOMContentLoaded", function() {
-// const signInBtn = document.getElementById("signInBtn"); // Managed by updateNavigation now
   const overlay = document.getElementById('authOverlay');
   const closeBtn = document.getElementById('closeAuth');
   const signinTab = document.getElementById('signinTab');
@@ -224,35 +244,37 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (!overlay) return; // Exit safely if elements don't exist
 
-// signInBtn.addEventListener("click", (e) => { // Managed by attachAuthEventListeners now
-//   e.preventDefault();
-//   overlay.style.display = "flex";
-//   document.body.style.overflow = "hidden";
-// });
-
-  closeBtn.addEventListener('click', () => {
-    overlay.style.display = 'none';
-    document.body.style.overflow = 'auto';
-  });
-
-  signinTab.addEventListener('click', () => {
-    signinTab.classList.add('active');
-    registerTab.classList.remove('active');
-    signinForm.classList.add('active');
-    registerForm.classList.remove('active');
-  });
-
-  registerTab.addEventListener('click', () => {
-    registerTab.classList.add('active');
-    signinTab.classList.remove('active');
-    registerForm.classList.add('active');
-    signinForm.classList.remove('active');
-  });
-
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
       overlay.style.display = 'none';
       document.body.style.overflow = 'auto';
-    }
-  });
+    });
+  }
+
+  if (signinTab) {
+    signinTab.addEventListener('click', () => {
+      signinTab.classList.add('active');
+      if (registerTab) registerTab.classList.remove('active');
+      if (signinForm) signinForm.classList.add('active');
+      if (registerForm) registerForm.classList.remove('active');
+    });
+  }
+
+  if (registerTab) {
+    registerTab.addEventListener('click', () => {
+      registerTab.classList.add('active');
+      if (signinTab) signinTab.classList.remove('active');
+      if (registerForm) registerForm.classList.add('active');
+      if (signinForm) signinForm.classList.remove('active');
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    });
+  }
 });
