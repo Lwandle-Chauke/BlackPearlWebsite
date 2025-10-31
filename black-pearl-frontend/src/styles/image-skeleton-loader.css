@@ -1,0 +1,41 @@
+/* src/styles/image-skeleton-loader.css */
+
+.skeleton-card {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    /* Match image height in Gallery.jsx */
+    background-color: #e0e0e0;
+}
+
+.skeleton-text-line {
+    width: 80%;
+    height: 1rem;
+    background-color: #e0e0e0;
+    margin: 1rem auto;
+    border-radius: 4px;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #f0f0f0;
+    }
+
+    50% {
+        background-color: #e0e0e0;
+    }
+
+    100% {
+        background-color: #f0f0f0;
+    }
+}

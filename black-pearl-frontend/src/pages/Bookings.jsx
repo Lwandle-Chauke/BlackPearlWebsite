@@ -15,8 +15,11 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [nextBooking, setNextBooking] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [actionLoading, setActionLoading] = useState(null); // New state for loading actions
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingBookingId, setEditingBookingId] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formData, setFormData] = useState({
     tripType: 'Airport Transfers',
     tripPurpose: 'Personal Use',
@@ -143,6 +146,11 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       return;
     }
 
+    if (!acceptedTerms) {
+      showToastMessage('Please accept the Terms and Conditions to proceed.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
 
@@ -169,20 +177,32 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       };
 
       console.log('Submitting booking data:', submissionData);
-
-      const response = await fetch('http://localhost:5000/api/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(submissionData)
-      });
+      // If we're editing an existing booking, call the edit endpoint
+      let response;
+      if (isEditing && editingBookingId) {
+        response = await fetch(`http://localhost:5000/api/quotes/${editingBookingId}/edit`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(submissionData)
+        });
+      } else {
+        response = await fetch('http://localhost:5000/api/quotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(submissionData)
+        });
+      }
 
       const data = await response.json();
 
       if (data.success) {
-        showToastMessage('Booking request submitted successfully! We will contact you shortly.');
+        showToastMessage(isEditing ? 'Booking updated successfully!' : 'Booking request submitted successfully! We will contact you shortly.');
         setShowBookingForm(false);
         // Reset form
         setFormData({
@@ -198,6 +218,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           specialRequests: ''
         });
         setFormErrors({});
+        setIsEditing(false);
+        setEditingBookingId(null);
+        setAcceptedTerms(false);
         fetchUserBookings(); // Refresh bookings
       } else {
         showToastMessage('Failed to submit booking: ' + (data.error || 'Please try again.'));
@@ -208,7 +231,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     }
   };
 
-  // Handle booking cancellation
+  // Handle booking cancellation - UPDATED to use quotes endpoint
   const handleCancelBooking = async (bookingId) => {
     const bookingToCancel = bookings.find(b => b._id === bookingId);
     const confirmed = window.confirm(
@@ -224,7 +247,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/cancel`, {
+      
+      // Use quotes endpoint instead of bookings endpoint
+      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/cancel`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -245,6 +270,35 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Open edit form for a pending booking
+  const openEditBooking = (booking) => {
+    // Only allow editing pending bookings
+    if (booking.status !== 'pending') {
+      showToastMessage('Only pending bookings can be edited.');
+      return;
+    }
+
+    setFormData({
+      tripType: booking.tripType || 'Airport Transfers',
+      tripPurpose: booking.tripPurpose || 'Personal Use',
+      destination: booking.destination || '',
+      pickupLocation: booking.pickupLocation || '',
+      dropoffLocation: booking.dropoffLocation || '',
+      vehicleType: booking.vehicleType || '4 Seater Sedan',
+      isOneWay: booking.isOneWay !== undefined ? booking.isOneWay : true,
+      tripDate: booking.tripDate ? booking.tripDate.split('T')[0] : '',
+      tripTime: booking.tripTime || '',
+      passengerCount: booking.passengerCount || 1,
+      specialRequests: booking.specialRequests || ''
+    });
+
+    setIsEditing(true);
+    setEditingBookingId(booking._id);
+    setShowBookingForm(true);
+    setAcceptedTerms(true); // Assume they already accepted terms for existing booking
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Handle booking deletion
@@ -291,9 +345,11 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
         } else {
           showToastMessage('Failed to delete booking: ' + (data.error || 'Unknown error'));
         }
-      } else {
-        // If DELETE doesn't work, try updating status to 'cancelled'
+      } else if (response.status === 401) {
+        // If unauthorized, try cancelling instead of deleting
         await handleCancelBooking(bookingId);
+      } else {
+        showToastMessage('Failed to delete booking. Please try again.');
       }
     } catch (error) {
       console.error('Delete booking error:', error);
@@ -664,7 +720,32 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                   />
                 </div>
 
-                <button type="submit" className="btn-submit-booking">
+                {/* Terms and Conditions Acceptance */}
+                <div className="terms-acceptance">
+                  <div className="terms-header">
+                    <button 
+                      type="button"
+                      className="terms-pdf-btn"
+                      onClick={() => window.open('/documents/terms-and-conditions.pdf', '_blank')}
+                    >
+                      📄 Read Terms and Conditions
+                    </button>
+                  </div>
+                  
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      required
+                    />
+                    <span>
+                      I confirm that I have read and agree to the Terms and Conditions *
+                    </span>
+                  </label>
+                </div>
+
+                <button type="submit" className="btn-submit-booking" disabled={!acceptedTerms}>
                   <i className="fas fa-paper-plane"></i>
                   Submit Booking Request
                 </button>
@@ -675,26 +756,6 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
 
         {/* Upcoming Booking Summary */}
         {renderNextUpcomingTrip()}
-
-        {/* User Booking Stats */}
-        <div className="booking-stats">
-          <div className="stat-item total">
-            <span className="stat-number">{stats.total}</span>
-            <span className="stat-label">Total Bookings</span>
-          </div>
-          <div className="stat-item confirmed">
-            <span className="stat-number">{stats.confirmed}</span>
-            <span className="stat-label">Confirmed</span>
-          </div>
-          <div className="stat-item pending">
-            <span className="stat-number">{stats.pending}</span>
-            <span className="stat-label">Pending</span>
-          </div>
-          <div className="stat-item completed">
-            <span className="stat-number">{stats.completed}</span>
-            <span className="stat-label">Completed</span>
-          </div>
-        </div>
 
         {/* Search & Filter */}
         <div className="search-filter-section">
@@ -755,9 +816,9 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       </div>
                     </div>
                     <div className="detail-item">
-                      <i className="fas fa-clock"></i>
+                      <i className="fas fa-calendar-alt"></i> 
                       <div>
-                        <strong>Time:</strong> {booking.tripTime}
+                        <strong>Date & Time:</strong> {new Date(booking.tripDate).toLocaleDateString()} at {booking.tripTime}
                       </div>
                     </div>
                     <div className="detail-item">
@@ -801,8 +862,19 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
                       </button>
                     )}
 
-                    {/* Show delete button for all bookings except active ones */}
-                    {!['pending', 'confirmed', 'booked'].includes(booking.status) && (
+                    {/* Show edit button for pending bookings (owner) */}
+                    {booking.status === 'pending' && (booking.userId?.toString() === currentUser?.id || !booking.userId) && (
+                      <button
+                        className="btn-edit"
+                        onClick={() => openEditBooking(booking)}
+                      >
+                        <i className="fas fa-edit"></i>
+                        Edit
+                      </button>
+                    )}
+
+                    {/* Show delete button only for admins */}
+                    {currentUser?.role === 'admin' && !['pending', 'confirmed', 'booked'].includes(booking.status) && (
                       <button
                         className="btn-delete"
                         onClick={() => handleDeleteBooking(booking._id)}

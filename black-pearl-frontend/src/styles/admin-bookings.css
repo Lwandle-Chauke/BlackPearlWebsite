@@ -230,6 +230,43 @@
     text-align: center;
 }
 
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  font-weight: 500;
+}
+
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+  margin: 30px 0;
+}
+
+.chart-wrapper {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--dark-gray);
+}
+
+
 /* Add these styles to your existing admin-bookings.css */
 
 /* Quote Status Badges */

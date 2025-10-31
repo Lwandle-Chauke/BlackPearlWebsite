@@ -185,10 +185,6 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
           </div>
         </form>
 
-        {/* Debug info - remove in production */}
-        <div style={{ marginTop: '15px', fontSize: '12px', color: '#666', textAlign: 'center' }}>
-          <p>Debug: Backend should be running on http://localhost:5000</p>
-        </div>
       </div>
     </div>
   );

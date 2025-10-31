@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import './styles/style.css';
+import { ThemeProvider } from './contexts/ThemeContext'; // Import ThemeProvider
 
 // =======================================================
 // IMPORT ALL PAGES (using correct file paths from file structure)
@@ -86,157 +87,159 @@ function App() {
     };
 
     return (
-        <Router>
-            <Routes>
-                {/* ======================================================= */}
-                {/* GUEST ROUTES (Publicly Accessible)                     */}
-                {/* ======================================================= */}
-                <Route path="/" element={
-                    <Home
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+        <ThemeProvider> {/* Wrap the entire application with ThemeProvider */}
+            <Router>
+                <Routes>
+                    {/* ======================================================= */}
+                    {/* GUEST ROUTES (Publicly Accessible)                     */}
+                    {/* ======================================================= */}
+                    <Route path="/" element={
+                        <Home
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+                    <Route path="/about" element={
+                        <About
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+                    <Route path="/quote" element={
+                        <Quote
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+                    <Route path="/contact" element={
+                        <Contact
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+                    <Route path="/fleet" element={
+                        <Fleet
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+                    <Route path="/gallery" element={
+                        <Gallery
+                            onAuthClick={handleAuthClick}
+                            isLoggedIn={isLoggedIn}
+                            showAuthModal={showAuthModal}
+                            setShowAuthModal={setShowAuthModal}
+                            onAuthSuccess={handleAuthSuccess}
+                        />
+                    } />
+
+                    {/* ======================================================= */}
+                    {/* CUSTOMER ROUTES (Requires 'customer' or 'admin')       */}
+                    {/* ======================================================= */}
+                    {/* Admin user can access customer dashboards */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute requiredRole={['customer', 'admin']}>
+                                <Dashboard onSignOut={handleSignOut} isLoggedIn={true} />
+                            </ProtectedRoute>
+                        }
                     />
-                } />
-                <Route path="/about" element={
-                    <About
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute requiredRole={['customer', 'admin']}>
+                                <Profile onSignOut={handleSignOut} isLoggedIn={true} />
+                            </ProtectedRoute>
+                        }
                     />
-                } />
-                <Route path="/quote" element={
-                    <Quote
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+                    <Route
+                        path="/bookings"
+                        element={
+                            <ProtectedRoute requiredRole={['customer', 'admin']}>
+                                <ErrorBoundary>
+                                    <Bookings onSignOut={handleSignOut} isLoggedIn={true} />
+                                </ErrorBoundary>
+                            </ProtectedRoute>
+                        }
                     />
-                } />
-                <Route path="/contact" element={
-                    <Contact
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+
+                    {/* ======================================================= */}
+                    {/* ADMIN ROUTES (Requires 'admin')                        */}
+                    {/* ======================================================= */}
+
+                    {/* Admin Dashboard */}
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <AdminDashboard onSignOut={handleSignOut} />
+                            </ProtectedRoute>
+                        }
                     />
-                } />
-                <Route path="/fleet" element={
-                    <Fleet
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+
+                    {/* Admin Messages */}
+                    <Route
+                        path="/admin/messages"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <AdminMessages />
+                            </ProtectedRoute>
+                        }
                     />
-                } />
-                <Route path="/gallery" element={
-                    <Gallery
-                        onAuthClick={handleAuthClick}
-                        isLoggedIn={isLoggedIn}
-                        showAuthModal={showAuthModal}
-                        setShowAuthModal={setShowAuthModal}
-                        onAuthSuccess={handleAuthSuccess}
+
+
+                    {/* Admin Bookings */}
+                    <Route
+                        path="/admin/bookings"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <AdminBookings />
+                            </ProtectedRoute>
+                        }
                     />
-                } />
 
-                {/* ======================================================= */}
-                {/* CUSTOMER ROUTES (Requires 'customer' or 'admin')       */}
-                {/* ======================================================= */}
-                {/* Admin user can access customer dashboards */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <Dashboard onSignOut={handleSignOut} isLoggedIn={true} />
-                        </ProtectedRoute>
-                    }
-                />
+                    {/* Admin Gallery */}
+                    <Route
+                        path="/admin/gallery"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <AdminGallery />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <Profile onSignOut={handleSignOut} isLoggedIn={true} />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
-                    path="/bookings"
-                    element={
-                        <ProtectedRoute requiredRole={['customer', 'admin']}>
-                            <ErrorBoundary>
-                                <Bookings onSignOut={handleSignOut} isLoggedIn={true} />
-                            </ErrorBoundary>
-                        </ProtectedRoute>
-                    }
-                />
+                    {/* Admin Settings */}
+                    <Route
+                        path="/admin/settings"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <AdminSettings />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                {/* ======================================================= */}
-                {/* ADMIN ROUTES (Requires 'admin')                        */}
-                {/* ======================================================= */}
-
-                {/* Admin Dashboard */}
-                <Route
-                    path="/admin/dashboard"
-                    element={
-                        <ProtectedRoute requiredRole="admin">
-                            <AdminDashboard onSignOut={handleSignOut} />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* Admin Messages */}
-                <Route
-                    path="/admin/messages"
-                    element={
-                        <ProtectedRoute requiredRole="admin">
-                            <AdminMessages />
-                        </ProtectedRoute>
-                    }
-                />
-
-
-                {/* Admin Bookings */}
-                <Route
-                    path="/admin/bookings"
-                    element={
-                        <ProtectedRoute requiredRole="admin">
-                            <AdminBookings />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* Admin Gallery */}
-                <Route
-                    path="/admin/gallery"
-                    element={
-                        <ProtectedRoute requiredRole="admin">
-                            <AdminGallery />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* Admin Settings */}
-                <Route
-                    path="/admin/settings"
-                    element={
-                        <ProtectedRoute requiredRole="admin">
-                            <AdminSettings />
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* Catch-all route for undefined paths */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </Router>
+                    {/* Catch-all route for undefined paths */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </Router>
+        </ThemeProvider>
     );
 }
 

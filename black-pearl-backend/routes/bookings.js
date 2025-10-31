@@ -77,6 +77,30 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 });
 
+// Cancel a booking (User access)
+router.post("/:id/cancel", auth, async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ success: false, error: "Booking not found" });
+        }
+
+        // Ensure user can only cancel their own bookings
+        if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ success: false, error: "Not authorized to cancel this booking" });
+        }
+
+        booking.status = 'cancelled';
+        await booking.save();
+
+        res.json({ success: true, data: booking });
+    } catch (err) {
+        console.error("Error cancelling booking:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Delete a booking (Admin access)
 router.delete("/:id", verifyToken, async (req, res) => {
     try {

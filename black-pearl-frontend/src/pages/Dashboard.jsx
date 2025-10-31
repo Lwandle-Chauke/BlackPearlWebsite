@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import '../styles/style.css';
 import '../styles/dashboard.css';
 import ChatWidget from "../chatbot/ChatWidget";
+import axios from 'axios'; // Import axios
 
 const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => {
   const navigate = useNavigate();
@@ -14,27 +15,10 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [reviewPhoto, setReviewPhoto] = useState(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
-  // Refresh user data function
-  const refreshUserData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && onUserUpdate) {
-          onUserUpdate(data.user);
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
-  };
+  const [showUploadModal, setShowUploadModal] = useState(false); // New state for upload modal
+  const [selectedFiles, setSelectedFiles] = useState([]); // New state for selected files
+  const [altText, setAltText] = useState(''); // New state for alt text
+  const [uploading, setUploading] = useState(false); // New state for upload status
 
   // Fetch user's bookings when component mounts or currentUser changes
   useEffect(() => {
@@ -74,86 +58,44 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // NEW: Photo upload function
-  const handlePhotoUpload = async (file) => {
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append('photo', file);
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/uploads/review-photo', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setReviewPhoto(data.photoUrl);
-        return data.photoUrl;
-      }
-      return null;
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      return null;
-    } finally {
-      setUploadingPhoto(false);
-    }
+  // Handle image file selection
+  const handleFileChange = (e) => {
+    setSelectedFiles(Array.from(e.target.files));
   };
 
-  // NEW: Submit review with photo
-  const handleReviewSubmit = async (e) => {
+  // Handle image upload
+  const handleImageUpload = async (e) => {
     e.preventDefault();
-    const rating = e.target.rating.value;
-    const text = e.target.testimonial.value.trim();
+    setUploading(true);
 
-    if (!rating) {
-      alert("Please choose a rating.");
-      return;
-    }
+    const formData = new FormData();
+    selectedFiles.forEach(file => {
+      formData.append('images', file);
+    });
+    formData.append('altText', altText);
 
     try {
-      let photoUrl = reviewPhoto;
-      const photoFile = e.target.photo?.files[0];
-
-      if (photoFile) {
-        photoUrl = await handlePhotoUpload(photoFile);
-      }
-
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/reviews', {
-        method: 'POST',
+      const config = {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          rating: parseInt(rating),
-          comment: text,
-          photo: photoUrl,
-          booking: nextBooking?._id // Link to current booking if available
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(`Thanks for your ${rating}-star review! Your feedback has been submitted.`);
-        e.target.reset();
-        setReviewPhoto(null);
-      } else {
-        alert('Failed to submit review. Please try again.');
-      }
-    } catch (error) {
-      console.error('Review submission error:', error);
-      alert('Failed to submit review. Please try again.');
+      };
+      const res = await axios.post('http://localhost:5000/api/images/upload', formData, config);
+      alert(res.data.msg);
+      setSelectedFiles([]);
+      setAltText('');
+      setShowUploadModal(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || 'Image upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Customer accepts quote
+  // NEW: Customer accepts quote
   const handleAcceptQuote = async (quoteId) => {
     if (!window.confirm('Are you sure you want to accept this quote? This will create a booking.')) {
       return;
@@ -182,7 +124,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // Customer declines quote
+  // NEW: Customer declines quote
   const handleDeclineQuote = async (quoteId) => {
     const declineReason = prompt('Please provide a reason for declining this quote (optional):');
 
@@ -211,12 +153,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     }
   };
 
-  // Calculate discount value based on loyalty points (same logic as loyaltyService)
-  const calculateDiscountValue = (points) => {
-    const discountAmount = Math.floor(points / 100) * 10;
-    return Math.min(discountAmount, 500); // Max R500 discount
-  };
-
   // Calculate real user data based on actual trips
   const calculateUserData = () => {
     const completedTrips = userBookings.filter(booking =>
@@ -228,22 +164,18 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
       .filter(booking => booking.status === 'completed' && booking.finalPrice)
       .reduce((total, booking) => total + (booking.finalPrice || 0), 0);
 
-    // Use actual user data from backend - ALWAYS use currentUser directly
+    // Use actual user data from backend
     return {
       name: currentUser?.name || "Guest",
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
-      loyaltyPoints: currentUser?.loyaltyPoints || 0,
       tripsCompleted: completedTrips,
-      totalTrips: currentUser?.totalTrips || 0,
       totalSpent: totalSpent,
-      tier: currentUser?.tier || 'bronze',
       memberSince: currentUser?.memberSince ? new Date(currentUser.memberSince).getFullYear().toString() : "2025",
       totalBookings: userBookings.length,
       upcomingTrips: userBookings.filter(booking =>
         booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'booked'
-      ).length,
-      availableDiscount: calculateDiscountValue(currentUser?.loyaltyPoints || 0)
+      ).length
     };
   };
 
@@ -258,11 +190,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         desc: `You've completed ${userData.tripsCompleted} trips with us!`
       },
       {
-        badge: '💰',
-        stat: `${userData.loyaltyPoints} Points`,
-        desc: `You have ${userData.loyaltyPoints} loyalty points to redeem.`
-      },
-      {
         badge: '⏱️',
         stat: `${userData.tripsCompleted * 3} Hours Saved`,
         desc: `You've saved ${userData.tripsCompleted * 3} hours of travel planning.`
@@ -273,29 +200,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         desc: `You've traveled ${userData.tripsCompleted * 240} km with us.`
       },
     ];
-
-    // Add tier-based highlights
-    const tierEmoji = {
-      bronze: '🥉',
-      silver: '🥈',
-      gold: '🥇',
-      platinum: '💎'
-    };
-
-    highlights.push({
-      badge: tierEmoji[userData.tier] || '🥉',
-      stat: `${userData.tier.charAt(0).toUpperCase() + userData.tier.slice(1)} Member`,
-      desc: `You are a ${userData.tier} level member with special benefits!`
-    });
-
-    // Add discount highlight
-    if (userData.availableDiscount > 0) {
-      highlights.push({
-        badge: '💎',
-        stat: `R ${userData.availableDiscount} Discount`,
-        desc: `You have R ${userData.availableDiscount} available to use on your next trip!`
-      });
-    }
 
     // Add spending highlight
     if (userData.totalSpent > 0) {
@@ -331,12 +235,16 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
     if (nextBooking) {
       alert(`${nextBooking.tripType || nextBooking.title}\nDate: ${new Date(nextBooking.tripDate).toLocaleDateString()}\nStatus: ${nextBooking.status}\nPickup: ${nextBooking.pickupLocation}\nDropoff: ${nextBooking.dropoffLocation}`);
     } else {
+
       navigate('/quote'); // CHANGED: Navigate to quote page instead of bookings
+
     }
   };
 
   const handleRequestQuote = () => {
+
     navigate('/quote'); // CHANGED: Navigate to quote page instead of bookings
+
   };
 
   const highlights = getPersonalHighlights();
@@ -486,32 +394,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
         </section>
       )}
 
-      {/* SERVICES */}
-      <section className="services-area">
-        <div className="services-row container">
-          <div className="service-card">
-            <h4>Airport Transfers</h4>
-            <p>Enjoy hassle-free airport pick-ups and drop-offs with professional drivers and reliable, comfortable rides.</p>
-          </div>
-          <div className="service-card">
-            <h4>Conference Shuttle Hire</h4>
-            <p>Keep events running smoothly with daily shuttle services between venues and hotels — on time and comfortable.</p>
-          </div>
-          <div className="service-card">
-            <h4>Sports Tours</h4>
-            <p>Travel stress-free with transport for teams and supporters to stadiums and events. Safe and coordinated.</p>
-          </div>
-          <div className="service-card">
-            <h4>Events & Leisure Travel</h4>
-            <p>Whether weddings or private functions, we arrange travel that combines comfort, style and safety.</p>
-          </div>
-        </div>
-
-        <div className="quote-cta-wrap">
-          <button className="request-cta" onClick={handleRequestQuote}>REQUEST A QUOTE</button>
-        </div>
-      </section>
-
       {/* PERSONAL HIGHLIGHTS */}
       <section className="highlights">
         <div className="section-title">Personal Highlights</div>
@@ -533,6 +415,13 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
             ))}
           </tbody>
         </table>
+        {isLoggedIn && (
+          <div className="upload-image-section">
+            <button className="btn-upload-image" onClick={() => setShowUploadModal(true)}>
+              <i className="fas fa-cloud-upload-alt"></i> Upload Gallery Images
+            </button>
+          </div>
+        )}
       </section>
 
       {/* RECENT TRIPS - Only show if user has trips */}
@@ -559,90 +448,6 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
           </div>
         </section>
       )}
-
-      {/* REVIEWS WITH PHOTO UPLOAD */}
-      <section className="reviews-wrap" aria-labelledby="reviewsTitle">
-        <div className="container">
-          <div id="reviewsTitle" className="section-title review-section-title">
-            {userData.tripsCompleted > 0 ? 'Leave us a review' : 'Share your expectations'}
-          </div>
-          <p className="reviews-sub">
-            {userData.tripsCompleted > 0
-              ? 'How was your last trip? Share your experience with a photo!'
-              : 'Tell us what you\'re looking forward to!'
-            }
-          </p>
-          <form className="review-form" onSubmit={handleReviewSubmit}>
-            <select name="rating" required>
-              <option value="">Rating...</option>
-              <option value="5">5 - Excellent</option>
-              <option value="4">4 - Good</option>
-              <option value="3">3 - Okay</option>
-              <option value="2">2 - Poor</option>
-              <option value="1">1 - Bad</option>
-            </select>
-
-            <textarea
-              name="testimonial"
-              placeholder={
-                userData.tripsCompleted > 0
-                  ? "Share your experience with your recent trip..."
-                  : "What are you most excited about for your upcoming travel?"
-              }
-            ></textarea>
-
-            {/* Photo Upload Section */}
-            <div className="photo-upload-section">
-              <label htmlFor="review-photo" className="photo-upload-label">
-                <i className="fas fa-camera"></i>
-                {reviewPhoto ? 'Photo Selected ✓' : 'Add Photo (Optional)'}
-              </label>
-              <input
-                type="file"
-                id="review-photo"
-                name="photo"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files[0]) {
-                    const file = e.target.files[0];
-                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                      alert('Photo must be less than 5MB');
-                      e.target.value = '';
-                      return;
-                    }
-                    setReviewPhoto(URL.createObjectURL(file));
-                  }
-                }}
-                style={{ display: 'none' }}
-              />
-
-              {reviewPhoto && (
-                <div className="photo-preview">
-                  <img src={reviewPhoto} alt="Review preview" />
-                  <button
-                    type="button"
-                    className="remove-photo"
-                    onClick={() => {
-                      setReviewPhoto(null);
-                      document.getElementById('review-photo').value = '';
-                    }}
-                  >
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-              )}
-
-              {uploadingPhoto && (
-                <div className="uploading-text">Uploading photo...</div>
-              )}
-            </div>
-
-            <button type="submit" className="review-submit" disabled={uploadingPhoto}>
-              {uploadingPhoto ? 'UPLOADING...' : 'SUBMIT REVIEW'}
-            </button>
-          </form>
-        </div>
-      </section>
 
       {/* Quote Details Modal */}
       {showQuoteModal && selectedQuote && (
@@ -700,6 +505,47 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Upload Modal */}
+      {showUploadModal && (
+        <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Upload Images to Gallery</h3>
+            <form onSubmit={handleImageUpload}>
+              <div className="form-group">
+                <label htmlFor="image-files">Select Images:</label>
+                <input
+                  type="file"
+                  id="image-files"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="alt-text">Alt Text (optional):</label>
+                <input
+                  type="text"
+                  id="alt-text"
+                  value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                  placeholder="Describe your images"
+                  disabled={uploading}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn-upload" disabled={selectedFiles.length === 0 || uploading}>
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+                <button type="button" className="btn-cancel" onClick={() => setShowUploadModal(false)} disabled={uploading}>
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

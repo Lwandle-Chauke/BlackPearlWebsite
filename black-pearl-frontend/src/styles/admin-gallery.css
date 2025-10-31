@@ -1,179 +1,319 @@
-/* ==========================================================
-   GALLERY PAGE LAYOUT
-   ========================================================== */
+/* src/styles/admin-gallery.css */
+
 .gallery-page-content {
-    width: 100%;
-    /* No flex layout needed here, as the content is single-column (main-content) */
+    padding: 2rem;
+    background-color: var(--light-gray);
+    min-height: calc(100vh - 60px);
+    /* Adjust based on AdminTopBar height */
 }
 
 .main-content {
+    max-width: 1200px;
+    margin: 0 auto;
     background: var(--white);
-    padding: 20px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.main-content h2 { 
-    font-size: 1.5rem; 
-    margin-top: 0; 
-    margin-bottom: 20px; 
-    color: var(--dark-gray); 
+.page-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--light-gray);
+    padding-bottom: 1rem;
 }
 
-/* Add Album Button */
-.btn-add-album {
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-bottom: 20px;
-    float: right;
-}
-.btn-add-album:hover { background: #2980b9; }
-
-.gallery-list {
-    clear: both; /* Clear the float from the button */
+.page-header h2 {
+    font-size: 1.8rem;
+    color: var(--black);
+    margin: 0;
 }
 
-/* ==========================================================
-   GALLERY CARD STYLES (Desktop - 3 Columns)
-   ========================================================== */
-.gallery-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 20px 0;
-    border-bottom: 1px solid #eee;
-    gap: 20px;
-}
-.gallery-item:last-child { 
-    border-bottom: none; 
+.pending-images-section,
+.approved-images-section {
+    margin-bottom: 3rem;
 }
 
-.image-container {
-    width: 200px; /* Adjusted width for better flex behavior */
-    flex-shrink: 0;
-    border-radius: 4px;
+.pending-images-section h3,
+.approved-images-section h3 {
+    font-size: 1.5rem;
+    color: var(--dark-gray);
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--mid-gray);
+    padding-bottom: 0.5rem;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.image-card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out;
 }
-.image-container img {
+
+.image-card:hover {
+    transform: translateY(-5px);
+}
+
+.image-card img {
     width: 100%;
-    height: 120px; /* Reduced height slightly */
+    height: 180px;
     object-fit: cover;
     display: block;
 }
 
-.gallery-info {
+.image-info {
+    padding: 1rem;
     flex-grow: 1;
-    min-width: 0; /* Prevents overflow */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-.gallery-info h3 {
-    font-size: 1.2rem;
-    margin-top: 0;
-    color: var(--dark-gray);
+.image-info p {
+    margin: 0.4rem 0;
+    font-size: 0.9rem;
+    color: #555;
 }
 
-.total-images {
-    font-size: 0.9rem; 
-    color: #666;
+.image-info p strong {
+    color: var(--black);
 }
 
-.gallery-actions {
-    margin-top: 10px;
+.image-info .status-pending {
+    color: #FF9800;
+    font-weight: bold;
 }
-.gallery-actions i {
-    font-size: 1.2rem;
-    margin-right: 15px;
+
+.image-info .status-approved {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.image-info .status-declined {
+    color: #f44336;
+    font-weight: bold;
+}
+
+.image-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-approve,
+.btn-decline,
+.btn-delete {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
-    color: var(--dark-gray);
-    transition: color 0.2s;
-}
-.gallery-actions i:hover { color: var(--primary-blue); }
-/* Status Badge Base */
-.stat-status .status-confirmed,
-.stat-status .status-pending,
-.stat-status .status-completed {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: white; /* Text color */
+    transition: background-color 0.2s ease;
+    flex: 1;
+}
+
+.btn-approve {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-approve:hover {
+    background-color: #45a049;
+}
+
+.btn-decline {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-decline:hover {
+    background-color: #da190b;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    /* Bootstrap danger color */
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.message {
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
     text-align: center;
-    min-width: 70px; /* optional: ensures badge isn't too narrow */
+    font-weight: 600;
 }
 
-/* Status Colors */
-.stat-status .status-confirmed {
-    background-color: #28a745; /* green */
+.error-message {
+    color: #d32f2f;
+    /* Darker red for better visibility */
+    background-color: #ffebee;
+    border: 1px solid #d32f2f;
 }
 
-.stat-status .status-pending {
-    background-color: #ffc107; /* yellow/orange */
-    color: #333; /* dark text for contrast */
+.success-message {
+    color: #388e3c;
+    /* Darker green for better visibility */
+    background-color: #e8f5e9;
+    border: 1px solid #388e3c;
 }
 
-.stat-status .status-completed {
-    background-color: #007bff; /* blue */
+.info-message {
+    color: #1976d2;
+    /* Darker blue for better visibility */
+    background-color: #e3f2fd;
+    border: 1px solid #1976d2;
+}
+
+.image-preview-container {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.image-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border: 1px solid var(--light-gray);
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+/* Image Upload Section */
+.image-upload-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 3rem;
+    border: 1px solid #e0e0e0;
+}
+
+.image-upload-section h3 {
+    font-size: 1.5rem;
+    color: var(--dark-gray);
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--mid-gray);
+    padding-bottom: 0.5rem;
+}
+
+.image-upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    /* Darker color for better visibility */
+}
+
+.form-group input[type="file"],
+.form-group input[type="text"] {
+    padding: 0.8rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #333;
+    /* Darker color for better visibility */
+    background-color: #fdfdfd;
+}
+
+.form-group input[type="file"]::file-selector-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.form-group input[type="file"]::file-selector-button:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-upload {
+    background-color: black;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    align-self: flex-start;
+}
+
+.btn-upload:hover {
+    background-color: #333333;
+    /* A slightly lighter black for hover effect */
+}
+
+.btn-upload:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 
-
-/* ==========================================================
-   RESPONSIVE (Mobile Adaptation)
-   ========================================================== */
+/* Responsive adjustments for upload section */
 @media (max-width: 768px) {
-    .btn-add-album {
-        float: none;
-        width: 100%;
-        margin-bottom: 20px;
-    }
-    
-    .gallery-item {
-        flex-direction: column; /* Stack image and info/stats vertically */
-        align-items: stretch;
-        padding: 15px 0;
-    }
-    
-    .image-container {
-        width: 100%; /* Image takes full width */
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-    .image-container img {
-        height: 180px; /* Slightly taller image on mobile */
-    }
-    
-    .gallery-info {
-        order: 1; /* Place info before stats */
-    }
-    
-    .current-stats {
-        order: 2; /* Place stats after info */
-        width: 100%;
-        text-align: left;
-        border-left: none;
-        border-top: 1px dashed #eee; /* Separator for clarity */
-        padding-top: 10px;
-        padding-left: 0;
-        margin-top: 10px;
+    .image-upload-section {
+        padding: 1.5rem;
     }
 
-    .current-stats h4 {
-        display: none; /* Hide redundant header */
+    .image-upload-section h3 {
+        font-size: 1.3rem;
     }
-    
-    /* Display stats inline for a cleaner mobile look */
-    .current-stats p {
-        display: inline-block;
-        margin-right: 15px;
+
+    .form-group input[type="file"]::file-selector-button {
+        padding: 0.6rem 1rem;
+        margin-right: 0.5rem;
     }
-    .current-stats .stat-status {
-        display: block; /* Status on its own line */
-        margin-top: 5px;
+
+    .btn-upload {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .pending-images-section h3,
+    .approved-images-section h3 {
+        font-size: 1.3rem;
+    }
+
+    .image-grid {
+        grid-template-columns: 1fr;
     }
 }

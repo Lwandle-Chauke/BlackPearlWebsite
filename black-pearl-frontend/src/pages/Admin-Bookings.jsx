@@ -143,7 +143,6 @@ const AdminBookings = () => {
         setShowQuoteModal(true);
     };
 
-    // UPDATED: Send quote to customer (with email support)
     const handleConfirmQuote = async () => {
         if (!selectedQuote) return;
 
@@ -175,11 +174,11 @@ const AdminBookings = () => {
                 if (selectedQuote.userId) {
                     alert('Quote sent to customer dashboard successfully!');
                 } else {
-                    alert('Quote sent to customer email successfully! The customer will receive a professional email with accept/decline buttons.');
+                    alert('Quote sent to customer email successfully! The customer will receive an email with approval links.');
                 }
                 setShowQuoteModal(false);
                 setSelectedQuote(null);
-                fetchQuotes(); // Refresh the list
+                fetchQuotes();
             } else {
                 alert('Failed to send quote: ' + data.error);
             }
@@ -242,7 +241,7 @@ const AdminBookings = () => {
             if (data.success) {
                 alert('Manual booking created successfully!');
                 setShowAddBookingModal(false);
-                fetchQuotes(); // Refresh the quotes list
+                fetchQuotes();
             } else {
                 alert('Failed to create booking: ' + data.error);
             }
@@ -281,17 +280,6 @@ const AdminBookings = () => {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
         });
     };
 
@@ -356,21 +344,15 @@ const AdminBookings = () => {
                                 </span>
                             </div>
                             <div className="stat-card">
-                                <h3>Pending Email</h3>
-                                <span className="stat-number pending-email">
-                                    {quotes.filter(q => q.quoteStatus === 'pending_email').length}
-                                </span>
-                            </div>
-                            <div className="stat-card">
-                                <h3>Accepted</h3>
-                                <span className="stat-number accepted">
-                                    {quotes.filter(q => q.quoteStatus === 'accepted').length}
-                                </span>
-                            </div>
-                            <div className="stat-card">
                                 <h3>Booked</h3>
                                 <span className="stat-number booked">
                                     {quotes.filter(q => q.status === 'booked').length}
+                                </span>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Total Bookings</h3>
+                                <span className="stat-number total">
+                                    {quotes.length}
                                 </span>
                             </div>
                         </div>
@@ -393,14 +375,13 @@ const AdminBookings = () => {
                                         <th>Pricing</th>
                                         <th>Status</th>
                                         <th>Quote Status</th>
-                                        <th>Email Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {quotes.length === 0 ? (
                                         <tr>
-                                            <td colSpan="11" className="no-data">
+                                            <td colSpan="10" className="no-data">
                                                 No quote requests found
                                             </td>
                                         </tr>
@@ -467,22 +448,6 @@ const AdminBookings = () => {
                                                         <div className="email-badge">📧 Email Sent</div>
                                                     )}
                                                 </td>
-                                                <td>
-                                                    {quote.sentToCustomerAt ? (
-                                                        <div className="email-sent-status">
-                                                            <div className="email-sent-badge">
-                                                                ✅ Sent
-                                                            </div>
-                                                            <div className="email-sent-date">
-                                                                {formatDateTime(quote.sentToCustomerAt)}
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="email-pending-badge">
-                                                            ⏳ Not Sent
-                                                        </div>
-                                                    )}
-                                                </td>
                                                 <td className="action-buttons">
                                                     <button
                                                         className="btn-send-quote"
@@ -536,7 +501,7 @@ const AdminBookings = () => {
                             <p><strong>User Type:</strong> {selectedQuote.userId ? 'Registered User' : 'Guest User'}</p>
                             {!selectedQuote.userId && (
                                 <p className="email-notice">
-                                    <small>📧 This quote will be sent via email with professional formatting and clear Accept/Decline buttons</small>
+                                    <small>📧 This quote will be sent via email with approval links</small>
                                 </p>
                             )}
                         </div>
@@ -564,7 +529,7 @@ const AdminBookings = () => {
                                 className="btn-confirm"
                                 onClick={handleConfirmQuote}
                             >
-                                {selectedQuote.userId ? 'Send to Dashboard' : 'Send Professional Email'}
+                                {selectedQuote.userId ? 'Send to Dashboard' : 'Send via Email'}
                             </button>
                             <button
                                 className="btn-book"

@@ -8,17 +8,21 @@
 .main-content {
     /* Using the standard layout box shared across pages */
     width: 100%;
-    background: var(--white);
+    background: var(--card-background);
+    /* Use theme variable */
     padding: 20px;
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s;
 }
 
-.main-content h2 { 
-    font-size: 1.5rem; 
-    margin-top: 0; 
-    margin-bottom: 20px; 
-    color: var(--dark-gray); 
+.main-content h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--text-color);
+    /* Use theme variable */
+    transition: color 0.3s;
 }
 
 /* ==========================================================
@@ -26,16 +30,20 @@
    ========================================================== */
 .settings-section {
     padding: 20px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
+    /* Use theme variable */
     border-radius: 4px;
     margin-bottom: 30px;
+    transition: border-color 0.3s;
 }
 
 .settings-section h3 {
     color: var(--primary-blue);
-    border-bottom: 2px solid #eee;
+    border-bottom: 2px solid var(--border-color);
+    /* Use theme variable */
     padding-bottom: 10px;
     margin-top: 0;
+    transition: border-color 0.3s, color 0.3s;
 }
 
 .form-grid {
@@ -46,26 +54,39 @@
 
 /* Form Groups */
 .form-group {
-    margin-bottom: 0; /* Managed by form-grid gap */
+    margin-bottom: 0;
+    /* Managed by form-grid gap */
 }
+
 .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: var(--dark-gray);
+    color: var(--text-color);
+    /* Use theme variable */
+    transition: color 0.3s;
 }
+
 .form-group input,
 .form-group select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
+    /* Use theme variable */
+    background-color: var(--card-background);
+    /* Use theme variable */
+    color: var(--text-color);
+    /* Use theme variable */
     border-radius: 4px;
     font-family: inherit;
     font-size: 1rem;
     box-sizing: border-box;
-    -webkit-appearance: none; /* Remove default browser styling for select */
+    -webkit-appearance: none;
+    /* Remove default browser styling for select */
     appearance: none;
+    transition: border-color 0.3s, background-color 0.3s, color 0.3s;
 }
+
 .form-group select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a4a4a'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -84,9 +105,13 @@
     cursor: pointer;
     font-weight: 600;
     transition: background 0.2s;
-    float: right; /* Maintain right alignment on desktop */
+    float: right;
+    /* Maintain right alignment on desktop */
 }
-.btn-save:hover { background: #2980b9; }
+
+.btn-save:hover {
+    background: #2980b9;
+}
 
 /* ==========================================================
    RESPONSIVE LAYOUT
@@ -94,6 +119,7 @@
 
 /* Tablet and Desktop Layout (Above 768px) */
 @media (min-width: 769px) {
+
     /* General Website Settings (3 columns) */
     .settings-section:nth-of-type(1) .form-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -103,11 +129,73 @@
     .settings-section:nth-of-type(2) .form-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     /* Security (1 column, stretch) */
     .settings-section:nth-of-type(3) .form-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Dark Mode Toggle Switch Styles */
+.switch-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Pushes label and switch apart */
+    padding: 10px 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--silver);
+    /* Use theme variable */
+    transition: .4s;
+    border-radius: 20px;
+    /* Make it round */
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    /* Make it round */
+}
+
+input:checked+.slider {
+    background-color: var(--primary-blue);
+    /* Or a dark mode specific color */
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--primary-blue);
+}
+
+input:checked+.slider:before {
+    transform: translateX(20px);
 }
 
 /* Mobile Layout (Below 768px) */
@@ -115,7 +203,7 @@
     .settings-section {
         padding: 15px;
     }
-    
+
     /* Ensure the button takes full width and floats are cleared */
     .btn-save {
         float: none;

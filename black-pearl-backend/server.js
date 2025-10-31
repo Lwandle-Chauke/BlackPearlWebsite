@@ -14,12 +14,14 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // Now import routes after environment variables are loaded
 import messageRoutes from "./routes/messageRoutes.js";
-import feedbackRoutes from "./routes/feedbackRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/auth.js';
 import quoteRoutes from './routes/quotes.js';
-import reviewRoutes from './routes/reviewRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
+
+import imageRoutes from './routes/imageRoutes.js'; // Import image routes
+
+import { protect, authorize } from './middleware/auth.js';
+
 
 const app = express();
 
@@ -32,7 +34,7 @@ app.use(cors({
 }));
 
 // Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // MongoDB connection
 const connectDB = async () => {
@@ -58,12 +60,10 @@ connectDB();
 
 // Routes
 app.use("/api/messages", messageRoutes);
-app.use("/api/feedback", feedbackRoutes);
 app.use("/api/users", userRoutes); // Use user routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quotes', quoteRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/uploads', uploadRoutes);
+app.use('/api/images', imageRoutes); // Use image routes
 
 // Test route for reviews (simple version)
 app.get('/api/reviews', (req, res) => {

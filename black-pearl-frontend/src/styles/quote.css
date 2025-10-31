@@ -267,3 +267,107 @@ hr {
         gap: 12px;
     }
 }
+
+/* Terms and Conditions Styles */
+.terms-acceptance {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  text-align: left; /* ensures content aligns to the left */
+}
+
+.terms-header {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Updated Terms PDF Button */
+.terms-pdf-btn {
+  background: #000000; /* black background */
+  color: #ffffff;      /* white text */
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.terms-pdf-btn:hover {
+  background: #333333; /* slightly lighter black on hover */
+  color: #ffffff;
+}
+
+/* Checkbox label aligned left */
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  text-align: left; /* aligns text to the left */
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 1px; /* space between checkbox and text */
+  margin-top: 2px;
+  transform: scale(1.1);
+}
+
+.checkbox-label span {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Disabled state for submit buttons */
+.submit-btn:disabled,
+.btn-submit-booking:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Terms Section in Home Page */
+.terms-section {
+  margin-top: 40px;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.terms-section p {
+  margin-bottom: 20px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .terms-acceptance {
+    padding: 15px;
+    margin: 20px 0;
+  }
+  
+  .terms-pdf-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .checkbox-label {
+    font-size: 13px;
+  }
+  
+  .terms-section {
+    padding: 20px;
+    margin-top: 30px;
+  }
+}
