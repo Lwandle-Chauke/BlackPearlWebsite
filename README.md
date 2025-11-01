@@ -5,4 +5,5 @@ for images:
 
 ***
 for location services:
-npm install @react-google-maps/api
+1. npm install @react-google-maps/api
+2. npm install @googlemaps/js-api-loader
