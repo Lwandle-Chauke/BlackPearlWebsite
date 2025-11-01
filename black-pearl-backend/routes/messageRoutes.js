@@ -69,39 +69,30 @@ router.delete("/:id", async (req, res) => {
 });
 
 // POST admin reply to a message
+// POST admin reply to a message
 router.post("/:id/reply", async (req, res) => {
     try {
         const { replyContent } = req.body;
         const messageId = req.params.id;
 
         const originalMessage = await Message.findById(messageId);
+        if (!originalMessage) return res.status(404).json({ success: false, error: "Message not found" });
 
-        if (!originalMessage) {
-            return res.status(404).json({ success: false, error: "Original message not found" });
-        }
+        // Save admin reply in DB
+        originalMessage.reply = replyContent;
+        originalMessage.read = true; // mark as read
+        await originalMessage.save();
 
-        await emailService.sendAdminReplyEmail(
-            originalMessage.email,
-            originalMessage.subject,
-            replyContent
-        );
+        // Optionally send email
+        await emailService.sendAdminReplyEmail(originalMessage.email, originalMessage.subject, replyContent);
 
-        // Optionally, mark the original message as replied or update its status
-        // For now, we'll just mark it as read if it wasn't already
-        if (!originalMessage.read) {
-            originalMessage.read = true;
-            await originalMessage.save();
-        }
-
-        res.status(200).json({ success: true, message: "Admin reply sent successfully" });
+        res.status(200).json({ success: true, message: "Admin reply saved and sent" });
 
     } catch (error) {
-        console.error('Error sending admin reply:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to send admin reply'
-        });
+        console.error(error);
+        res.status(500).json({ success: false, error: "Failed to send admin reply" });
     }
 });
+
 
 export default router;
