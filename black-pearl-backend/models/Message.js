@@ -1,3 +1,4 @@
+// models/Message.js
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
@@ -6,6 +7,7 @@ const messageSchema = new mongoose.Schema({
     subject: { type: String, required: true },
     message: { type: String, required: true },
     read: { type: Boolean, default: false },
+    reply: { type: String, default: '' }, // <-- store admin reply
     createdAt: { type: Date, default: Date.now }
 });
 

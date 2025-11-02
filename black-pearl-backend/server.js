@@ -1,54 +1,52 @@
-
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
+// server.js
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
+// For ES6 modules, we need to create __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables FIRST, before any other imports
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-// Now import routes after environment variables are loaded
-import messageRoutes from "./routes/messageRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import authRoutes from './routes/auth.js';
-import quoteRoutes from './routes/quotes.js';
-
-import imageRoutes from './routes/imageRoutes.js'; // Import image routes
-
-import { protect, authorize } from './middleware/auth.js';
-
+dotenv.config();
 
 const app = express();
 
-// Middleware
+// Serve gallery uploads
+app.use('/uploads/gallery', express.static(path.join(__dirname, 'uploads', 'gallery')));
+
+// ===== Middleware =====
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
-// MongoDB connection
+// Import routes using dynamic imports
+let authRoutes, quoteRoutes, galleryRoutes, messageRoutes, feedbackRoutes;
+
+// Dynamic import for routes - UPDATED FILE NAMES
+const importRoutes = async () => {
+  authRoutes = (await import('./routes/auth.js')).default;
+  quoteRoutes = (await import('./routes/quotes.js')).default;
+  galleryRoutes = (await import('./routes/gallery.js')).default;
+  messageRoutes = (await import('./routes/messageRoutes.js')).default; // CHANGED
+  feedbackRoutes = (await import('./routes/feedbackRoutes.js')).default; // CHANGED
+};
+
+// ===== MongoDB Connection =====
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ Missing');
-    console.log('EMAIL_USER:', process.env.EMAIL_USER ? '✓ Loaded' : '✗ Missing');
-    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '✓ Loaded' : '✗ Missing');
-    
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours', {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
+    const conn = await mongoose.connect(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours'
+    );
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
   } catch (error) {
@@ -56,75 +54,121 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
-connectDB();
 
-// Routes
-app.use("/api/messages", messageRoutes);
-app.use("/api/users", userRoutes); // Use user routes
-app.use('/api/auth', authRoutes);
-app.use('/api/quotes', quoteRoutes);
-app.use('/api/images', imageRoutes); // Use image routes
+// ===== Import models =====
+import GalleryAlbum from './models/GalleryAlbum.js';
 
-// Test route for reviews (simple version)
-app.get('/api/reviews', (req, res) => {
-  res.json({ success: true, data: [] });
-});
+// ===== Ensure Default Albums Exist =====
+const ensureDefaultAlbums = async () => {
+  try {
+    const defaults = [
+      'Events and Leisure',
+      'Sports Tour',
+      'Tourism and Sightseeing',
+      'Other',
+    ];
 
-app.post('/api/reviews', (req, res) => {
-  console.log('📝 Review submitted:', req.body);
-  res.json({
-    success: true,
-    data: {
-      ...req.body,
-      _id: 'test-' + Date.now(),
-      status: 'pending',
-      createdAt: new Date()
+    for (const name of defaults) {
+      const exists = await GalleryAlbum.findOne({ albumName: name }).lean();
+      if (!exists) {
+        await GalleryAlbum.create({ albumName: name, images: [] });
+        console.log(`✅ Created default album: ${name}`);
+      }
     }
-  });
-});
-
-// Test route for uploads (simple version)
-app.post('/api/uploads/review-photo', (req, res) => {
-  console.log('📸 Photo upload attempt');
-  res.json({
-    success: true,
-    photoUrl: '/uploads/reviews/test-photo.jpg'
-  });
-});
-
-// Basic API route
-app.get('/api', (req, res) => res.json({ success: true, message: 'Black Pearl Tours API running!', timestamp: new Date() }));
-app.get('/api/health', (req, res) => res.json({
-  status: 'OK',
-  database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-  email: process.env.EMAIL_USER ? 'Configured' : 'Not Configured',
-  timestamp: new Date()
-}));
-
-// Error handling
-app.use((error, req, res, next) => {
-  console.error('Server error:', error);
-  res.status(500).json({ success: false, error: 'Internal server error' });
-});
-
-// 404 handler
-app.use((req, res) => res.status(404).json({ success: false, error: `Route ${req.originalUrl} not found` }));
-
-// Graceful shutdown
-const shutdown = async () => {
-  console.log('\n🔻 Shutting down server...');
-  await mongoose.connection.close();
-  console.log('✅ MongoDB connection closed.');
-  process.exit(0);
+  } catch (err) {
+    console.error('Error ensuring default albums:', err.message || err);
+  }
 };
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 API: http://localhost:${PORT}/api`);
-  console.log(`📁 Uploads: http://localhost:${PORT}/uploads`);
-  console.log(`📧 Email Service: ${process.env.EMAIL_USER ? '✅ Nodemailer Configured' : '❌ Email Not Configured'}`);
+// ===== Initialize App =====
+const initializeApp = async () => {
+  try {
+    // Import routes first
+    await importRoutes();
+    
+    // Connect to database
+    await connectDB();
+    
+    // Ensure default albums
+    await ensureDefaultAlbums();
+
+    // ===== Mount Routes =====
+    app.use('/api/auth', authRoutes);
+    app.use('/api/quotes', quoteRoutes);
+    app.use('/api/gallery', galleryRoutes);
+    app.use('/api/messages', messageRoutes); // MOUNT MESSAGE ROUTES
+    app.use('/api/feedback', feedbackRoutes); // MOUNT FEEDBACK ROUTES
+
+    // ===== Static Folder for Uploads =====
+    const uploadsPath = path.join(__dirname, 'uploads');
+    app.use('/uploads', express.static(uploadsPath));
+
+    // ===== Basic API Info =====
+    app.get('/api', (req, res) => {
+      res.json({
+        success: true,
+        message: 'Black Pearl Tours API is running!',
+        version: '1.0.0',
+        endpoints: {
+          auth: '/api/auth',
+          quotes: '/api/quotes',
+          gallery: '/api/gallery',
+          messages: '/api/messages',
+          feedback: '/api/feedback',
+          uploads: '/uploads',
+        },
+      });
+    });
+
+    // ===== Health Check =====
+    app.get('/api/health', (req, res) => {
+      res.json({
+        status: 'OK',
+        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        timestamp: new Date().toISOString(),
+      });
+    });
+
+    // ===== Error Handling =====
+    app.use((err, req, res, next) => {
+      console.error('❌ Server error:', err);
+      res.status(err.status || 500).json({
+        success: false,
+        error: err.message || 'Internal server error',
+      });
+    });
+
+    // ===== 404 Fallback =====
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        error: `Route ${req.originalUrl} not found`,
+      });
+    });
+
+    // ===== Start Server =====
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 API available at http://localhost:${PORT}/api`);
+      console.log(`📨 Messages API: http://localhost:${PORT}/api/messages`);
+      console.log(`💬 Feedback API: http://localhost:${PORT}/api/feedback`);
+    });
+
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+    process.exit(1);
+  }
+};
+
+// Start the application
+initializeApp();
+
+// ===== Process-level diagnostics =====
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception thrown:', err);
 });

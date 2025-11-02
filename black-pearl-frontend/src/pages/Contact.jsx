@@ -133,6 +133,7 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     disabled={isSubmitting}
                   />
                 </div>
+                <br />
 
                 <div className="form-group">
                   <label htmlFor="email">Email Address</label>
@@ -147,6 +148,7 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     disabled={isSubmitting}
                   />
                 </div>
+                <br />
 
                 <div className="form-group">
                   <label htmlFor="subject">Subject</label>
@@ -161,6 +163,7 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     disabled={isSubmitting}
                   />
                 </div>
+                <br />
 
                 <div className="form-group">
                   <label htmlFor="message">Message</label>
@@ -174,7 +177,8 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     disabled={isSubmitting}
                   ></textarea>
                 </div>
-
+                <br />
+                
                 {submitMessage && (
                   <div className={`submit-message ${submitMessage.includes('error') ? 'error' : 'success'}`}>
                     {submitMessage}

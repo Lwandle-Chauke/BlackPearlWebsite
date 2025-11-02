@@ -1,309 +1,286 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
-import '../styles/admin.css';
+import galleryService from '../services/galleryService.js';
+import PendingImagesModal from '../components/PendingImagesModal';
+import AdminUploadModal from '../components/AdminUploadModal';
+import AddAlbumModal from '../components/AddAlbumModal';
+import AlbumManagementModal from '../components/AlbumManagementModal'; // NEW
 import '../styles/admin-gallery.css';
-import axios from 'axios';
-import { API_BASE_URL, IMAGE_BASE_URL } from '../utils/config';
+import '../styles/admin.css';
+
+// ✅ Reusable gallery item card - UPDATED
+const GalleryItem = ({ item, handleAction }) => (
+    <div className="gallery-item">
+        <div className="image-container">
+            <img
+                src={(item.images?.[0]?.url) || item.imageUrl || '/placeholder.jpg'}
+                alt={item.albumName}
+            />
+        </div>
+
+        <div className="gallery-info">
+            <h3>{item.albumName}</h3>
+            <p className="total-images">
+                Total Images: {item.totalImages || item.images?.length || 0}
+            </p>
+
+            <div className="gallery-actions">
+                <button
+                    className="btn-action"
+                    title="View & Manage Images"
+                    onClick={() => handleAction('View', item)}
+                >
+                    <i className="fas fa-eye"></i> View
+                </button>
+
+                <button
+                    className="btn-action"
+                    title="Upload New Images"
+                    onClick={() => handleAction('Upload', item._id || item.id)}
+                >
+                    <i className="fas fa-upload"></i> Upload
+                </button>
+
+                <button
+                    className="btn-action"
+                    title="Edit Album Name"
+                    onClick={() => handleAction('Edit', item._id || item.id)}
+                >
+                    <i className="fas fa-pen"></i> Edit
+                </button>
+
+                <button
+                    className="btn-action btn-delete"
+                    title="Delete Album"
+                    onClick={() => handleAction('Delete', item._id || item.id)}
+                >
+                    <i className="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+
+        <div className="current-stats">
+            <h4>Album Stats</h4>
+            <p>Images: {item.totalImages || item.images?.length || 0}</p>
+            <p>Approved: {(item.images || []).filter(img => img.approved).length}</p>
+        </div>
+    </div>
+);
 
 const AdminGallery = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [pendingImages, setPendingImages] = useState([]);
-    const [approvedImages, setApprovedImages] = useState([]);
+    const [albums, setAlbums] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [altText, setAltText] = useState('');
-    const [uploading, setUploading] = useState(false);
-    const [uploadError, setUploadError] = useState(null);
-    const [uploadSuccess, setUploadSuccess] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null); // New state for image preview
-    const [testimonials, setTestimonials] = useState([]);
 
-    useEffect(() => {
-        fetchImages();
-        fetchTestimonials();
-    }, []);
+    // Modals
+    const [showUploadForAlbum, setShowUploadForAlbum] = useState(null);
+    const [showPending, setShowPending] = useState(false);
+    const [showAddAlbum, setShowAddAlbum] = useState(false);
+    const [showManagement, setShowManagement] = useState(false);
+    const [selectedAlbum, setSelectedAlbum] = useState(null);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        setSelectedFile(file);
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            setImagePreview(null);
-        }
-    };
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-    const handleAltTextChange = (e) => {
-        setAltText(e.target.value);
-    };
-
-    const handleImageUpload = async (e) => {
-        e.preventDefault();
-        if (!selectedFile) {
-            setUploadError('Please select an image to upload.');
-            return;
-        }
-
-        setUploading(true);
-        setUploadError(null);
-        setUploadSuccess(false);
-
-        const formData = new FormData();
-        formData.append('image', selectedFile);
-        formData.append('altText', altText);
-
-        try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`
-                }
-            };
-            await axios.post(`${API_BASE_URL}/upload/images`, formData, config);
-            setUploadSuccess(true);
-            setSelectedFile(null);
-            setAltText('');
-            setImagePreview(null); // Clear image preview after successful upload
-            fetchImages(); // Refresh images after upload
-        } catch (err) {
-            console.error('Error uploading image:', err);
-            setUploadError(err.response?.data?.msg || 'Failed to upload image.');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const fetchImages = async () => {
+    // 🔄 Fetch albums
+    const loadAlbums = async () => {
         setLoading(true);
         setError(null);
         try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            };
-
-            const pendingRes = await axios.get(`${API_BASE_URL}/images/pending`, config);
-            setPendingImages(pendingRes.data);
-
-            const approvedRes = await axios.get(`${API_BASE_URL}/images/approved`, config);
-            setApprovedImages(approvedRes.data);
-
+            const data = await galleryService.getAlbums();
+            setAlbums(data || []);
         } catch (err) {
-            console.error('Error fetching images:', err);
-            setError(err.response?.data?.msg || 'Failed to fetch images');
+            console.error(err);
+            setError(err.message || 'Failed to load albums');
         } finally {
             setLoading(false);
         }
     };
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
+    useEffect(() => {
+        loadAlbums();
+    }, []);
 
-    const handleStatusUpdate = async (id, status) => {
-        if (!window.confirm(`Are you sure you want to ${status} this image?`)) {
-            return;
-        }
+    // 🎯 Admin action handler - UPDATED
+    const handleAction = async (action, itemOrId) => {
+        switch (action) {
+            case 'View':
+                // Use the existing View button to open AlbumManagementModal
+                setSelectedAlbum(itemOrId);
+                setShowManagement(true);
+                break;
 
-        try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            case 'Delete':
+                if (!window.confirm('Delete this album and all its images?')) return;
+                try {
+                    await galleryService.deleteAlbum(itemOrId);
+                    await loadAlbums();
+                } catch (err) {
+                    alert('Delete failed: ' + (err.response?.data?.message || err.message));
                 }
-            };
-            await axios.put(`${API_BASE_URL}/images/${id}/status`, { status }, config);
-            alert(`Image ${status} successfully!`);
-            fetchImages(); // Refresh images
-        } catch (err) {
-            console.error('Error updating image status:', err);
-            alert(err.response?.data?.msg || 'Failed to update image status');
-        }
-    };
+                break;
 
-    const handleDeleteImage = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            case 'Edit':
+                const newName = window.prompt('Enter new album name:');
+                if (newName) {
+                    try {
+                        await galleryService.updateAlbum(itemOrId, newName);
+                        await loadAlbums();
+                    } catch (err) {
+                        alert('Rename failed: ' + (err.response?.data?.message || err.message));
+                    }
                 }
-            };
-            await axios.delete(`${API_BASE_URL}/images/${id}`, config);
-            alert('Image deleted successfully!');
-            fetchImages(); // Refresh images
-        } catch (err) {
-            console.error('Error deleting image:', err);
-            alert(err.response?.data?.msg || 'Failed to delete image');
+                break;
+
+            case 'Upload':
+                setShowUploadForAlbum(itemOrId);
+                break;
+
+            case 'Add':
+                setShowAddAlbum(true);
+                break;
+
+            default:
+                alert(`Action "${action}" not supported.`);
         }
-    };
-
-    const fetchTestimonials = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            };
-            const res = await axios.get(`${API_BASE_URL}/reviews`, config);
-            // Filter for approved reviews
-            setTestimonials(res.data.data.filter(review => review.status === 'approved'));
-        } catch (err) {
-            console.error('Error fetching testimonials:', err);
-        }
-    };
-
-    const getRandomTestimonial = () => {
-        if (testimonials.length === 0) return null;
-        const randomIndex = Math.floor(Math.random() * testimonials.length);
-        return testimonials[randomIndex];
-    };
-
-    const ImageCard = ({ image, type }) => {
-        const testimonial = getRandomTestimonial();
-        return (
-            <div className="image-card">
-                <img src={`${IMAGE_BASE_URL}${image.url}`} alt={image.altText} />
-                <div className="image-info">
-                    <p><strong>Alt Text:</strong> {image.altText}</p>
-                    <p><strong>Status:</strong> <span className={`status-${image.status}`}>{image.status}</span></p>
-                    {testimonial && (
-                        <div className="testimonial-display">
-                            <p><strong>Testimonial:</strong> "{testimonial.comment}"</p>
-                            <p>- {testimonial.user?.name || 'Anonymous'}</p>
-                        </div>
-                    )}
-                    <div className="image-actions">
-                        {type === 'pending' && (
-                            <>
-                                <button className="btn-approve" onClick={() => handleStatusUpdate(image._id, 'approved')}>
-                                    Approve
-                                </button>
-                                <button className="btn-decline" onClick={() => handleStatusUpdate(image._id, 'declined')}>
-                                    Decline
-                                </button>
-                            </>
-                        )}
-                        {type === 'approved' && (
-                            <button className="btn-delete" onClick={() => handleDeleteImage(image._id)}>
-                                Delete
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
     };
 
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-            <AdminSidebar
-                isSidebarOpen={isSidebarOpen}
-                toggleSidebar={toggleSidebar}
-            />
+            <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
             <div id="content-wrapper">
-                <AdminTopBar
-                    pageTitle="Gallery Management"
-                    toggleSidebar={toggleSidebar}
-                />
+                <AdminTopBar pageTitle="Gallery Management" toggleSidebar={toggleSidebar} />
 
                 <main className="gallery-page-content">
                     <div className="main-content">
                         <div className="page-header">
-                            <h2>Image Approval & Management</h2>
+                            <h2>Gallery Management</h2>
+                            <p>Manage albums, upload images, and review pending submissions</p>
                         </div>
 
-                        <section className="image-upload-section">
-                            <h3>Upload New Image</h3>
-                            <form onSubmit={handleImageUpload} className="image-upload-form">
-                                <div className="form-group">
-                                    <label htmlFor="imageFile">Select Image:</label>
-                                    <input
-                                        type="file"
-                                        id="imageFile"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        required
-                                    />
-                                </div>
-                                {imagePreview && (
-                                    <div className="image-preview-container">
-                                        <img src={imagePreview} alt="Image Preview" className="image-preview" />
-                                    </div>
-                                )}
-                                <div className="form-group">
-                                    <label htmlFor="altText">Alt Text (for accessibility):</label>
-                                    <input
-                                        type="text"
-                                        id="altText"
-                                        value={altText}
-                                        onChange={handleAltTextChange}
-                                        placeholder="e.g., Black Pearl Sedan"
-                                        required
-                                    />
-                                </div>
-                                <button type="submit" className="btn-upload" disabled={uploading}>
-                                    {uploading ? 'Uploading...' : 'Upload Image'}
-                                </button>
-                                {uploadError && <p className="message error-message">{uploadError}</p>}
-                                {uploadSuccess && <p className="message success-message">Image uploaded successfully! Awaiting approval.</p>}
-                            </form>
-                        </section>
+                        <div className="admin-actions">
+                            <button
+                                className="btn-add-album"
+                                onClick={() => handleAction('Add')}
+                            >
+                                <i className="fas fa-plus"></i> Add New Album
+                            </button>
 
-                        {loading ? (
-                            <p className="message info-message">Loading images...</p>
-                        ) : error ? (
-                            <p className="message error-message">{error}</p>
-                        ) : (
-                            <>
-                                <section className="pending-images-section">
-                                    <h3>Pending Images ({pendingImages.length})</h3>
-                                    {pendingImages.length === 0 ? (
-                                        <p>No images awaiting approval.</p>
-                                    ) : (
-                                        <div className="image-grid">
-                                            {pendingImages.map(image => (
-                                                <ImageCard key={image._id} image={image} type="pending" />
-                                            ))}
-                                        </div>
-                                    )}
-                                </section>
+                            <button
+                                className="btn-pending"
+                                onClick={() => setShowPending(true)}
+                            >
+                                <i className="fas fa-clock"></i> Review Pending Images
+                            </button>
 
-                                <section className="approved-images-section">
-                                    <h3>Approved Images ({approvedImages.length})</h3>
-                                    {approvedImages.length === 0 ? (
-                                        <p>No approved images.</p>
-                                    ) : (
-                                        <div className="image-grid">
-                                            {approvedImages.map(image => (
-                                                <ImageCard key={image._id} image={image} type="approved" />
-                                            ))}
-                                        </div>
-                                    )}
-                                </section>
-                            </>
+                            <button
+                                className="btn-refresh"
+                                onClick={loadAlbums}
+                            >
+                                <i className="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+
+                        {loading && (
+                            <div className="loading-state">
+                                <i className="fas fa-spinner fa-spin"></i>
+                                <p>Loading albums…</p>
+                            </div>
                         )}
+                        
+                        {error && (
+                            <div className="error-state">
+                                <i className="fas fa-exclamation-triangle"></i>
+                                <p>{error}</p>
+                                <button onClick={loadAlbums}>Try Again</button>
+                            </div>
+                        )}
+
+                        {!loading && !error && albums.length === 0 && (
+                            <div className="empty-state">
+                                <i className="fas fa-images"></i>
+                                <h3>No Albums Found</h3>
+                                <p>Create your first album to get started!</p>
+                                <button 
+                                    className="btn-add-album"
+                                    onClick={() => handleAction('Add')}
+                                >
+                                    <i className="fas fa-plus"></i> Create First Album
+                                </button>
+                            </div>
+                        )}
+
+                        {!loading && !error && albums.length > 0 && (
+                            <div className="gallery-stats">
+                                <div className="stat-card">
+                                    <h4>Total Albums</h4>
+                                    <span className="stat-number">{albums.length}</span>
+                                </div>
+                                <div className="stat-card">
+                                    <h4>Total Images</h4>
+                                    <span className="stat-number">
+                                        {albums.reduce((total, album) => total + (album.images?.length || 0), 0)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="gallery-list">
+                            {albums.map(album => (
+                                <GalleryItem
+                                    key={album._id || album.id}
+                                    item={album}
+                                    handleAction={handleAction}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </main>
             </div>
 
-            <div className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`} onClick={toggleSidebar}></div>
+            {/* Sidebar overlay */}
+            <div
+                className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`}
+                onClick={toggleSidebar}
+            ></div>
+
+            {/* ✅ Modals */}
+            {showUploadForAlbum && (
+                <AdminUploadModal
+                    albums={albums}
+                    initialAlbum={showUploadForAlbum}
+                    onClose={() => setShowUploadForAlbum(null)}
+                    onUploaded={loadAlbums}
+                />
+            )}
+
+            {showPending && (
+                <PendingImagesModal
+                    onClose={() => setShowPending(false)}
+                    onApproved={loadAlbums}
+                />
+            )}
+
+            {showAddAlbum && (
+                <AddAlbumModal
+                    onClose={() => setShowAddAlbum(false)}
+                    onCreated={loadAlbums}
+                />
+            )}
+
+            {/* Album Management Modal - triggered by View button */}
+            {showManagement && selectedAlbum && (
+                <AlbumManagementModal
+                    album={selectedAlbum}
+                    onClose={() => {
+                        setShowManagement(false);
+                        setSelectedAlbum(null);
+                    }}
+                    onUpdate={loadAlbums}
+                />
+            )}
         </div>
     );
 };

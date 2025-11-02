@@ -1,120 +1,81 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/Gallery.jsx
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/style.css';
 import '../styles/gallery.css';
 import ChatWidget from "../chatbot/ChatWidget";
-import axios from 'axios';
-import { API_BASE_URL, IMAGE_BASE_URL } from '../utils/config';
-import ImageSkeletonLoader from '../components/ImageSkeletonLoader';
+import galleryService from '../services/galleryService.js';
+import UserUploadModal from '../components/UserUploadModal';
 
 const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
-  const [galleryImages, setGalleryImages] = useState([]);
+  const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [showUpload, setShowUpload] = useState(false);
 
-  useEffect(() => {
-    fetchApprovedImages();
+  const fetchAlbums = () => {
+    setLoading(true);
+    galleryService.getAlbums()
+      .then(data => setAlbums(data || []))
+      .catch(err => setError(err?.message || 'Failed to load gallery'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { 
+    fetchAlbums(); 
   }, []);
 
-  const openLightbox = (image) => {
-    setSelectedImage(image);
-    setLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-    setSelectedImage(null);
-  };
-
-  const navigateLightbox = (direction) => {
-    const currentIndex = galleryImages.findIndex(img => img._id === selectedImage._id);
-    let newIndex = currentIndex + direction;
-    if (newIndex < 0) {
-      newIndex = galleryImages.length - 1;
-    } else if (newIndex >= galleryImages.length) {
-      newIndex = 0;
-    }
-    setSelectedImage(galleryImages[newIndex]);
-  };
-
-  const fetchApprovedImages = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/images/approved`);
-      setGalleryImages(res.data);
-    } catch (err) {
-      console.error('Error fetching approved images:', err);
-      setError(err.response?.data?.msg || 'Failed to fetch gallery images');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleUploaded = () => fetchAlbums();
 
   return (
     <>
-      <Header
-        onAuthClick={onAuthClick}
-        isLoggedIn={isLoggedIn}
-        user={currentUser}
-        onSignOut={onSignOut}
-      />
+      <Header onAuthClick={onAuthClick} isLoggedIn={isLoggedIn} user={currentUser} onSignOut={onSignOut} />
 
-      {/* Gallery Section */}
       <main className="gallery-section">
-        <h1 className="gallery-title">GALLERY</h1>
+        <div className="gallery-header">
+          <h1 className="gallery-title">Our Travel Gallery</h1>
+          {isLoggedIn && (
+            <button className="upload-btn" onClick={() => setShowUpload(true)}>+ Share Your Memory</button>
+          )}
+        </div>
 
-        {loading ? (
-          <div className="gallery-grid">
-            {[...Array(6)].map((_, index) => ( // Show 6 skeleton loaders
-              <ImageSkeletonLoader key={index} />
-            ))}
-          </div>
-        ) : error ? (
-          <p className="message error-message">{error}</p>
-        ) : galleryImages.length === 0 ? (
-          <p className="message info-message">No images in the gallery yet.</p>
-        ) : (
-          <div className="gallery-grid">
-            {galleryImages.map(item => (
-              <div key={item._id} className="card">
-                <img src={`${IMAGE_BASE_URL}${item.url}`} alt={item.altText} onClick={() => openLightbox(item)} />
-                {item.reviews && item.reviews.length > 0 && (
-                  <div className="image-reviews">
-                    {item.reviews.map(review => (
-                      <div key={review._id} className="review-item">
-                        <p className="review-comment">"{review.comment}"</p>
-                        {review.user && <p className="review-author">- {review.user.name}</p>}
-                      </div>
-                    ))}
+        {loading && <p className="status-text">Loading gallery…</p>}
+        {error && <p className="status-text error">{error}</p>}
+        {(!loading && albums.length === 0) && <div className="empty-message">No albums available yet.</div>}
+
+        {albums.map(album => {
+          const approvedImages = (album.images || []).filter(img => img.approved);
+          if (approvedImages.length === 0) return null;
+          return (
+            <section key={album._id} className="album-section">
+              <h2 className="album-title">{album.albumName}</h2>
+              <div className="gallery-grid">
+                {approvedImages.map(item => (
+                  <div key={item._id || item.url} className="gallery-card">
+                    <div className="image-wrapper">
+                      {/* galleryService makes item.url absolute now */}
+                      <img src={item.url} alt={item.caption || album.albumName} className="gallery-image" />
+                    </div>
+                    {item.caption && <p className="testimonial">"{item.caption}"</p>}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </section>
+          );
+        })}
       </main>
 
-      {lightboxOpen && selectedImage && (
-        <div className="lightbox-overlay" onClick={closeLightbox}>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <button className="lightbox-close" onClick={closeLightbox}>&times;</button>
-            <button className="lightbox-nav prev" onClick={() => navigateLightbox(-1)}>&#10094;</button>
-            <img src={`${IMAGE_BASE_URL}${selectedImage.url}`} alt={selectedImage.altText} className="lightbox-image" />
-            <button className="lightbox-nav next" onClick={() => navigateLightbox(1)}>&#10095;</button>
-            {selectedImage.altText && <p className="lightbox-alt-text">{selectedImage.altText}</p>}
-          </div>
-        </div>
-      )}
-
-      {/* Floating chat icon */}
       <Footer />
-
       <ChatWidget />
 
+      {showUpload && (
+        <UserUploadModal
+          albums={albums}
+          onClose={() => setShowUpload(false)}
+          onUploaded={handleUploaded}
+        />
+      )}
     </>
   );
 };

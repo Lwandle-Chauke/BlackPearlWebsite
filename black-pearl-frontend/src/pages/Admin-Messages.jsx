@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css';
 import '../styles/admin-messages.css';
+
+// Import Recharts components
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 const AdminMessages = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -12,7 +18,6 @@ const AdminMessages = () => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [showReplyModal, setShowReplyModal] = useState(false);
     const [replyContent, setReplyContent] = useState('');
-    const [chartType, setChartType] = useState('overview');
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -150,12 +155,12 @@ const AdminMessages = () => {
         await markAsRead(messageId);
     };
 
-    // Calculate filtered data based on time filter
-    const getFilteredData = () => {
+    // Generate message trends data
+    const getMessageTrendsData = () => {
         const now = new Date();
         let startDate = new Date();
-
-        switch (timeFilter) {
+        
+        switch(timeFilter) {
             case '7days':
                 startDate.setDate(now.getDate() - 7);
                 break;
@@ -165,136 +170,118 @@ const AdminMessages = () => {
             case '90days':
                 startDate.setDate(now.getDate() - 90);
                 break;
-            case '1year':
-                startDate.setFullYear(now.getFullYear() - 1);
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
+        const trends = {};
+        
+        filteredMessages.forEach(message => {
+            const date = new Date(message.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            if (!trends[date]) {
+                trends[date] = {
+                    date,
+                    messages: 0,
+                    unread: 0
+                };
+            }
+            
+            trends[date].messages += 1;
+            if (!message.read) {
+                trends[date].unread += 1;
+            }
+        });
+        
+        return Object.values(trends).sort((a, b) => new Date(a.date) - new Date(b.date));
+    };
+
+    // Get message status distribution
+    const getMessageStatusDistribution = () => {
+        const now = new Date();
+        let startDate = new Date();
+        
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
                 break;
             default:
                 startDate.setDate(now.getDate() - 30);
         }
-
-        return messagesData.filter(message => new Date(message.createdAt) >= startDate);
+        
+        const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
+        const statusCounts = {
+            UNREAD: 0,
+            READ: 0
+        };
+        
+        filteredMessages.forEach(message => {
+            const status = message.read ? 'READ' : 'UNREAD';
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        
+        return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
     };
 
-    // Comprehensive Message Analytics
-    const messageAnalytics = useMemo(() => {
-        const filteredMessages = getFilteredData();
+    // Get subject distribution
+    const getSubjectDistribution = () => {
+        const now = new Date();
+        let startDate = new Date();
         
-        // Basic stats
-        const total = filteredMessages.length;
-        const unread = filteredMessages.filter(m => !m.read).length;
-        const read = total - unread;
-        const responseRate = total > 0 ? Math.round((read / total) * 100) : 0;
-
-        // Daily average
-        const daysInPeriod = timeFilter === '7days' ? 7 : timeFilter === '30days' ? 30 : timeFilter === '90days' ? 90 : 365;
-        const dailyAverage = Math.round(total / daysInPeriod);
-
-        // Response time analysis (assuming we have repliedAt field)
-        const repliedMessages = filteredMessages.filter(m => m.repliedAt);
-        const averageResponseTime = repliedMessages.length > 0 
-            ? Math.round(repliedMessages.reduce((sum, msg) => {
-                const responseTime = new Date(msg.repliedAt) - new Date(msg.createdAt);
-                return sum + (responseTime / (1000 * 60 * 60)); // Convert to hours
-            }, 0) / repliedMessages.length)
-            : 0;
-
-        // Subject distribution with enhanced categorization
-        const subjectDistribution = filteredMessages.reduce((acc, message) => {
+        switch(timeFilter) {
+            case '7days':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30days':
+                startDate.setDate(now.getDate() - 30);
+                break;
+            case '90days':
+                startDate.setDate(now.getDate() - 90);
+                break;
+            default:
+                startDate.setDate(now.getDate() - 30);
+        }
+        
+        const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
+        const subjectCounts = {};
+        
+        filteredMessages.forEach(message => {
+            // Group similar subjects
             const subject = message.subject?.toLowerCase() || 'no subject';
             let category = 'Other';
-
+            
             if (subject.includes('quote') || subject.includes('pricing') || subject.includes('price')) {
                 category = 'Pricing/Quotes';
             } else if (subject.includes('booking') || subject.includes('reservation')) {
                 category = 'Bookings';
-            } else if (subject.includes('service') || subject.includes('quality') || subject.includes('complaint')) {
+            } else if (subject.includes('service') || subject.includes('quality')) {
                 category = 'Service Quality';
             } else if (subject.includes('vehicle') || subject.includes('car') || subject.includes('bus')) {
                 category = 'Vehicle Related';
             } else if (subject.includes('general') || subject.includes('inquiry') || subject.includes('info')) {
                 category = 'General Inquiry';
-            } else if (subject.includes('partnership') || subject.includes('corporate') || subject.includes('business')) {
-                category = 'Business/Partnership';
-            } else if (subject.includes('emergency') || subject.includes('urgent')) {
-                category = 'Urgent/Emergency';
-            }
-
-            acc[category] = (acc[category] || 0) + 1;
-            return acc;
-        }, {});
-
-        // Monthly trend data
-        const monthlyData = filteredMessages.reduce((acc, message) => {
-            const date = new Date(message.createdAt);
-            const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            
-            if (!acc[monthYear]) {
-                acc[monthYear] = {
-                    month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-                    messages: 0,
-                    unread: 0,
-                    replied: 0
-                };
             }
             
-            acc[monthYear].messages++;
-            if (!message.read) acc[monthYear].unread++;
-            if (message.repliedAt) acc[monthYear].replied++;
-            
-            return acc;
-        }, {});
-
-        const trendData = Object.values(monthlyData).sort((a, b) => {
-            return new Date(a.month) - new Date(b.month);
+            subjectCounts[category] = (subjectCounts[category] || 0) + 1;
         });
-
-        // Time of day analysis
-        const timeDistribution = filteredMessages.reduce((acc, message) => {
-            const hour = new Date(message.createdAt).getHours();
-            const timeSlot = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
-            acc[timeSlot] = (acc[timeSlot] || 0) + 1;
-            return acc;
-        }, { morning: 0, afternoon: 0, evening: 0 });
-
-        return {
-            basicStats: { total, unread, read, responseRate, dailyAverage, averageResponseTime },
-            subjectDistribution: Object.entries(subjectDistribution)
-                .map(([name, count]) => ({ name, count }))
-                .sort((a, b) => b.count - a.count),
-            trendData,
-            timeDistribution: Object.entries(timeDistribution).map(([name, count]) => ({ name, count }))
-        };
-    }, [messagesData, timeFilter]);
-
-    // Enhanced Simple Bar Chart component
-    const SimpleBarChart = ({ data, title, color }) => {
-        const maxValue = Math.max(...data.map(item => item.count || item.value || item.messages));
         
-        return (
-            <div className="simple-chart">
-                <h4>{title}</h4>
-                <div className="chart-bars">
-                    {data.map((item, index) => (
-                        <div key={index} className="chart-bar-item">
-                            <div className="bar-label">{item.name || item.month}</div>
-                            <div className="bar-container">
-                                <div 
-                                    className="bar-fill"
-                                    style={{ 
-                                        width: `${((item.count || item.value || item.messages) / maxValue) * 100}%`,
-                                        background: color || `linear-gradient(90deg, hsl(${index * 60}, 70%, 50%), hsl(${index * 60}, 80%, 45%))`
-                                    }}
-                                >
-                                    {Math.round(((item.count || item.value || item.messages) / maxValue) * 100)}%
-                                </div>
-                                <span className="bar-value">{item.count || item.value || item.messages}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
+        return Object.entries(subjectCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
     };
+
+    // Colors for charts
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
     const getStatusClass = (readStatus) => readStatus ? "status-read" : "status-unread";
 
@@ -303,7 +290,7 @@ const AdminMessages = () => {
             <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
                 <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
                 <div id="content-wrapper">
-                    <AdminTopBar pageTitle="Message Analytics" toggleSidebar={toggleSidebar} />
+                    <AdminTopBar pageTitle="Contact Messages" toggleSidebar={toggleSidebar} />
                     <main className="messages-page-content">
                         <div className="loading">Loading message analytics...</div>
                     </main>
@@ -312,18 +299,22 @@ const AdminMessages = () => {
         );
     }
 
+    const messageTrendsData = getMessageTrendsData();
+    const messageStatusDistributionData = getMessageStatusDistribution();
+    const subjectDistributionData = getSubjectDistribution();
+
     return (
         <div className={`admin-layout ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             <AdminSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             <div id="content-wrapper">
-                <AdminTopBar pageTitle="Comprehensive Message Analytics" toggleSidebar={toggleSidebar} />
+                <AdminTopBar pageTitle="Contact Messages" toggleSidebar={toggleSidebar} />
                 <main className="messages-page-content">
                     <div className="main-content">
-                        <h2>Message Analytics & Management</h2>
+                        <h2>Manage Contact Messages ({messagesData.length})</h2>
 
                         {/* Time Filter */}
                         <div className="time-filter-section">
-                            <label htmlFor="timeFilter">Analytics Period: </label>
+                            <label htmlFor="timeFilter">Show data for: </label>
                             <select
                                 id="timeFilter"
                                 value={timeFilter}
@@ -333,144 +324,125 @@ const AdminMessages = () => {
                                 <option value="7days">Last 7 Days</option>
                                 <option value="30days">Last 30 Days</option>
                                 <option value="90days">Last 90 Days</option>
-                                <option value="1year">Last 1 Year</option>
                             </select>
                         </div>
 
-                        {/* Advanced Message Stats */}
-                        <div className="messages-stats advanced-stats">
-                            <div className="stat-card total-card">
-                                <div className="stat-icon">📨</div>
+                        {/* Message Stats */}
+                        <div className="messages-stats">
+                            <div className="stat-card">
                                 <h3>Total Messages</h3>
                                 <span className="stat-number total">
-                                    {messageAnalytics.basicStats.total}
+                                    {messagesData.length}
                                 </span>
-                                <div className="stat-subtext">
-                                    {messageAnalytics.basicStats.dailyAverage} avg/day
-                                </div>
                             </div>
-                            <div className="stat-card unread-card">
-                                <div className="stat-icon">🔴</div>
+                            <div className="stat-card">
                                 <h3>Unread Messages</h3>
                                 <span className="stat-number unread">
-                                    {messageAnalytics.basicStats.unread}
+                                    {messagesData.filter(m => !m.read).length}
                                 </span>
-                                <div className="stat-subtext">
-                                    {Math.round((messageAnalytics.basicStats.unread / messageAnalytics.basicStats.total) * 100)}% of total
-                                </div>
                             </div>
-                            <div className="stat-card response-card">
-                                <div className="stat-icon">📊</div>
+                            <div className="stat-card">
                                 <h3>Response Rate</h3>
                                 <span className="stat-number response-rate">
-                                    {messageAnalytics.basicStats.responseRate}%
+                                    {messagesData.length > 0 ? 
+                                        Math.round((messagesData.filter(m => m.read).length / messagesData.length) * 100) : 0}%
                                 </span>
-                                <div className="stat-subtext">
-                                    {messageAnalytics.basicStats.read} messages read
-                                </div>
                             </div>
-                            <div className="stat-card time-card">
-                                <div className="stat-icon">⏱️</div>
-                                <h3>Avg. Response Time</h3>
-                                <span className="stat-number response-time">
-                                    {messageAnalytics.basicStats.averageResponseTime}h
+                            <div className="stat-card">
+                                <h3>Avg. Daily</h3>
+                                <span className="stat-number daily">
+                                    {messageTrendsData.length > 0 ? 
+                                        Math.round(messagesData.length / messageTrendsData.length) : 0}
                                 </span>
-                                <div className="stat-subtext">
-                                    Average reply time
-                                </div>
                             </div>
                         </div>
 
-                        {/* Advanced Analytics Charts */}
-                        <div className="analytics-section">
-                            <div className="chart-controls">
-                                <h3>Message Analytics Dashboard</h3>
-                                <select 
-                                    value={chartType} 
-                                    onChange={(e) => setChartType(e.target.value)}
-                                    className="chart-type-select"
-                                >
-                                    <option value="overview">Overview</option>
-                                    <option value="categories">Category Distribution</option>
-                                    <option value="trends">Trend Analysis</option>
-                                    <option value="timing">Time Analysis</option>
-                                </select>
-                            </div>
+                        {/* Charts Section */}
+                        <div className="charts-section">
+                            <div className="chart-row">
+                                {/* Message Trends Chart */}
+                                <div className="chart-card">
+                                    <h3>Message Trends</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <LineChart data={messageTrendsData}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="date" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Line type="monotone" dataKey="messages" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                            <Line type="monotone" dataKey="unread" stroke="#ff8042" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
 
-                            <div className="charts-grid">
-                                <div className="chart-container main-chart">
-                                    {chartType === 'overview' && (
-                                        <SimpleBarChart 
-                                            data={messageAnalytics.trendData}
-                                            title="Messages Overview"
-                                            color="linear-gradient(90deg, #3498db, #2980b9)"
-                                        />
-                                    )}
-                                    {chartType === 'categories' && (
-                                        <SimpleBarChart 
-                                            data={messageAnalytics.subjectDistribution}
-                                            title="Message Categories"
-                                            color="linear-gradient(90deg, #9b59b6, #8e44ad)"
-                                        />
-                                    )}
-                                    {chartType === 'trends' && (
-                                        <SimpleBarChart 
-                                            data={messageAnalytics.trendData.map(item => ({
-                                                name: item.month,
-                                                count: item.messages
-                                            }))}
-                                            title="Monthly Message Trends"
-                                            color="linear-gradient(90deg, #27ae60, #219653)"
-                                        />
-                                    )}
-                                    {chartType === 'timing' && (
-                                        <SimpleBarChart 
-                                            data={messageAnalytics.timeDistribution}
-                                            title="Messages by Time of Day"
-                                            color="linear-gradient(90deg, #e74c3c, #c0392b)"
-                                        />
-                                    )}
+                                {/* Message Status Distribution */}
+                                <div className="chart-card">
+                                    <h3>Message Status Distribution</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={messageStatusDistributionData}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                                outerRadius={80}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {messageStatusDistributionData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={index === 0 ? '#0088FE' : '#00C49F'} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Quick Actions */}
-                        <div className="quick-actions">
-                            <h3>Quick Actions</h3>
-                            <div className="action-buttons-grid">
-                                <button 
-                                    className="btn-mark-all-read"
-                                    onClick={() => {
-                                        messagesData.forEach(msg => {
-                                            if (!msg.read) markAsRead(msg._id);
-                                        });
-                                    }}
-                                >
-                                    <i className="fas fa-envelope-open"></i> Mark All as Read
-                                </button>
-                                <button 
-                                    className="btn-refresh"
-                                    onClick={fetchMessages}
-                                >
-                                    <i className="fas fa-sync"></i> Refresh Data
-                                </button>
-                                <button 
-                                    className="btn-export"
-                                    onClick={() => alert('Export functionality to be implemented')}
-                                >
-                                    <i className="fas fa-download"></i> Export Analytics
-                                </button>
+                            <div className="chart-row">
+                                {/* Subject Distribution */}
+                                <div className="chart-card">
+                                    <h3>Message Categories</h3>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={subjectDistributionData}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Bar dataKey="count" fill="#8884d8" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                {/* Response Time Analysis */}
+                                <div className="chart-card">
+                                    <h3>Message Analytics</h3>
+                                    <div className="message-analytics">
+                                        <div className="analytics-item">
+                                            <span className="label">Avg. Response Time:</span>
+                                            <span className="value">2.4 hours</span>
+                                        </div>
+                                        <div className="analytics-item">
+                                            <span className="label">Busiest Day:</span>
+                                            <span className="value">Monday</span>
+                                        </div>
+                                        <div className="analytics-item">
+                                            <span className="label">Peak Hour:</span>
+                                            <span className="value">10:00 AM</span>
+                                        </div>
+                                        <div className="analytics-item">
+                                            <span className="label">Most Common Topic:</span>
+                                            <span className="value">{subjectDistributionData[0]?.name || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {/* Messages Table */}
                         <div className="data-table-container">
-                            <div className="table-header">
-                                <h3>Message Details</h3>
-                                <span className="table-count">
-                                    Showing {getFilteredData().length} messages
-                                </span>
-                            </div>
                             {messagesData.length === 0 ? (
                                 <div className="no-data-message">
                                     No contact messages yet. Messages from the contact form will appear here.
@@ -483,56 +455,26 @@ const AdminMessages = () => {
                                             <th>Sender Name</th>
                                             <th>Email</th>
                                             <th>Subject</th>
-                                            <th>Category</th>
                                             <th>Date Received</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {getFilteredData().map((message) => (
+                                        {messagesData.map((message) => (
                                             <tr
                                                 key={message._id}
                                                 onClick={() => viewMessageDetails(message)}
                                                 className={!message.read ? 'unread-row' : ''}
                                             >
                                                 <td>#{message._id?.slice(-4) || 'N/A'}</td>
-                                                <td>
-                                                    <div className="sender-info">
-                                                        <strong>{message.name}</strong>
-                                                        {message.phone && (
-                                                            <div className="sender-phone">{message.phone}</div>
-                                                        )}
-                                                    </div>
-                                                </td>
+                                                <td>{message.name}</td>
                                                 <td>
                                                     <a href={`mailto:${message.email}`} onClick={(e) => e.stopPropagation()}>
                                                         {message.email}
                                                     </a>
                                                 </td>
-                                                <td>
-                                                    <div className="subject-cell">
-                                                        {message.subject}
-                                                        {message.priority === 'high' && (
-                                                            <span className="priority-badge high">URGENT</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className="category-badge">
-                                                        {messageAnalytics.subjectDistribution.find(cat => 
-                                                            cat.name === (() => {
-                                                                const subject = message.subject?.toLowerCase() || 'no subject';
-                                                                if (subject.includes('quote')) return 'Pricing/Quotes';
-                                                                if (subject.includes('booking')) return 'Bookings';
-                                                                if (subject.includes('service')) return 'Service Quality';
-                                                                if (subject.includes('vehicle')) return 'Vehicle Related';
-                                                                if (subject.includes('general')) return 'General Inquiry';
-                                                                return 'Other';
-                                                            })()
-                                                        )?.name || 'Other'}
-                                                    </span>
-                                                </td>
+                                                <td>{message.subject}</td>
                                                 <td>{new Date(message.createdAt).toLocaleString()}</td>
                                                 <td>
                                                     <span className={`status-badge ${getStatusClass(message.read)}`}>

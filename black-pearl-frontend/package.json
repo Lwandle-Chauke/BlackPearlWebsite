@@ -1,3 +1,4 @@
+
 {
   "name": "black-pearl-frontend",
   "version": "0.1.0",
@@ -11,6 +12,7 @@
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "express": "^5.1.0",
+    "mongodb": "^6.20.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4",
