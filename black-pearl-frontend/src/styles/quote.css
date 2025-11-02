@@ -15,6 +15,7 @@ main {
     padding: 40px 20px;
     display: flex;
     justify-content: center;
+    background: white; /* Changed from gradient to white */
 }
 
 .quote-section {
@@ -164,11 +165,56 @@ hr {
     font-weight: 600;
 }
 
+.price-estimate-details {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+/* =========================
+   Message Styles
+   ========================= */
+.message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
 /* =========================
    Custom Destination Input
    ========================= */
 #customDestination {
     margin-bottom: 14px;
+}
+
+.custom-destination-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.3s;
+    margin-bottom: 14px;
+}
+
+.custom-destination-input:focus {
+    border-color: #222;
 }
 
 /* =========================
@@ -196,7 +242,7 @@ hr {
 }
 
 /* =========================
-   Map Modal Styles
+   Enhanced Map Modal Styles
    ========================= */
 .map-modal-overlay {
     position: fixed;
@@ -232,19 +278,28 @@ hr {
 .map-modal-header h3 {
     margin: 0;
     color: #333;
+    font-size: 18px;
+    font-weight: 600;
 }
 
 .close-map-btn {
     background: none;
     border: none;
-    font-size: 20px;
     cursor: pointer;
-    padding: 5px;
+    padding: 8px;
     color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 .close-map-btn:hover {
     color: #333;
+    background: #f0f0f0;
 }
 
 .map-modal-body {
@@ -254,13 +309,20 @@ hr {
 .map-modal-body p {
     margin-bottom: 15px;
     color: #666;
+    font-size: 14px;
 }
 
-/* Map Search Box */
+/* =========================
+   Enhanced Map Search Styles
+   ========================= */
+.map-search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
 .map-search-box {
     display: flex;
     gap: 8px;
-    margin-bottom: 15px;
 }
 
 .map-search-box input {
@@ -269,6 +331,7 @@ hr {
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 14px;
+    margin-bottom: 0;
 }
 
 .search-btn {
@@ -277,21 +340,87 @@ hr {
     border-radius: 6px;
     padding: 10px 15px;
     cursor: pointer;
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    min-width: 44px;
 }
 
 .search-btn:hover {
     background: #e9ecef;
+    border-color: #999;
 }
 
+.search-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Search Suggestions Dropdown */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1001;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.suggestion-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.suggestion-main {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+    font-size: 14px;
+}
+
+.suggestion-secondary {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Selected Address Display */
 .selected-address {
     background: #f8f9fa;
     padding: 12px;
     border-radius: 6px;
     margin: 15px 0;
     border-left: 4px solid #007bff;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
+.selected-address strong {
+    color: #333;
+}
+
+/* Map Actions */
 .map-actions {
     display: flex;
     justify-content: flex-end;
@@ -306,13 +435,17 @@ hr {
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
 }
 
 .confirm-location-btn:hover {
     background: #0056b3;
 }
 
-/* Location Input with Map Button */
+/* =========================
+   Location Input with Map Button
+   ========================= */
 .location-input-with-map {
     display: flex;
     gap: 8px;
@@ -321,6 +454,7 @@ hr {
 
 .location-input-with-map input {
     flex: 1;
+    margin-bottom: 0;
 }
 
 .map-pin-btn {
@@ -329,8 +463,11 @@ hr {
     border-radius: 6px;
     padding: 10px 12px;
     cursor: pointer;
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
+    min-width: 44px;
 }
 
 .map-pin-btn:hover {
@@ -338,22 +475,37 @@ hr {
     border-color: #999;
 }
 
-/* Add to quote.css */
+.map-pin-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* =========================
+   Map Loading and Helper Styles
+   ========================= */
 .map-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  font-size: 16px;
-  color: #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #666;
 }
 
 .location-helper {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 16px;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.location-helper strong {
+    color: #333;
 }
 
 /* =========================
@@ -389,57 +541,81 @@ hr {
     
     .map-pin-btn {
         align-self: flex-start;
+        margin-top: 8px;
+    }
+
+    .map-search-box {
+        flex-direction: column;
+    }
+    
+    .search-suggestions {
+        position: relative;
+        margin-top: 8px;
+    }
+
+    .map-modal-header {
+        padding: 15px;
+    }
+
+    .map-modal-body {
+        padding: 15px;
+    }
+
+    .map-modal-header h3 {
+        font-size: 16px;
     }
 }
 
-/* Terms and Conditions Styles */
+/* =========================
+   Terms and Conditions Styles
+   ========================= */
 .terms-acceptance {
-  margin: 25px 0;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  text-align: left;
+    margin: 25px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    text-align: left;
 }
 
 .terms-header {
-  margin-bottom: 15px;
-  text-align: center;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
 .terms-pdf-btn {
-  background: #000000;
-  color: #ffffff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
 .terms-pdf-btn:hover {
-  background: #333333;
-  color: #ffffff;
+    background: #333333;
+    color: #ffffff;
 }
 
 .checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1.4;
-  margin: 0;
-  text-align: left;
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+    text-align: left;
 }
 
 .checkbox-label input[type="checkbox"] {
-    margin-right: 1px;
+    margin-right: 10px;
     margin-top: 2px;
     transform: scale(1.1);
 }
@@ -489,4 +665,54 @@ hr {
         padding: 20px;
         margin-top: 30px;
     }
+}
+
+/* =========================
+   Additional Utility Styles
+   ========================= */
+.input-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 14px;
+}
+
+.quote-page {
+    min-height: 100vh;
+    background: white; /* Changed from gradient to white */
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, select {
+    transition: all 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Loading state for submit button */
+.submit-btn:disabled {
+    position: relative;
+}
+
+.submit-btn:disabled::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    right: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
