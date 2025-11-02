@@ -70,13 +70,13 @@
   /* Corresponds to .hero .cta-read:hover in original HTML */
   background: var(--silver);
 }
-
-/* CONTENT SECTIONS */
+/* MAIN */
 main {
   background: var(--white);
   padding: 18px;
 }
 
+/* ABOUT SECTION */
 .about-section {
   margin-top: 18px;
   display: flex;
@@ -84,38 +84,111 @@ main {
   gap: 18px;
 }
 
-/* STYLES TO REPLACE INLINE STYLES IN JSX */
 .about-section .about-intro {
   font-weight: 700;
-  /* Replaces style="font-weight:700" */
   margin: 0 0 8px 0;
-  /* Replaces style="margin:0 0 8px 0" */
 }
 
 .about-section .about-body {
   margin-top: 10px;
-  /* Replaces style="margin-top:10px" */
+}
+
+/* TOURS */
+.tours {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tours p {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
 }
 
 .tours .tours-callout {
   font-weight: 600;
-  /* Replaces style="font-weight:600" */
 }
 
-/* END INLINE STYLE REPLACEMENTS */
+/* OUR FLEET */
+.fleet-preview {
+  padding: 30px 0;
+  border-radius: 12px;
+}
 
+.home-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 20px;
+}
 
-/* Section Title: RESTORE FLEXBOX to match index.html */
-.section-title {
-  /* REVERTED from display: block; */
+.vehicle-card {
+  background: #fff;
+  border: 1px solid var(--silver);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.vehicle-card:hover {
+  transform: translateY(-6px);
+}
+
+.vehicle-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-bottom: 2px solid #000;
+}
+
+.vehicle-card .card-content {
+  padding: 16px;
+  text-align: center;
+}
+
+.vehicle-card h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #000;
+}
+
+.vehicle-card p {
+  font-size: 15px;
+  color: #444;
+  line-height: 1.4;
+}
+
+.explore-btn-wrap {
   display: flex;
-  /* REVERTED from text-align: center; */
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.explore-btn {
+  background: var(--bg-black);
+  color: #fff;
+  padding: 10px 25px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.explore-btn:hover {
+  background: var(--silver);
+  color: var(--accent);
+}
+
+/* SECTION TITLES */
+.section-title {
+  display: flex;
   justify-content: space-between;
-  /* Added to spread h2 and hr/div */
   align-items: left;
   gap: 5px;
-  /* Re-added gap */
-  /* REVERTED from margin-bottom: 18px; */
 }
 
 .section-title h2 {
@@ -125,25 +198,10 @@ main {
   color: var(--accent);
 }
 
-.section-title hr {
-  /* REVERTED margin: 0 auto; */
-  flex: 1;
-  /* Allows it to take up remaining space */
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--muted));
-  border: 0;
-  margin-left: 12px;
-  /* Restored from HTML <style> */
-  margin-right: 6px;
-  /* Restored from HTML <style> */
-  opacity: 0.8;
-}
-
-/* Common CTA-read style for About and Tours sections (This section looks correct) */
+/* CTA BUTTONS */
 .cta-read {
   display: inline-block;
   align-self: flex-start;
-  width: auto;
   background: #000;
   color: #fff;
   padding: 8px 12px;
@@ -159,61 +217,22 @@ main {
   color: #000;
 }
 
-
-/* Tours small section */
-.tours {
-  margin-top: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.tours p {
-  margin: 0;
-  color: #333;
-  font-size: 16px;
-}
-
-/* Floating chat icon */
-.chat-fab {
-  position: fixed;
-  right: 14px;
-  bottom: 92px;
-  /* Set to match the style.css footer padding */
-  width: 58px;
-  height: 58px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #f9f9f9, #e6e6e6);
-  /* Matched to style.css footer */
-  display: grid;
-  place-items: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-  z-index: 70;
-  /* Matched to style.css */
-}
-
-/* Responsive and layout tweaks for larger screens */
+/* RESPONSIVE */
 @media(min-width: 720px) {
   .hero {
     min-height: 320px;
   }
-
   .hero-inner {
-    padding: 46px 18px
+    padding: 46px 18px;
   }
-
   .hero h1 {
-    font-size: 36px
+    font-size: 36px;
   }
-
   .hero .cta {
-    padding: 12px 26px
+    padding: 12px 26px;
   }
-
-  /* Using the global .wrap styles defined in style.css */
   main {
-    padding: 26px
+    padding: 26px;
   }
 }
 
@@ -222,12 +241,7 @@ main {
     min-height: 420px;
     background-position: center right;
   }
-
   .hero h1 {
-    font-size: 44px
-  }
-
-  .hero-inner {
-    align-items: flex-start
+    font-size: 44px;
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import "../styles/quote.css";
 import "../styles/style.css";
 import Header from "../components/Header";
@@ -18,6 +18,52 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 }; // Johannesburg
+
+// ===============================
+// CUSTOM MAP ICONS
+// ===============================
+const createMapIcon = (color) => ({
+  url: `data:image/svg+xml;base64,${btoa(`
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 28.5C15.828 28.5 16.5 27.828 16.5 27H13.5C13.5 27.828 14.172 28.5 15 28.5Z" fill="${color}"/>
+      <circle cx="15" cy="13" r="8" fill="${color}"/>
+      <circle cx="15" cy="13" r="5" fill="white"/>
+    </svg>
+  `)}`,
+  scaledSize: { width: 30, height: 30 },
+  anchor: { x: 15, y: 30 }
+});
+
+const mapIcons = {
+  pickup: createMapIcon("#3377FF"),
+  dropoff: createMapIcon("#FF4444"),
+  selected: {
+    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMTUiIGZpbGw9IiMyN0FFNjAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMyIvPgo8cGF0aCBkPSJNMTYgMjBMMTggMjJMMjQgMTYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==',
+    scaledSize: { width: 40, height: 40 },
+    anchor: { x: 20, y: 20 }
+  }
+};
+
+// ===============================
+// BUTTON ICONS
+// ===============================
+const ButtonIcons = {
+  mapPin: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#333333"/>
+    </svg>
+  ),
+  search: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#333333"/>
+    </svg>
+  ),
+  close: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#333333"/>
+    </svg>
+  )
+};
 
 // ===============================
 // LOCATION ZONES (VERIFIED FROM PDF)
@@ -176,21 +222,42 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [customerCompany, setCustomerCompany] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Map states
+  // Enhanced Map states
   const [pickupMarker, setPickupMarker] = useState(null);
   const [dropoffMarker, setDropoffMarker] = useState(null);
   const [activeMap, setActiveMap] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [address, setAddress] = useState("");
   const [mapCenter, setMapCenter] = useState(defaultCenter);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [mapError, setMapError] = useState("");
 
-  // Refs for performance
+  // Refs
   const geocoderRef = useRef(null);
   const mapRef = useRef(null);
   const priceCalculationTimeoutRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const autocompleteServiceRef = useRef(null);
+  const placesServiceRef = useRef(null);
 
-  // Initialize geocoder only when needed
+  // Google Maps API loader
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries: ['places'],
+  });
+
+  // Check if Google Maps API key is available
+  const mapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+  
+  useEffect(() => {
+    if (!mapsApiKey) {
+      setMapError("Google Maps API key is missing. Please check your environment configuration.");
+      console.error("REACT_APP_GOOGLE_MAPS_API_KEY is not set");
+    }
+  }, [mapsApiKey]);
+
+  // Initialize Google services
   const getGeocoder = useCallback(() => {
     if (!geocoderRef.current && window.google) {
       geocoderRef.current = new window.google.maps.Geocoder();
@@ -198,9 +265,104 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     return geocoderRef.current;
   }, []);
 
+  const getAutocompleteService = useCallback(() => {
+    if (!autocompleteServiceRef.current && window.google && window.google.maps.places) {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+    }
+    return autocompleteServiceRef.current;
+  }, []);
+
+  const getPlacesService = useCallback(() => {
+    if (!placesServiceRef.current && window.google && window.google.maps.places && mapRef.current) {
+      placesServiceRef.current = new window.google.maps.places.PlacesService(mapRef.current);
+    }
+    return placesServiceRef.current;
+  }, []);
+
+  // Enhanced address search with suggestions
+  const handleAddressSearch = useCallback(async (searchTerm) => {
+    if (!searchTerm.trim() || !isLoaded) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const service = getAutocompleteService();
+      if (!service) {
+        console.warn('Autocomplete service not available');
+        return;
+      }
+
+      service.getPlacePredictions(
+        {
+          input: searchTerm,
+          componentRestrictions: { country: 'za' },
+          types: ['address', 'establishment', 'geocode']
+        },
+        (predictions, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setSearchSuggestions(predictions);
+            setShowSuggestions(true);
+          } else {
+            setSearchSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [isLoaded, getAutocompleteService]);
+
+  // Get place details when a suggestion is selected
+  const handleSuggestionSelect = useCallback(async (placeId) => {
+    try {
+      const service = getPlacesService();
+      if (!service) {
+        console.warn('Places service not available');
+        return;
+      }
+
+      service.getDetails(
+        {
+          placeId: placeId,
+          fields: ['geometry', 'formatted_address', 'name', 'address_components']
+        },
+        (place, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+            const location = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            };
+
+            setMapCenter(location);
+            setSelectedLocation(location);
+            setAddress(place.formatted_address);
+            
+            if (activeMap === 'pickup') {
+              setPickupLocation(place.formatted_address);
+              setPickupMarker(location);
+            } else if (activeMap === 'dropoff') {
+              setDropoffLocation(place.formatted_address);
+              setDropoffMarker(location);
+            }
+
+            setShowSuggestions(false);
+            setSearchSuggestions([]);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error getting place details:', error);
+    }
+  }, [activeMap, getPlacesService]);
+
   // Optimized geocoding function
   const geocodeAddress = useCallback(async (address) => {
-    if (!address.trim()) return null;
+    if (!address.trim() || !isLoaded) return null;
     
     try {
       const geocoder = getGeocoder();
@@ -227,10 +389,12 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       console.error('Geocoding error:', error);
       return null;
     }
-  }, [getGeocoder]);
+  }, [isLoaded, getGeocoder]);
 
   // Optimized map click handler
   const onMapClick = useCallback(async (event) => {
+    if (!isLoaded) return;
+    
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
     const location = { lat, lng };
@@ -275,57 +439,59 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         setDropoffMarker(location);
       }
     }
-  }, [activeMap, getGeocoder]);
+  }, [activeMap, getGeocoder, isLoaded]);
 
   // Optimized map load handler
   const onMapLoad = useCallback((map) => {
     mapRef.current = map;
-    setIsMapLoaded(true);
+    console.log('Google Maps loaded successfully');
   }, []);
 
-  // Optimized open map functions
-  const openMapForPickup = useCallback(async () => {
+  // Fixed open map functions
+  const openMapForPickup = useCallback(() => {
+    console.log("Opening map for pickup");
     setActiveMap('pickup');
+    setShowSuggestions(false);
+    setMapError("");
+    setAddress("");
+    setSelectedLocation(null);
     
-    if (pickupLocation) {
-      const location = await geocodeAddress(pickupLocation);
-      if (location) {
-        setMapCenter(location);
-        setSelectedLocation(location);
-        setPickupMarker(location);
-        return;
-      }
+    if (pickupMarker) {
+      setMapCenter(pickupMarker);
+      setSelectedLocation(pickupMarker);
+    } else {
+      setMapCenter(defaultCenter);
     }
-    
-    setMapCenter(pickupMarker || defaultCenter);
-    setSelectedLocation(pickupMarker);
-  }, [pickupLocation, pickupMarker, geocodeAddress]);
+  }, [pickupMarker]);
 
-  const openMapForDropoff = useCallback(async () => {
+  const openMapForDropoff = useCallback(() => {
+    console.log("Opening map for dropoff");
     setActiveMap('dropoff');
+    setShowSuggestions(false);
+    setMapError("");
+    setAddress("");
+    setSelectedLocation(null);
     
-    if (dropoffLocation) {
-      const location = await geocodeAddress(dropoffLocation);
-      if (location) {
-        setMapCenter(location);
-        setSelectedLocation(location);
-        setDropoffMarker(location);
-        return;
-      }
+    if (dropoffMarker) {
+      setMapCenter(dropoffMarker);
+      setSelectedLocation(dropoffMarker);
+    } else {
+      setMapCenter(defaultCenter);
     }
-    
-    setMapCenter(dropoffMarker || defaultCenter);
-    setSelectedLocation(dropoffMarker);
-  }, [dropoffLocation, dropoffMarker, geocodeAddress]);
+  }, [dropoffMarker]);
 
   const closeMap = useCallback(() => {
+    console.log("Closing map");
     setActiveMap(null);
     setSelectedLocation(null);
     setAddress("");
+    setShowSuggestions(false);
+    setSearchSuggestions([]);
+    setMapError("");
   }, []);
 
   const handleSearchLocation = useCallback(async () => {
-    if (!address.trim()) return;
+    if (!address.trim() || !isLoaded) return;
     
     const location = await geocodeAddress(address);
     if (location) {
@@ -338,9 +504,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         setDropoffMarker(location);
       }
     }
-  }, [address, activeMap, geocodeAddress]);
+  }, [address, activeMap, geocodeAddress, isLoaded]);
 
-  // Zone detection functions
+  // Zone detection functions (keep the same as before)
   const findZone = useCallback((location, city) => {
     if (!location || !city) return null;
     
@@ -472,7 +638,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     return Math.round(price);
   }, []);
 
-  // Form handlers
+  // Form handlers (keep the same)
   const handleDestinationChange = useCallback((e) => {
     setDestination(e.target.value);
     setShowCustomDestination(e.target.value === "Other (Specify Below)");
@@ -613,6 +779,14 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     };
   }, [vehicleType, tripDirection, destination, pickupLocation, dropoffLocation, calculateEstimatedPrice]);
 
+  // Handle Google Maps load error
+  useEffect(() => {
+    if (loadError) {
+      setMapError("Failed to load Google Maps. Please check your API key and internet connection.");
+      console.error('Google Maps load error:', loadError);
+    }
+  }, [loadError]);
+
   return (
     <>
       <Header 
@@ -643,6 +817,13 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
             All trips must originate from these areas. Rates for destinations outside Johannesburg and Pretoria 
             will be calculated differently and may vary.
           </div>
+
+          {/* API Key Warning */}
+          {!mapsApiKey && (
+            <div className="message error">
+              <strong>Google Maps Configuration Required:</strong> Please set up your REACT_APP_GOOGLE_MAPS_API_KEY environment variable.
+            </div>
+          )}
 
           {/* Price Estimate Display */}
           {estimatedPrice > 0 && (
@@ -750,8 +931,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     className="map-pin-btn"
                     onClick={openMapForPickup}
                     title="Select pickup location on map"
+                    disabled={!isLoaded}
                   >
-                    📍
+                    {ButtonIcons.mapPin}
                   </button>
                 </div>
               </div>
@@ -771,8 +953,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     className="map-pin-btn"
                     onClick={openMapForDropoff}
                     title="Select drop-off location on map"
+                    disabled={!isLoaded}
                   >
-                    📍
+                    {ButtonIcons.mapPin}
                   </button>
                 </div>
               </div>
@@ -780,6 +963,7 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               {/* Location Helper Text */}
               <div className="location-helper">
                 <strong>Tip:</strong> Click the pin icon to select locations on the map, or type addresses manually.
+                {!isLoaded && " (Google Maps is loading...)"}
               </div>
 
               {/* Vehicle Type */}
@@ -866,35 +1050,65 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               )}
             </div>
 
-            {/* Map Modal */}
+            {/* Enhanced Map Modal */}
             {activeMap && (
               <div className="map-modal-overlay">
                 <div className="map-modal">
                   <div className="map-modal-header">
                     <h3>Select {activeMap === 'pickup' ? 'Pickup' : 'Drop-off'} Location</h3>
-                    <button onClick={closeMap} className="close-map-btn">✕</button>
+                    <button onClick={closeMap} className="close-map-btn">
+                      {ButtonIcons.close}
+                    </button>
                   </div>
                   <div className="map-modal-body">
                     <p>Click on the map to set your {activeMap} location, or search for an address:</p>
                     
-                    {/* Search Box */}
-                    <div className="map-search-box">
-                      <input
-                        type="text"
-                        placeholder="Search for an address..."
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearchLocation()}
-                      />
-                      <button onClick={handleSearchLocation} className="search-btn">
-                        🔍
-                      </button>
+                    {/* Map Error Display */}
+                    {mapError && (
+                      <div className="message error">
+                        {mapError}
+                      </div>
+                    )}
+
+                    {/* Enhanced Search Box with Suggestions */}
+                    <div className="map-search-container">
+                      <div className="map-search-box">
+                        <input
+                          ref={searchInputRef}
+                          type="text"
+                          placeholder="Search for an address..."
+                          value={address}
+                          onChange={(e) => {
+                            setAddress(e.target.value);
+                            handleAddressSearch(e.target.value);
+                          }}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSearchLocation()}
+                        />
+                        <button onClick={handleSearchLocation} className="search-btn">
+                          {ButtonIcons.search}
+                        </button>
+                      </div>
+                      
+                      {/* Search Suggestions Dropdown */}
+                      {showSuggestions && searchSuggestions.length > 0 && (
+                        <div className="search-suggestions">
+                          {searchSuggestions.map((prediction) => (
+                            <div
+                              key={prediction.place_id}
+                              className="suggestion-item"
+                              onClick={() => handleSuggestionSelect(prediction.place_id)}
+                            >
+                              <div className="suggestion-text">
+                                <div className="suggestion-main">{prediction.structured_formatting.main_text}</div>
+                                <div className="suggestion-secondary">{prediction.structured_formatting.secondary_text}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     
-                    <LoadScript 
-                      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-                      loadingElement={<div className="map-loading">Loading Maps...</div>}
-                    >
+                    {isLoaded ? (
                       <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={mapCenter}
@@ -905,28 +1119,23 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                           disableDefaultUI: false,
                           zoomControl: true,
                           streetViewControl: true,
-                          mapTypeControl: true
+                          mapTypeControl: true,
+                          fullscreenControl: true
                         }}
                       >
                         {/* Pickup Marker */}
                         {activeMap === 'pickup' && pickupMarker && (
                           <Marker
                             position={pickupMarker}
-                            icon={{
-                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
-                              scaledSize: new window.google.maps.Size(30, 30),
-                            }}
+                            icon={mapIcons.pickup}
                           />
-                           )}
+                        )}
 
-                                                   {/* Dropoff Marker */}
+                        {/* Dropoff Marker */}
                         {activeMap === 'dropoff' && dropoffMarker && (
                           <Marker
                             position={dropoffMarker}
-                            icon={{
-                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
-                              scaledSize: new window.google.maps.Size(30, 30),
-                            }}
+                            icon={mapIcons.dropoff}
                           />
                         )}
 
@@ -934,14 +1143,15 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                         {selectedLocation && (
                           <Marker
                             position={selectedLocation}
-                            icon={{
-                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
-                              scaledSize: new window.google.maps.Size(40, 40),
-                            }}
+                            icon={mapIcons.selected}
                           />
                         )}
                       </GoogleMap>
-                    </LoadScript>
+                    ) : (
+                      <div className="map-loading">
+                        {loadError ? "Failed to load Google Maps" : "Loading Google Maps..."}
+                      </div>
+                    )}
 
                     {address && (
                       <div className="selected-address">

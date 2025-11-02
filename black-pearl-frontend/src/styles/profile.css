@@ -1,108 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
-
-/* Profile Container */
+/* ---------- Profile Container ---------- */
 .profile-container {
   max-width: 900px;
-  margin: 100px auto 60px auto;
+  margin: 80px auto 60px auto;
   background: #fff;
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
   font-family: 'Poppins', sans-serif;
 }
 
+/* ---------- Header ---------- */
 .profile-header {
   text-align: center;
   margin-bottom: 30px;
 }
+.profile-header h2 { font-size: 2rem; margin-bottom: 5px; }
+.profile-header p { font-size: 1rem; color: #555; }
 
-.profile-header h2 {
-  font-size: 2rem;
-  color: var(--bg-black);
-  margin-bottom: 5px;
-}
-
-.profile-header p {
-  color: #555;
-  font-size: 1rem;
-}
-
-/* Profile Picture Section */
+/* ---------- Profile Picture ---------- */
 .profile-pic-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
 }
+.profile-pic { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid black; margin-bottom: 15px; transition: transform 0.2s, box-shadow 0.2s; }
+.profile-pic:hover { transform: scale(1.03); box-shadow: 0 0 0 4px rgba(0,0,0,0.1); }
 
-.profile-pic {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 15px;
-  border: 3px solid black;
-  cursor: pointer;
-  /* Indicate it's clickable */
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+/* ---------- Name ---------- */
+.profile-name { font-size: 1.5rem; font-weight: 600; color: #333; }
 
-/* Hover effect for the profile picture */
-.profile-pic:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
-}
-
-.profile-pic-section input[type="file"] {
-  display: none;
-  /* Hide the default file input */
-}
-
-/* Style for the 'Change Picture' button */
-.upload-btn {
-  background: #f1f1f1;
-  color: #333;
-  padding: 8px 18px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: 0.3s;
-}
-
-.upload-btn:hover {
-  background: #e5e5e5;
-  border-color: #ccc;
-}
-
-.profile-name {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Static Profile Information */
-.profile-info-static {
-  margin-bottom: 40px;
-}
-
-.info-section {
-  margin-bottom: 30px;
-}
-
-.info-section h3 {
-  color: #333;
-  border-bottom: 2px solid #e6e6e6;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  font-size: 1.3rem;
-}
+/* ---------- Info Sections ---------- */
+.info-section { margin-bottom: 30px; }
+.info-section h3 { font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #e6e6e6; padding-bottom: 10px; }
 
 .info-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -112,96 +46,27 @@
   border-radius: 8px;
   border-left: 4px solid #e6e6e6;
 }
+.info-item label { font-weight: 600; font-size: 0.9rem; color: #555; margin-bottom: 5px; display: block; }
+.info-value { font-size: 1.1rem; font-weight: 500; color: #333; }
 
-.info-item label {
-  display: block;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-}
-
-.info-value {
-  font-size: 1.1rem;
-  color: #333;
-  font-weight: 500;
-}
-
-/* Account Actions */
-.account-actions {
-  background: #f8f9fa;
-  padding: 25px;
-  border-radius: 10px;
-  border: 2px solid #e6e6e6;
-}
-
-.account-actions h3 {
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 1.3rem;
-}
-
-.profile-form input:focus,
-.profile-form select:focus {
-  outline: none;
-  border-color: #000;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
+/* ---------- Account Actions ---------- */
+.account-actions { display: flex; flex-direction: column; gap: 15px; padding: 25px; background: #f8f9fa; border-radius: 10px; border: 2px solid #e6e6e6; margin-bottom: 30px; }
+.account-actions h3 { font-size: 1.3rem; margin-bottom: 15px; color: #333; }
+.action-buttons { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
 .password-reset-btn,
-.contact-support-btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1;
-  min-width: 200px;
-}
+.contact-support-btn { flex: 1; min-width: 200px; padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+.password-reset-btn { background: #e6e6e6; color: black; }
+.password-reset-btn:hover { background: black; color: white; transform: translateY(-2px); }
+.contact-support-btn { background: black; color: white; }
+.contact-support-btn:hover { background: #e6e6e6; color: black; transform: translateY(-2px); }
 
-.password-reset-btn {
-  background: #e6e6e6;
-  color: black;
-}
-
-.password-reset-btn:hover:not(:disabled) {
-  background: black;
-  transform: translateY(-2px);
-  color: white;
-}
-
-.password-reset-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.contact-support-btn {
-  background: black;
-  color: white;
-}
-
-.contact-support-btn:hover {
-  background: #e6e6e6;
-  transform: translateY(-2px);
-  color: black;
-}
-
-/* Stats Section */
+/* ---------- Stats Section ---------- */
 .stats-section {
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
   margin-top: 50px;
 }
-
 .stat-card {
   background: #f8f8f8;
   border-radius: 12px;
@@ -209,164 +74,50 @@
   margin: 10px;
   width: 220px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   transition: transform 0.3s;
 }
+.stat-card h3 { font-size: 1.4rem; margin-bottom: 8px; color: #111; }
+.stat-card p { font-size: 0.95rem; color: #555; }
+.stat-card:hover { transform: translateY(-5px); }
 
-.stat-card:hover {
-  transform: translateY(-5px);
-}
+/* ---------- Quotes Table ---------- */
+.quotes-table-container { overflow-x: auto; margin-top: 20px; }
+.quotes-table { width: 100%; border-collapse: collapse; min-width: 600px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+.quotes-table th, .quotes-table td { padding: 12px 15px; text-align: left; }
+.quotes-table th { background: #f8f9fa; font-weight: 600; border-bottom: 2px solid #e6e6e6; }
+.quotes-table tr:hover { background: #f8f9fa; }
+.trip-details small { font-size: 0.85rem; color: #666; }
 
-.stat-card h3 {
-  font-size: 1.4rem;
-  margin-bottom: 8px;
-  color: #111;
-}
+/* ---------- Status Badges ---------- */
+.status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 600; text-transform: uppercase; }
+.status-pending { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d1ecf1; color: #0c5460; }
+.status-booked { background: #d4edda; color: #155724; }
+.status-completed { background: #d1ecf1; color: #0c5460; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
 
-.stat-card p {
-  font-size: 0.95rem;
-  color: #555;
-}
+/* ---------- Buttons ---------- */
+.btn-primary { background: #000; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-download { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
 
-/* Responsive */
+/* ---------- Loading / No Quotes ---------- */
+.loading-quotes, .no-quotes { text-align: center; padding: 40px; color: #666; }
+.no-quotes p { margin-bottom: 20px; }
+
+/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
-  .profile-container {
-    padding: 20px;
-    margin: 20px;
-  }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .stats-section {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .stat-card {
-    width: 90%;
-  }
+  .profile-container { padding: 20px; margin: 20px; }
+  .info-grid { grid-template-columns: repeat(2, 1fr); gap: 5px;}
+  .action-buttons { flex-direction: column; }
+  .stats-section { flex-direction: column; align-items: center; }
+  .stat-card { width: 90%; margin: 10px 0; }
+  .profile-pic { width: 100px; height: 100px; }
 }
 
 @media (max-width: 480px) {
-  .stats-section {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-header h2 {
-    font-size: 2rem;
-  }
-}
-
-/* Quote Requests Section */
-.quotes-table-container {
-  overflow-x: auto;
-  margin-top: 20px;
-}
-
-.quotes-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.quotes-table th {
-  background: #f8f9fa;
-  padding: 12px 15px;
-  text-align: left;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #e6e6e6;
-}
-
-.quotes-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.quotes-table tr:hover {
-  background: #f8f9fa;
-}
-
-.trip-details {
-  line-height: 1.4;
-}
-
-.trip-details small {
-  color: #666;
-  font-size: 0.85em;
-}
-
-/* Status Badges */
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-pending {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-confirmed {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.status-booked {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-completed {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.status-cancelled {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-/* Buttons */
-.btn-primary {
-  background: #000;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-download {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85em;
-}
-
-.loading-quotes,
-.no-quotes {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.no-quotes p {
-  margin-bottom: 20px;
+  .stats-section { flex-direction: column; align-items: center; }
+  .profile-header h2 { font-size: 1.6rem; }
+  .quotes-table { min-width: 400px; }
+  .btn-download { font-size: 0.75em; padding: 5px 10px; }
 }

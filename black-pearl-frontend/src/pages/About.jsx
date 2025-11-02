@@ -21,6 +21,10 @@ const About = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                     <h1 className="main-title">ABOUT US</h1>
 
                     <section>
+                        <p>BlackPearl Coach Charters and Tours is an exceptional passenger transport company based in Roodepoort, Gauteng. We specialise in providing safe, reliable, and comfortable transportation services for corporate, government, and private clients. Our services cater to airport transfers, conference shuttles, sporting events, event transportation, and tour group travel. Our aim is to ensure affordability, efficiency, and top-tier service delivery.</p>
+                    </section>
+
+                    <section>
                         <h2 className="section-title">Our Mission</h2>
                         <p>At Black Pearl Coach Charters and Tours, our mission is simple: to make passenger transport arranging a seamless, reliable, and affordable experience. We believe that whether you're travelling for business, sports, or leisure, your journey should be comfortable, safe, and stress-free from start to finish.</p>
                     </section>
