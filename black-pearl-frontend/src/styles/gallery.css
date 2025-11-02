@@ -1,265 +1,570 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
 
-/* Your page-specific styles here */
-/* --- FIXED & CLEANED CSS --- */
-
-/* ROOT VARIABLES */
+/* --------------------------------------------- */
+/* 🌍 GLOBAL VARIABLES */
+/* --------------------------------------------- */
 :root {
   --black: #0b0b0b;
   --dark-gray: #1f1f1f;
   --mid-gray: #bfbfbf;
   --light-gray: #efefef;
+  --accent: var(--black);
+  --muted: #6c757d;
   --white: #ffffff;
 }
 
-/* BASE STYLES */
+/* --------------------------------------------- */
+/* 🧱 BASE STYLES */
+/* --------------------------------------------- */
 body {
   background: var(--light-gray);
   color: #222;
-  line-height: 1.4;
-  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  font-family: 'Poppins', Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
 
-/* --- GALLERY LAYOUT FIX --- */
-
-/* Ensures the gallery is centered and well-structured */
+/* --------------------------------------------- */
+/* 🖼 GALLERY SECTION */
+/* --------------------------------------------- */
 .gallery-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 100px 5% 50px;
-  /* Space from header */
+  padding: 80px 5% 50px;
   min-height: 100vh;
-  box-sizing: border-box;
   background: var(--light-gray);
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* Centers heading */
-.gallery-section h1.gallery-title {
-  font-size: 2.5rem;
+/* Header for Gallery Page */
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 40px auto;
+  padding: 0 10px;
+}
+
+.gallery-header h1 {
+  font-size: 2.2rem;
   font-weight: 700;
   color: var(--black);
-  margin: 20px 0 30px;
-  letter-spacing: 1.5px;
+  margin: 0;
+  letter-spacing: 1.2px;
 }
 
+.upload-btn {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
+.upload-btn i {
+  font-size: 1rem;
+}
+
+.upload-btn:hover {
+  background: var(--dark-gray);
+  transform: translateY(-2px);
+}
+
+/* --------------------------------------------- */
+/* 🖼 ALBUM SECTIONS */
+/* --------------------------------------------- */
+.album-section {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto 60px auto;
+  text-align: left;
+}
+
+.album-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--black);
+  padding-left: 12px;
+}
+
+/* Professional Grid for gallery images - UPDATED */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  /* Flexible columns */
-  gap: 2rem;
-  padding: 2rem;
-  max-width: 1200px;
-  /* Limit grid width */
-  margin: 0 auto;
-  /* Center the grid */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  width: 100%;
 }
 
-/* CARD STYLE */
+/* --------------------------------------------- */
+/* 🧩 GALLERY CARDS - UPDATED FOR SMALLER, PROFESSIONAL LOOK */
+/* --------------------------------------------- */
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+  height: fit-content;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* 4:3 Aspect Ratio for consistency */
+  overflow: hidden;
+}
+
+.gallery-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-card:hover .gallery-image {
+  transform: scale(1.05);
+}
+
+/* Testimonial text under image - UPDATED */
+.testimonial {
+  background: var(--light-gray);
+  padding: 1rem;
+  margin: 0;
+  color: #555;
+  font-style: italic;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+/* Legacy card styles for compatibility */
 .card {
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: 100%;
-  /* Ensure cards take full height in grid item */
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .card img {
   width: 100%;
-  height: 200px;
-  /* Fixed height for images */
+  height: 260px;
   object-fit: cover;
   display: block;
 }
 
 .card p {
-  padding: 1rem;
-  font-size: 0.95rem;
-  color: #555;
-  line-height: 1.4;
   margin: 0;
-  flex-grow: 1;
-  /* Allow text to take available space */
-  display: flex;
-  align-items: center;
-  /* Center text vertically */
-  justify-content: center;
-  /* Center text horizontally */
+  padding: 0.8rem 1rem 1rem;
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.4;
+  background: var(--light-gray);
+  border-top: 1px solid #f1f1f1;
 }
 
-.message {
-  padding: 1rem;
-  border-radius: 5px;
-  margin-top: 1rem;
-  text-align: center;
+.card.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--muted);
+  font-weight: 600;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* --------------------------------------------- */
+/* ⚙️ BUTTONS & STATES */
+/* --------------------------------------------- */
+.btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:hover {
+  opacity: 0.95;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--white);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--black);
+}
+
+.upload-action {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* --------------------------------------------- */
+/* 🪟 MODAL STYLES (Upload/Testimonial, Pending, etc.) */
+/* --------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal.card-modal {
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.25);
+  animation: fadeIn 0.3s ease;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #f1f1f3;
+}
+.card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark-gray);
+}
+.card-header .close {
+  background: transparent;
+  border: 0;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.card-body {
+  padding: 18px 22px 22px 22px;
+}
+
+.card-actions,
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 22px 22px 22px;
+}
+
+/* Form layout inside modal */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-grid .col label {
+  display: block;
+  margin-bottom: 10px;
   font-weight: 600;
 }
 
-.error-message {
-  color: #f44336;
-  background-color: #ffebee;
-  border: 1px solid #f44336;
+.form-grid .col input[type="text"],
+.form-grid .col input[type="url"],
+.form-grid .col input[type="email"],
+.form-grid .col select,
+.form-grid .col textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6e6e9;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: 'Poppins', Arial, sans-serif;
 }
 
-.info-message {
-  color: #2196F3;
-  background-color: #e3f2fd;
-  border: 1px solid #2196F3;
+.form-grid .col textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
-/* Responsive adjustments */
-@media (max-width: 900px) {
+.file-input {
+  padding: 6px 4px;
+}
+
+/* Pending/approval items (for admin side) */
+.pending-items {
+  display: grid;
+  gap: 12px;
+}
+.pending-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(10, 10, 10, 0.03);
+}
+.pending-item .thumb {
+  width: 140px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.pending-item .meta {
+  flex: 1;
+}
+.pending-item .caption {
+  color: var(--muted);
+  margin: 6px 0;
+}
+.pending-item .by {
+  font-size: 0.9rem;
+  color: #888;
+}
+.pending-item .actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+.btn-action {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn-action:hover {
+  background: #fafcff;
+}
+
+/* --------------------------------------------- */
+/* 💬 RESPONSIVE DESIGN - UPDATED */
+/* --------------------------------------------- */
+@media (max-width: 1200px) {
   .gallery-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    padding: 1.5rem;
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal.card-modal {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 768px) {
   .gallery-section {
     padding: 80px 1rem 30px;
   }
 
-  .gallery-section h1.gallery-title {
-    font-size: 2rem;
-    margin-bottom: 25px;
+  .gallery-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .gallery-header h1 {
+    font-size: 1.7rem;
+  }
+
+  .upload-btn {
+    width: 100%;
+    max-width: 260px;
   }
 
   .gallery-grid {
-    grid-template-columns: 1fr;
-    padding: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
   }
 
-  .card img {
-    height: 180px;
-  }
-
-  .card p {
-    font-size: 0.9rem;
-    padding: 0.8rem;
+  .album-title {
+    font-size: 1.3rem;
   }
 }
 
-/* Lightbox Styles */
-.lightbox-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+@media (max-width: 480px) {
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .testimonial {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
 }
 
-.lightbox-content {
-  position: relative;
-  background: var(--white);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-  max-width: 90%;
-  max-height: 90%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* --------------------------------------------- */
+/* 🔆 ANIMATIONS */
+/* --------------------------------------------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.lightbox-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: var(--black);
-  cursor: pointer;
-  z-index: 1001;
+/* --- USER UPLOAD MODAL REFINEMENT --- */
+.smooth-modal {
+  animation: fadeInScale 0.3s ease forwards;
 }
 
-.lightbox-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  font-size: 2rem;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+@keyframes fadeInScale {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
-.lightbox-nav:hover {
-  background-color: rgba(0, 0, 0, 0.7);
+.modal-description {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: var(--muted);
 }
 
-.lightbox-nav.prev {
-  left: 10px;
-}
-
-.lightbox-nav.next {
-  right: 10px;
-}
-
-.lightbox-image {
-  max-width: 100%;
-  max-height: 70vh;
-  object-fit: contain;
-  border-radius: 5px;
-  margin-bottom: 15px;
-}
-
-.lightbox-alt-text,
-.lightbox-uploaded-by {
+.upload-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
   color: var(--dark-gray);
-  font-size: 1rem;
-  margin: 5px 0;
 }
 
-@media (max-width: 768px) {
-  .lightbox-content {
-    padding: 15px;
-  }
+.upload-form input,
+.upload-form select,
+.upload-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 4px;
+  transition: border 0.2s ease;
+}
 
-  .lightbox-close {
-    font-size: 1.5rem;
-    top: 5px;
-    right: 5px;
-  }
+.upload-form input:focus,
+.upload-form textarea:focus,
+.upload-form select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 
-  .lightbox-nav {
-    font-size: 1.5rem;
-    padding: 5px 10px;
-  }
+.file-input {
+  border: 2px dashed #ccc;
+  padding: 15px;
+  text-align: center;
+  background: #fafafa;
+  cursor: pointer;
+}
 
-  .lightbox-image {
-    max-height: 60vh;
-  }
+.file-input:hover {
+  border-color: var(--accent);
+}
 
-  .lightbox-alt-text,
-  .lightbox-uploaded-by {
-    font-size: 0.9rem;
-  }
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.form-row .col {
+  flex: 1;
+}
+
+.status-message {
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.toggle-checkbox input {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+/* Loading and Status Messages */
+.status-text {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  margin: 2rem 0;
+}
+
+.status-text.error {
+  color: #e74c3c;
+  background: #fdf2f2;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+}
+
+.empty-message {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin: 3rem 0;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
 }

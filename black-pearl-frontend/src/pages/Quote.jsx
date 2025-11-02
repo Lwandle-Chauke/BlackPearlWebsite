@@ -1,13 +1,159 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import "../styles/quote.css";
 import "../styles/style.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ChatWidget from "../chatbot/ChatWidget";
 
+// ===============================
+// MAP CONFIGURATION
+// ===============================
+const mapContainerStyle = {
+  width: "100%",
+  height: "300px",
+  borderRadius: "8px",
+  border: "1px solid #ccc"
+};
+
+const defaultCenter = { lat: -26.2041, lng: 28.0473 }; // Johannesburg
+
+// ===============================
+// LOCATION ZONES (VERIFIED FROM PDF)
+// ===============================
+const locationZones = {
+  johannesburg: {
+    zone1: [
+      "Bedford Gardens", "Bedfordview", "Bellevue", "Benoni", "Bezuidenhout Valley",
+      "Birch Acres", "Birchleigh", "Boksburg", "Bonaero Park", "Brentwood Park",
+      "Bruma", "Cyrildene", "Dawn Park", "Dower Glen", "Eden Glen", "Edenvale",
+      "Fairvale", "Fairwood", "Farrarmere", "Fellside", "Glen Marais", "Glenhazel",
+      "Heriotdale", "Highlands", "Hurleyvale", "Isando", "Jet Park", "Kempton Park",
+      "Kensington", "Killarney", "Lakefield", "Linksfield", "Lombardy East",
+      "Lyndhurst", "Malvern", "Marais Steyn Park", "North Norwood", "Oaklands",
+      "Observatory", "Orchards", "Raedene", "Riviera", "Rosherville", "Rouxville",
+      "Rynfield", "Sandringham", "Senderwood", "Silvermont", "Spartan",
+      "St. Andrews", "Sydenham", "Victoria"
+    ],
+    zone2: [
+      "Abbotsford", "Alberton", "Albertville", "Athol", "Auckland Park", "Bassonia",
+      "Benmore", "Berario", "Bergbon", "Birdhaven", "Blairgowrie", "Bordoux",
+      "Braamfontein", "Brackenhurst", "Brakpan", "Bramley", "Bryanston", "Chiselhurston",
+      "Craighill Park", "Darrenwood", "Dunkeld", "Duxberry", "Emmarentia", "Fairland",
+      "Ferndale", "Fontainebleau", "Gallo Manor", "Germiston", "Greymont", "Hurlingham",
+      "Hyde Park", "Illovo", "Inanda", "Johannesburg CBD", "Kelland", "Kelvin", "Kensington B",
+      "Kew", "Kibler Park", "Kyalami", "Kyber Rock", "Linden", "Linmeyer", "Lyme Park",
+      "Malanshof", "Melrose", "Melville", "Meredale", "Meyersdal", "Midrand", "Mondeor",
+      "Montroux", "Morningside", "Mulbarton", "Noordwyk", "Northcliff", "Oakdene", "Ormonde",
+      "Parkhurst", "Parkmore", "Parktown", "Parktown North", "Parkview", "Parkwood", "Paulshof",
+      "Petervale", "Randburg CBD", "Randhart", "Randpark", "Richmond", "Ridgeway", "Risana",
+      "Risidale", "River Club", "Rivonia", "Robindale", "Robinhills", "Rooseveldt Park",
+      "Rosebank", "Rosettenville", "Rossmore", "Sandhurst", "Sandown", "Sandton CBD",
+      "Savoy Estate", "Saxonwold", "Strathavon", "Strydom Park", "Sunninghill", "The Hill",
+      "Triomf", "Turffontein", "Victoria Park", "Vorna Valley", "Waverley", "Wendywood",
+      "Westcliff", "Westdene", "Windsor", "Woodmead"
+    ],
+    zone3: [
+      "Alensnek", "Beverley", "Boskruin", "Broadacres", "Bromhof", "Bushill Estate",
+      "Chartwell", "Craigavon", "Dainfern", "Douglasdale", "Farmhall", "Fourways",
+      "Jukskei Park", "Lonehill", "Magaliessig", "Northriding", "Olivedale", "Pine Slopes",
+      "Quellerina", "Randpark Ridge", "Sharonlea", "Sonneglans", "Sundowner",
+      "Waterford Estate", "Weltevreden Park", "Witkoppen"
+    ],
+    zone4: [
+      "Breunanda", "Constantia Kloof", "Discovery", "Featherbrook Estate", "Florida",
+      "Georginia", "Helderkruin", "Honeydew", "Horison", "Kya Sands", "Lanseria",
+      "Little Falls", "Maraisburg", "Mindalore", "Muldersdrift", "Princess", "Radiokop",
+      "Rangeview", "Roodekraans", "Roodepoort CBD", "Ruimsig", "Selcourt", "Springs",
+      "Strubens Valley", "Wilgeheuwel", "Wilro Park", "Witpoortjie", "Zandspruit"
+    ],
+    zone5: ["Kenmare", "Krugersdorp", "Monument", "Noordheuwel", "Rand En Dal"],
+    zone6: [
+      "Brits", "Broederstroom", "Magaliesburg", "Nigel", "Randfontein", "Sasolburg",
+      "Vanderbijlpark", "Vereenigin", "Westonia", "Witbank"
+    ]
+  },
+  pretoria: {
+    zone1: [
+      "Amberfield", "Arcadia", "Bronberrick", "Brooklyn", "Brumeria", "Capital Park",
+      "Centurion North", "Centurion South", "Clubview", "Colbyn", "Constantia Park",
+      "Cornwall Hill", "Die Hoewes", "Die Wilgers", "Dorinkloof", "Eldoraigne",
+      "Equestria", "Faerie Glen", "Garsfontein", "Groenkloof", "Hatfield",
+      "Hennopspark", "Highveld Park", "Irene", "Kloofsig", "La Montagne",
+      "Lynnwood", "Lyttleton Manor", "Marrayfield", "Menlyn Park", "Meyerspark",
+      "Monument Park", "Mooikloof", "Moreletta Park", "Muckleneuk", "Newlands",
+      "Olifantsfontein", "Pierre van Ryneveld", "Pretoria CBD", "Pretoria Gardens",
+      "Pretorius Park", "Queenswood", "Rietfontein", "Rietondale", "Rooihuiskraal",
+      "Silverlakes", "Sterrewag", "Swartkops", "The Reeds", "Valhalla", "Valley Farm",
+      "Wapadrand", "Waterkloof", "Waverley", "Wierda Park", "Willowglen",
+      "Wingate Park", "Woodhill"
+    ],
+    zone2: [
+      "Akasia", "Amandasig", "Annlin", "Dorandia", "Eldorette", "Karenpark",
+      "Laudium Montana", "Mayville", "Onderstepoort", "Roodeplaat", "Silverton",
+      "Sinoville", "The Orchards", "Theresapark", "Wonderboom"
+    ],
+    zone3: ["Brits", "Bronkhorstspruit", "Cullinan", "Delmas", "Hammanskraal", "Hartbeespoort Dam"],
+    zone4: ["Soshanguve", "Mamelodi", "Mabopane"],
+    zone5: ["Hammanskraal", "Letlhabile", "Brits"]
+  }
+};
+
+// ===============================
+// RATE TABLES
+// ===============================
+const johannesburgRates = {
+  "4 Seater Sedan": { zone1: 695, zone2: 845, zone3: 856, zone4: 963, zone5: 1059, zone6: 1900 },
+  "Mini Bus Mercedes Viano": { zone1: 963, zone2: 1123, zone3: 1357, zone4: 1357, zone5: 1487, zone6: 2354 },
+  "15 Seater Quantum": { zone1: 1200, zone2: 1400, zone3: 1600, zone4: 1800, zone5: 2000, zone6: 2800 },
+  "17 Seater Luxury Sprinter": { zone1: 1400, zone2: 1600, zone3: 1800, zone4: 2000, zone5: 2200, zone6: 3200 },
+  "22 Seater Luxury Coach": { zone1: 1800, zone2: 2000, zone3: 2200, zone4: 2400, zone5: 2600, zone6: 3800 },
+  "28 Seater Luxury Coach": { zone1: 2200, zone2: 2400, zone3: 2600, zone4: 2800, zone5: 3000, zone6: 4200 },
+  "39 Seater Luxury Coach": { zone1: 2800, zone2: 3000, zone3: 3200, zone4: 3400, zone5: 3600, zone6: 5000 },
+  "60 Seater Semi Luxury": { zone1: 3500, zone2: 3700, zone3: 3900, zone4: 4100, zone5: 4300, zone6: 5800 },
+  "70 Seater Semi Luxury": { zone1: 4000, zone2: 4200, zone3: 4400, zone4: 4600, zone5: 4800, zone6: 6500 }
+};
+
+const pretoriaRates = {
+  "4 Seater Sedan": { zone4: 856, zone5: 963, zone6: 1600 },
+  "Mini Bus Mercedes Viano": { zone4: 1600, zone5: 1700, zone6: 2300 },
+  "15 Seater Quantum": { zone4: 2000, zone5: 2100, zone6: 2800 },
+  "17 Seater Luxury Sprinter": { zone4: 2200, zone5: 2300, zone6: 3200 },
+  "22 Seater Luxury Coach": { zone4: 2600, zone5: 2700, zone6: 3800 },
+  "28 Seater Luxury Coach": { zone4: 3000, zone5: 3100, zone6: 4200 },
+  "39 Seater Luxury Coach": { zone4: 3600, zone5: 3700, zone6: 5000 },
+  "60 Seater Semi Luxury": { zone4: 4300, zone5: 4400, zone6: 5800 },
+  "70 Seater Semi Luxury": { zone4: 4800, zone5: 4900, zone6: 6500 }
+};
+
+// ===============================
+// SPECIAL LOCATIONS
+// ===============================
+const specialLocations = {
+  "or tambo": { city: "johannesburg", zone: "zone1" },
+  "ortambo": { city: "johannesburg", zone: "zone1" },
+  "johannesburg airport": { city: "johannesburg", zone: "zone1" },
+  "lanseria": { city: "johannesburg", zone: "zone4" },
+  "lanseria airport": { city: "johannesburg", zone: "zone4" },
+  "iie msa": { city: "johannesburg", zone: "zone4" },
+  "monash": { city: "johannesburg", zone: "zone4" },
+  "university of johannesburg": { city: "johannesburg", zone: "zone2" },
+  "uj": { city: "johannesburg", zone: "zone2" },
+  "wits": { city: "johannesburg", zone: "zone2" },
+  "university of witwatersrand": { city: "johannesburg", zone: "zone2" },
+  "up": { city: "pretoria", zone: "zone1" },
+  "university of pretoria": { city: "pretoria", zone: "zone1" },
+  "tuks": { city: "pretoria", zone: "zone1" }
+};
+
+// ===============================
+// MAIN COMPONENT
+// ===============================
 const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [searchParams] = useSearchParams();
+  
+  // Form states
   const [vehicleType, setVehicleType] = useState("");
   const [tripDirection, setTripDirection] = useState("one-way");
   const [destination, setDestination] = useState("");
@@ -30,125 +176,172 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const [customerCompany, setCustomerCompany] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Comprehensive location to zone mapping based on PDF
-  const locationZones = {
-    // Johannesburg Zones
-    johannesburg: {
-      zone1: [
-        'bedford gardens', 'bedfordview', 'bafevan', 'benzul', 'beaufortnout valley', 
-        'birch acree', 'birchleigh', 'boladburg', 'bonasno park', 'brentwood park', 
-        'burma', 'cynldren', 'dawn park', 'down glen', 'eden glen', 'eromdale', 
-        'farinade', 'fairwood', 'frantemes', 'feltside', 'glen marais', 'glenhazel', 
-        'heriotdale', 'highlands', 'hurleyville', 'isanto', 'jet park', 'kempton park', 
-        'kerrington', 'kilimrey', 'lakefield', 'linksfield', 'lombardy east', 
-        'lyndhurst', 'malvern', 'marsh steyn park', 'north norwood', 'oakland', 
-        'observatory', 'orchards', 'raedens', 'riviera', 'roshenville', 'ruxunlin', 
-        'ryttfield', 'sandringham', 'sondawood', 'silvermont', 'spatham', 
-        'st. andrews', 'sydenham', 'victoria'
-      ],
-      zone2: [
-        'alboisidout', 'aberton', 'abendnie', 'alhol', 'auckland park', 'bassords', 
-        'benmore', 'besato', 'bergbon', 'birdhaven', 'batigownie', 'bootour', 
-        'basenfonden', 'backenhurst', 'badyon', 'bamley', 'brysenton', 'chislehurstton', 
-        'cragghill park', 'danewood', 'dunfield', 'quickery', 'emmarstrids', 'fattand', 
-        'fernolds', 'fontainebleau', 'gallo mauro', 'gemiskon', 'gwyndorf', 'hurtingham', 
-        'hyde park', 'ilfovo', 'isonda', 'johannesburg cbd', 'kalacol', 'kelvin', 
-        'kerrington ydf', 'kibler park', 'kyalami', 'kyber rock', 'linden', 'limmeyer', 
-        'lyme park', 'maimahud', 'mercea', 'melville', 'mendela', 'mayersold', 'midland', 
-        'mondoor', 'montroux', 'montropski', 'mulcainry', 'northcliff', 'northriding', 
-        'omnova', 'parkmont', 'parkmore', 'petkoon', 'parktown north', 'parkview', 
-        'parkwood', 'palacket', 'penovale', 'randburg cbd', 'randhart', 'rampage', 
-        'richmond', 'ridgeway', 'ribana', 'risdells', 'river club', 'rhonda', 
-        'robindale', 'robinthia', 'roosevelt park', 'rosebank', 'roskenhuth', 
-        'rosarene', 'sandhurst', 'starbunch', 'sandton cbd', 'sevoy estate', 
-        'saxonsolid', 'stethancon', 'strydom park', 'sunninghill', 'the town trunkman', 
-        'victoria park', 'viona valley', 'waverley', 'wendyspool', 'westcliff', 
-        'weedsboro', 'windsor', 'woodward'
-      ],
-      zone3: [
-        'alemselle', 'beverley', 'bodwin', 'broadscene', 'blombock', 'bubill estate', 
-        'charlevall', 'craigavon', 'daniilern', 'douglasdale', 'farmhall', 'foraways', 
-        'jackal park', 'lowell', 'magalesegg', 'northriding', 'olivestale', 
-        'piree slopes', 'quelferina', 'rangpark ridge', 'sharonites', 'someglans', 
-        'sundowner', 'waterford estate', 'welterweden park', 'wilcoxpon'
-      ],
-      zone4: [
-        'breunanda', 'constantia kloud', 'discovery', 'featherbrook estate', 
-        'florida', 'georgina', 'helderburn', 'hongview', 'houston', 'kya sands', 
-        'lamonta', 'little falls', 'meadalong', 'mindstone', 'middlesbitt', 
-        'princess', 'radiology', 'rangview', 'roodekrans', 'roodepoort cbd', 
-        'ruining', 'seixant', 'springs', 'southern valley', 'wigelhauser', 
-        'who park', 'wipcooffs', 'zambgoroll'
-      ],
-      zone5: [
-        'kermans', 'kingsmidorp', 'mountmart', 'noordhauser', 'rand el dal'
-      ],
-      zone6: [
-        'brits', 'bondentroom', 'magaliesburg', 'nigel', 'randforthin', 
-        'sandburg', 'vanderbiljank', 'vereinship', 'westonia', 'witbank'
-      ]
-    },
-    // Pretoria Zones
-    pretoria: {
-      zone1: [
-        'amherfield', 'arcadia', 'brotherrick', 'brooklyn', 'brunerda', 
-        'capital park', 'centurion north', 'centurion south', 'clubview', 
-        'colony', 'cordentia park', 'cornwall hill', 'dict-howes', 'de-wigura', 
-        'durbiskot', 'eldersigne', 'enpastria', 'faerie giau', 'gastricnini', 
-        'genevilliers', 'hatfield', 'hammarabizat', 'highland park', 'irene', 
-        'la mustangra', 'lynnwood', 'lyttleton manvi', 'mirandjeld', 'merlin park', 
-        'meyerspark', 'monument park', 'modokoot', 'morelena park', 'mukkhenak', 
-        'nevalands', 'offershorten', 'pierre van ryeweld', 'pretoria cbd', 
-        'pretoria gardens', 'pretoria park', 'queenswood', 'restriction', 
-        'retorodale', 'rodmukkneal', 'silveriekes', 'stameway', 'swarthops', 
-        'the reeds', 'vahalla', 'valley farm', 'wagadrand', 'waterloof', 
-        'waverley', 'werela park', 'wilfonglen', 'wingale park', 'woodhill'
-      ],
-      zone2: [
-        'akasia', 'amandaaga', 'amith', 'doranda', 'elbowite', 'karampark', 
-        'landium montana', 'mayville', 'ordersexpoort', 'rooxleplaat', 
-        'silveston', 'shoville', 'the orchards', 'theresepark', 'wonderboom'
-      ],
-      zone3: [
-        'brits', 'bromhorstspunt', 'cuffman', 'damas', 'hammarabizat', 
-        'harthesexpoort dam'
-      ],
-      zone4: [
-        'soulangyue', 'mamiddol', 'makopane'
-      ],
-      zone5: [
-        'hammarabizat', 'lethibelle', 'brits'
-      ]
+  // Map states
+  const [pickupMarker, setPickupMarker] = useState(null);
+  const [dropoffMarker, setDropoffMarker] = useState(null);
+  const [activeMap, setActiveMap] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [address, setAddress] = useState("");
+  const [mapCenter, setMapCenter] = useState(defaultCenter);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // Refs for performance
+  const geocoderRef = useRef(null);
+  const mapRef = useRef(null);
+  const priceCalculationTimeoutRef = useRef(null);
+
+  // Initialize geocoder only when needed
+  const getGeocoder = useCallback(() => {
+    if (!geocoderRef.current && window.google) {
+      geocoderRef.current = new window.google.maps.Geocoder();
     }
-  };
+    return geocoderRef.current;
+  }, []);
 
-  // Rate structures based on the PDF
-  const johannesburgRates = {
-    '4 Seater Sedan': { zone1: 695, zone2: 845, zone3: 856, zone4: 963, zone5: 1059, zone6: 1900 },
-    'Mini Bus Mercedes Viano': { zone1: 963, zone2: 1123, zone3: 1357, zone4: 1357, zone5: 1487, zone6: 2354 },
-    '15 Seater Quantum': { zone1: 1200, zone2: 1400, zone3: 1600, zone4: 1800, zone5: 2000, zone6: 2800 },
-    '17 Seater Luxury Sprinter': { zone1: 1400, zone2: 1600, zone3: 1800, zone4: 2000, zone5: 2200, zone6: 3200 },
-    '22 Seater Luxury Coach': { zone1: 1800, zone2: 2000, zone3: 2200, zone4: 2400, zone5: 2600, zone6: 3800 },
-    '28 Seater Luxury Coach': { zone1: 2200, zone2: 2400, zone3: 2600, zone4: 2800, zone5: 3000, zone6: 4200 },
-    '39 Seater Luxury Coach': { zone1: 2800, zone2: 3000, zone3: 3200, zone4: 3400, zone5: 3600, zone6: 5000 },
-    '60 Seater Semi Luxury': { zone1: 3500, zone2: 3700, zone3: 3900, zone4: 4100, zone5: 4300, zone6: 5800 },
-    '70 Seater Semi Luxury': { zone1: 4000, zone2: 4200, zone3: 4400, zone4: 4600, zone5: 4800, zone6: 6500 }
-  };
+  // Optimized geocoding function
+  const geocodeAddress = useCallback(async (address) => {
+    if (!address.trim()) return null;
+    
+    try {
+      const geocoder = getGeocoder();
+      if (!geocoder) {
+        console.warn('Geocoder not available');
+        return null;
+      }
 
-  const pretoriaRates = {
-    '4 Seater Sedan': { zone4: 856, zone5: 963, zone6: 1800 },
-    'Mini Bus Mercedes Viano': { zone4: 1800, zone5: 1700, zone6: 2300 },
-    '15 Seater Quantum': { zone4: 2000, zone5: 2100, zone6: 2800 },
-    '17 Seater Luxury Sprinter': { zone4: 2200, zone5: 2300, zone6: 3200 },
-    '22 Seater Luxury Coach': { zone4: 2600, zone5: 2700, zone6: 3800 },
-    '28 Seater Luxury Coach': { zone4: 3000, zone5: 3100, zone6: 4200 },
-    '39 Seater Luxury Coach': { zone4: 3600, zone5: 3700, zone6: 5000 },
-    '60 Seater Semi Luxury': { zone4: 4300, zone5: 4400, zone6: 5800 },
-    '70 Seater Semi Luxury': { zone4: 4800, zone5: 4900, zone6: 6500 }
-  };
+      const result = await new Promise((resolve, reject) => {
+        geocoder.geocode({ address: address }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Geocoding failed: ${status}`));
+          }
+        });
+      });
+      
+      return {
+        lat: result.geometry.location.lat(),
+        lng: result.geometry.location.lng()
+      };
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  }, [getGeocoder]);
 
-  // Function to find zone for a location
-  const findZone = (location, city) => {
+  // Optimized map click handler
+  const onMapClick = useCallback(async (event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+    const location = { lat, lng };
+    
+    setSelectedLocation(location);
+    setMapCenter(location);
+    
+    try {
+      const geocoder = getGeocoder();
+      if (geocoder) {
+        const result = await new Promise((resolve, reject) => {
+          geocoder.geocode({ location }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              resolve(results[0]);
+            } else {
+              reject(new Error(`Geocoding failed: ${status}`));
+            }
+          });
+        });
+        
+        const address = result.formatted_address;
+        setAddress(address);
+        
+        if (activeMap === 'pickup') {
+          setPickupLocation(address);
+          setPickupMarker(location);
+        } else if (activeMap === 'dropoff') {
+          setDropoffLocation(address);
+          setDropoffMarker(location);
+        }
+      }
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      const coordAddress = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      setAddress(coordAddress);
+      
+      if (activeMap === 'pickup') {
+        setPickupLocation(coordAddress);
+        setPickupMarker(location);
+      } else if (activeMap === 'dropoff') {
+        setDropoffLocation(coordAddress);
+        setDropoffMarker(location);
+      }
+    }
+  }, [activeMap, getGeocoder]);
+
+  // Optimized map load handler
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map;
+    setIsMapLoaded(true);
+  }, []);
+
+  // Optimized open map functions
+  const openMapForPickup = useCallback(async () => {
+    setActiveMap('pickup');
+    
+    if (pickupLocation) {
+      const location = await geocodeAddress(pickupLocation);
+      if (location) {
+        setMapCenter(location);
+        setSelectedLocation(location);
+        setPickupMarker(location);
+        return;
+      }
+    }
+    
+    setMapCenter(pickupMarker || defaultCenter);
+    setSelectedLocation(pickupMarker);
+  }, [pickupLocation, pickupMarker, geocodeAddress]);
+
+  const openMapForDropoff = useCallback(async () => {
+    setActiveMap('dropoff');
+    
+    if (dropoffLocation) {
+      const location = await geocodeAddress(dropoffLocation);
+      if (location) {
+        setMapCenter(location);
+        setSelectedLocation(location);
+        setDropoffMarker(location);
+        return;
+      }
+    }
+    
+    setMapCenter(dropoffMarker || defaultCenter);
+    setSelectedLocation(dropoffMarker);
+  }, [dropoffLocation, dropoffMarker, geocodeAddress]);
+
+  const closeMap = useCallback(() => {
+    setActiveMap(null);
+    setSelectedLocation(null);
+    setAddress("");
+  }, []);
+
+  const handleSearchLocation = useCallback(async () => {
+    if (!address.trim()) return;
+    
+    const location = await geocodeAddress(address);
+    if (location) {
+      setMapCenter(location);
+      setSelectedLocation(location);
+      
+      if (activeMap === 'pickup') {
+        setPickupMarker(location);
+      } else if (activeMap === 'dropoff') {
+        setDropoffMarker(location);
+      }
+    }
+  }, [address, activeMap, geocodeAddress]);
+
+  // Zone detection functions
+  const findZone = useCallback((location, city) => {
     if (!location || !city) return null;
     
     const locationLower = location.toLowerCase().trim();
@@ -156,7 +349,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     
     if (!cityZones) return null;
 
-    // Check each zone for matching suburbs
     for (const [zone, suburbs] of Object.entries(cityZones)) {
       if (suburbs.some(suburb => locationLower.includes(suburb.toLowerCase()))) {
         return zone;
@@ -164,21 +356,18 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     }
 
     return null;
-  };
+  }, []);
 
-  // Function to detect city based on location
-  const detectCity = (location) => {
+  const detectCity = useCallback((location) => {
     if (!location) return null;
     
     const locationLower = location.toLowerCase();
     
-    // Check for Johannesburg areas
     const johannesburgIndicators = [
       'johannesburg', 'jhb', 'sandton', 'randburg', 'roodepoort', 
       'kempton', 'midrand', 'fourways', 'rosebank'
     ];
     
-    // Check for Pretoria areas
     const pretoriaIndicators = [
       'pretoria', 'pta', 'centurion', 'hatfield', 'lynnwood', 
       'brooklyn', 'arcadia', 'queenswood'
@@ -193,79 +382,29 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     }
 
     return null;
-  };
+  }, []);
 
-  // Special location mappings for common routes
-  const specialLocations = {
-    // Airports
-    'or tambo': { city: 'johannesburg', zone: 'zone1' },
-    'ortambo': { city: 'johannesburg', zone: 'zone1' },
-    'johannesburg airport': { city: 'johannesburg', zone: 'zone1' },
-    'lanseria': { city: 'johannesburg', zone: 'zone4' },
-    'lanseria airport': { city: 'johannesburg', zone: 'zone4' },
-    
-    // Common landmarks
-    'iie msa': { city: 'johannesburg', zone: 'zone4' },
-    'monash': { city: 'johannesburg', zone: 'zone4' },
-    'university of johannesburg': { city: 'johannesburg', zone: 'zone2' },
-    'uj': { city: 'johannesburg', zone: 'zone2' },
-    'wits': { city: 'johannesburg', zone: 'zone2' },
-    'university of witwatersrand': { city: 'johannesburg', zone: 'zone2' },
-    'up': { city: 'pretoria', zone: 'zone1' },
-    'university of pretoria': { city: 'pretoria', zone: 'zone1' },
-    'tuks': { city: 'pretoria', zone: 'zone1' },
-  };
-
-  // Enhanced zone detection with special locations
-  const detectZone = (location) => {
+  const detectZone = useCallback((location) => {
     if (!location) return { city: null, zone: null };
     
     const locationLower = location.toLowerCase().trim();
     
-    // Check special locations first
     for (const [key, value] of Object.entries(specialLocations)) {
       if (locationLower.includes(key)) {
         return value;
       }
     }
     
-    // Try to detect city
     const city = detectCity(location);
     if (!city) return { city: null, zone: null };
     
-    // Find zone within detected city
     const zone = findZone(location, city);
     
     return { city, zone };
-  };
+  }, [detectCity, findZone]);
 
-  useEffect(() => {
-    const vehicleFromUrl = searchParams.get("vehicle");
-    if (vehicleFromUrl) {
-      setVehicleType(vehicleFromUrl);
-    }
-
-    // Set minimum date to today
-    const today = new Date().toISOString().split("T")[0];
-    setTripDate(today);
-  }, [searchParams]);
-
-  useEffect(() => {
-    // Recalculate price when relevant fields change
-    calculateEstimatedPrice();
-  }, [vehicleType, tripDirection, destination, pickupLocation, dropoffLocation]);
-
-  const handleDestinationChange = (e) => {
-    setDestination(e.target.value);
-    setShowCustomDestination(e.target.value === "Other (Specify Below)");
-  };
-
-  // Calculate minimum date for return date (should be after trip date)
-  const getMinReturnDate = () => {
-    return tripDate || new Date().toISOString().split('T')[0];
-  };
-
-  const calculateEstimatedPrice = () => {
+  // Price calculation with debouncing
+  const calculateEstimatedPrice = useCallback(() => {
     if (!vehicleType || !pickupLocation || !dropoffLocation) {
       setEstimatedPrice(0);
       return;
@@ -273,62 +412,43 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
     let basePrice = 0;
     
-    // Detect zones for both locations
     const pickupInfo = detectZone(pickupLocation);
     const dropoffInfo = detectZone(dropoffLocation);
-    
-    console.log('Pickup Info:', pickupInfo);
-    console.log('Dropoff Info:', dropoffInfo);
 
-    // Determine if this is a Johannesburg or Pretoria trip
     const isJohannesburg = pickupInfo.city === 'johannesburg' || dropoffInfo.city === 'johannesburg';
     const isPretoria = pickupInfo.city === 'pretoria' || dropoffInfo.city === 'pretoria';
 
-    // Use the higher zone for pricing
     const getHigherZone = (zone1, zone2) => {
       const zones = ['zone1', 'zone2', 'zone3', 'zone4', 'zone5', 'zone6'];
       const index1 = zones.indexOf(zone1);
       const index2 = zones.indexOf(zone2);
       
-      // If both zones found, return the higher one
       if (index1 !== -1 && index2 !== -1) {
         return zones[Math.max(index1, index2)];
       }
       
-      // If only one zone found, return that one
       if (index1 !== -1) return zone1;
       if (index2 !== -1) return zone2;
       
-      // Default to zone1 if no zones found
       return 'zone1';
     };
 
     const zone = getHigherZone(pickupInfo.zone, dropoffInfo.zone);
 
-    console.log('Final Zone:', zone);
-    console.log('Is Johannesburg:', isJohannesburg);
-    console.log('Is Pretoria:', isPretoria);
-
     if (isJohannesburg && johannesburgRates[vehicleType] && johannesburgRates[vehicleType][zone]) {
       basePrice = johannesburgRates[vehicleType][zone];
-      console.log('Using Johannesburg rates:', basePrice);
     } else if (isPretoria && pretoriaRates[vehicleType] && pretoriaRates[vehicleType][zone]) {
       basePrice = pretoriaRates[vehicleType][zone];
-      console.log('Using Pretoria rates:', basePrice);
     } else {
-      // For other destinations or unknown zones, use a default calculation
       basePrice = calculateDefaultPrice(vehicleType, destination);
-      console.log('Using default rates:', basePrice);
     }
 
-    // Apply both ways multiplier (1.8x for round trip as per your backend)
     const finalPrice = tripDirection === "both-ways" ? Math.round(basePrice * 1.8) : basePrice;
     
     setEstimatedPrice(finalPrice);
-  };
+  }, [vehicleType, tripDirection, destination, pickupLocation, dropoffLocation, detectZone]);
 
-  const calculateDefaultPrice = (vehicle, dest) => {
-    // Default pricing for vehicles when outside Johannesburg/Pretoria
+  const calculateDefaultPrice = useCallback((vehicle, dest) => {
     const defaultPrices = {
       '4 Seater Sedan': 1000,
       'Mini Bus Mercedes Viano': 1500,
@@ -343,7 +463,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
     let price = defaultPrices[vehicle] || 2000;
     
-    // Adjust for long distance
     if (dest === 'Cape Town' || dest === 'Durban') {
       price *= 2.5;
     } else if (dest === 'Port Elizabeth' || dest === 'Bloemfontein') {
@@ -351,9 +470,19 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     }
 
     return Math.round(price);
-  };
+  }, []);
 
-  const resetForm = () => {
+  // Form handlers
+  const handleDestinationChange = useCallback((e) => {
+    setDestination(e.target.value);
+    setShowCustomDestination(e.target.value === "Other (Specify Below)");
+  }, []);
+
+  const getMinReturnDate = useCallback(() => {
+    return tripDate || new Date().toISOString().split('T')[0];
+  }, [tripDate]);
+
+  const resetForm = useCallback(() => {
     setVehicleType("");
     setTripDirection("one-way");
     setDestination("");
@@ -372,7 +501,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     setCustomerPhone("");
     setCustomerCompany("");
     setAcceptedTerms(false);
-  };
+    setPickupMarker(null);
+    setDropoffMarker(null);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -380,7 +511,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     setMessage("");
 
     try {
-      // Get form data - using state values
       const formData = {
         tripPurpose: tripPurpose,
         tripType: tripType,
@@ -401,7 +531,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         userId: currentUser ? currentUser.id : null
       };
 
-      // Validation
       const requiredFields = [
         { field: 'tripPurpose', value: tripPurpose, name: 'Purpose of Trip' },
         { field: 'tripType', value: tripType, name: 'Trip Type' },
@@ -429,7 +558,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         return;
       }
 
-      // Submit to backend
       const response = await fetch('http://localhost:5000/api/quotes', {
         method: 'POST',
         headers: {
@@ -443,8 +571,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       if (data.success) {
         setMessageType("success");
         setMessage(data.message || "Thank you for your quote request! We will contact you shortly.");
-        
-        // Reset form
         resetForm();
       } else {
         setMessageType("error");
@@ -458,6 +584,34 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
       setLoading(false);
     }
   };
+
+  // Effects
+  useEffect(() => {
+    const vehicleFromUrl = searchParams.get("vehicle");
+    if (vehicleFromUrl) {
+      setVehicleType(vehicleFromUrl);
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    setTripDate(today);
+  }, [searchParams]);
+
+  // Debounced price calculation
+  useEffect(() => {
+    if (priceCalculationTimeoutRef.current) {
+      clearTimeout(priceCalculationTimeoutRef.current);
+    }
+
+    priceCalculationTimeoutRef.current = setTimeout(() => {
+      calculateEstimatedPrice();
+    }, 300);
+
+    return () => {
+      if (priceCalculationTimeoutRef.current) {
+        clearTimeout(priceCalculationTimeoutRef.current);
+      }
+    };
+  }, [vehicleType, tripDirection, destination, pickupLocation, dropoffLocation, calculateEstimatedPrice]);
 
   return (
     <>
@@ -492,35 +646,16 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
           {/* Price Estimate Display */}
           {estimatedPrice > 0 && (
-            <div className="price-estimate" style={{
-              backgroundColor: "#e7f3ff",
-              border: "1px solid #b3d9ff",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginBottom: "20px",
-              fontSize: "16px",
-              color: "#0066cc",
-              textAlign: "center",
-              fontWeight: "600"
-            }}>
+            <div className="price-estimate">
               Estimated Price: <strong>R {estimatedPrice.toLocaleString()}</strong>
-              <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+              <div className="price-estimate-details">
                 {tripDirection === "both-ways" ? "Round trip" : "One way"} • Final price may vary
               </div>
             </div>
           )}
 
           {message && (
-            <div className={`message ${messageType}`} style={{
-              padding: "1rem",
-              borderRadius: "6px",
-              marginBottom: "1rem",
-              textAlign: "center",
-              fontWeight: "600",
-              backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da",
-              color: messageType === "success" ? "#155724" : "#721c24",
-              border: `1px solid ${messageType === "success" ? "#c3e6cb" : "#f5c6cb"}`
-            }}>
+            <div className={`message ${messageType}`}>
               {message}
             </div>
           )}
@@ -532,11 +667,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Purpose of Trip */}
               <div className="input-group">
-                <br />
                 <label htmlFor="tripPurpose">Purpose of Trip</label>
                 <select 
                   id="tripPurpose" 
-                  name="tripPurpose" 
                   value={tripPurpose}
                   onChange={(e) => setTripPurpose(e.target.value)}
                   required
@@ -553,11 +686,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Trip Type */}
               <div className="input-group">
-                <br />
                 <label htmlFor="tripType">Trip Type</label>
                 <select 
                   id="tripType" 
-                  name="tripType" 
                   value={tripType}
                   onChange={(e) => setTripType(e.target.value)}
                   required
@@ -573,11 +704,9 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Destination */}
               <div className="input-group">
-                <br />
                 <label htmlFor="destination">Destination</label>
                 <select
                   id="destination"
-                  name="destination"
                   value={destination}
                   onChange={handleDestinationChange}
                   required
@@ -601,42 +730,63 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                   placeholder="If 'Other', please specify your destination"
                   value={customDestination}
                   onChange={(e) => setCustomDestination(e.target.value)}
-                  style={{ marginBottom: "14px" }}
+                  className="custom-destination-input"
                 />
               )}
 
-              {/* Pickup & Drop-off */}
-              <div className="row">
-                <input 
-                  type="text" 
-                  id="pickupLocation" 
-                  placeholder="Pickup Location *" 
-                  required 
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
-                />
-                <input 
-                  type="text" 
-                  id="dropoffLocation" 
-                  placeholder="Drop-off Location *" 
-                  required 
-                  value={dropoffLocation}
-                  onChange={(e) => setDropoffLocation(e.target.value)}
-                />
+              {/* Pickup & Drop-off with Map Integration */}
+              <div className="input-group">
+                <label>Pickup Location *</label>
+                <div className="location-input-with-map">
+                  <input 
+                    type="text" 
+                    placeholder="Pickup Location *" 
+                    required 
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                  />
+                  <button 
+                    type="button" 
+                    className="map-pin-btn"
+                    onClick={openMapForPickup}
+                    title="Select pickup location on map"
+                  >
+                    📍
+                  </button>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Drop-off Location *</label>
+                <div className="location-input-with-map">
+                  <input 
+                    type="text" 
+                    placeholder="Drop-off Location *" 
+                    required 
+                    value={dropoffLocation}
+                    onChange={(e) => setDropoffLocation(e.target.value)}
+                  />
+                  <button 
+                    type="button" 
+                    className="map-pin-btn"
+                    onClick={openMapForDropoff}
+                    title="Select drop-off location on map"
+                  >
+                    📍
+                  </button>
+                </div>
               </div>
 
               {/* Location Helper Text */}
-              <div style={{ fontSize: "12px", color: "#666", marginBottom: "16px" }}>
-                <strong>Tip:</strong> Include suburb names for accurate pricing (e.g., "IIE MSA, Roodepoort" or "OR Tambo Airport, Kempton Park")
+              <div className="location-helper">
+                <strong>Tip:</strong> Click the pin icon to select locations on the map, or type addresses manually.
               </div>
 
               {/* Vehicle Type */}
               <div className="input-group">
-                <br />
                 <label htmlFor="vehicleType">Vehicle Type</label>
                 <select
                   id="vehicleType"
-                  name="vehicleType"
                   required
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
@@ -656,7 +806,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
 
               {/* Trip Direction Radio Buttons */}
               <div className="input-group">
-                <br />
                 <label>Trip Direction</label>
                 <div className="radio-group">
                   <label>
@@ -704,7 +853,6 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
               {/* Return Date for Both Ways */}
               {tripDirection === "both-ways" && (
                 <div className="input-group">
-                  <br />
                   <label htmlFor="returnDate">Return Date *</label>
                   <input 
                     type="date" 
@@ -717,6 +865,103 @@ const Quote = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
                 </div>
               )}
             </div>
+
+            {/* Map Modal */}
+            {activeMap && (
+              <div className="map-modal-overlay">
+                <div className="map-modal">
+                  <div className="map-modal-header">
+                    <h3>Select {activeMap === 'pickup' ? 'Pickup' : 'Drop-off'} Location</h3>
+                    <button onClick={closeMap} className="close-map-btn">✕</button>
+                  </div>
+                  <div className="map-modal-body">
+                    <p>Click on the map to set your {activeMap} location, or search for an address:</p>
+                    
+                    {/* Search Box */}
+                    <div className="map-search-box">
+                      <input
+                        type="text"
+                        placeholder="Search for an address..."
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearchLocation()}
+                      />
+                      <button onClick={handleSearchLocation} className="search-btn">
+                        🔍
+                      </button>
+                    </div>
+                    
+                    <LoadScript 
+                      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+                      loadingElement={<div className="map-loading">Loading Maps...</div>}
+                    >
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={mapCenter}
+                        zoom={15}
+                        onLoad={onMapLoad}
+                        onClick={onMapClick}
+                        options={{
+                          disableDefaultUI: false,
+                          zoomControl: true,
+                          streetViewControl: true,
+                          mapTypeControl: true
+                        }}
+                      >
+                        {/* Pickup Marker */}
+                        {activeMap === 'pickup' && pickupMarker && (
+                          <Marker
+                            position={pickupMarker}
+                            icon={{
+                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
+                              scaledSize: new window.google.maps.Size(30, 30),
+                            }}
+                          />
+                           )}
+
+                                                   {/* Dropoff Marker */}
+                        {activeMap === 'dropoff' && dropoffMarker && (
+                          <Marker
+                            position={dropoffMarker}
+                            icon={{
+                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
+                              scaledSize: new window.google.maps.Size(30, 30),
+                            }}
+                          />
+                        )}
+
+                        {/* Selected Location Marker */}
+                        {selectedLocation && (
+                          <Marker
+                            position={selectedLocation}
+                            icon={{
+                              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNy41ODYgMiA0IDUuNTg2IDQgMTBDNCAxNC40MTQgNy41ODYgMTggMTIgMThDMTYuNDE0IDE4IDIwIDE0LjQxNCAyMCAxMEMyMCA1LjU4NiAxNi40MTQgMiAxMiAyWk0xMiAxMkMxMC44OTcgMTIgMTAgMTEuMTAzIDEwIDEwQzEwIDguODk3IDEwLjg5NyA4IDEyIDhDMTMuMTAzIDggMTQgOC44OTcgMTQgMTBDMTQgMTEuMTAzIDEzLjEwMyAxMiAxMiAxMloiIGZpbGw9IiMzMzc3RkYiLz4KPC9zdmc+',
+                              scaledSize: new window.google.maps.Size(40, 40),
+                            }}
+                          />
+                        )}
+                      </GoogleMap>
+                    </LoadScript>
+
+                    {address && (
+                      <div className="selected-address">
+                        <strong>Selected Address:</strong> {address}
+                      </div>
+                    )}
+
+                    <div className="map-actions">
+                      <button 
+                        type="button" 
+                        onClick={closeMap}
+                        className="confirm-location-btn"
+                      >
+                        Confirm Location
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <hr />
 
