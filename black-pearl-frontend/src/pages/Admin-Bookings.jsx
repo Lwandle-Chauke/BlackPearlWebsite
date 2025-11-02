@@ -357,6 +357,60 @@ const AdminBookings = () => {
                             </div>
                         </div>
 
+                       
+// Replace the existing quick quotes section in Admin-Bookings.jsx with this:
+
+{/* Quick Quotes Section */}
+<div className="quick-quotes-section">
+  <h3>🚀 Quick Quote Requests</h3>
+  <div className="quotes-grid">
+    {quotes
+      .filter(quote => quote.isQuickQuote && quote.quoteStatus === 'pending_admin')
+      .map(quote => (
+        <div key={quote._id} className="quote-card quick-quote-card">
+          <div className="quote-header">
+            <h4>Quick Quote Request</h4>
+            <span className="badge quick-quote-badge">Quick Quote</span>
+          </div>
+          <div className="quote-details">
+            <p><strong>Customer:</strong> {quote.customerName}</p>
+            <p><strong>Contact:</strong> {quote.customerEmail} | {quote.customerPhone}</p>
+            <p><strong>Service:</strong> {quote.tripType}</p>
+            <p><strong>Vehicle:</strong> {quote.vehicleType}</p>
+            <p><strong>Route:</strong> {quote.pickupLocation} → {quote.dropoffLocation}</p>
+            {quote.message && (
+              <p><strong>Details:</strong> {quote.message}</p>
+            )}
+            <p><strong>Submitted:</strong> {new Date(quote.createdAt).toLocaleDateString()} at {new Date(quote.createdAt).toLocaleTimeString()}</p>
+          </div>
+          <div className="quote-actions">
+            <button 
+              onClick={() => handleSendQuote(quote)}
+              className="btn-send-quote"
+            >
+              Send Quote
+            </button>
+            <button 
+              onClick={() => {
+                setSelectedQuote(quote);
+                setShowQuoteModal(true);
+              }}
+              className="btn-view-details"
+            >
+              View Details
+            </button>
+          </div>
+        </div>
+      ))
+    }
+    {quotes.filter(quote => quote.isQuickQuote && quote.quoteStatus === 'pending_admin').length === 0 && (
+      <div className="no-quick-quotes">
+        <p>No pending quick quote requests</p>
+      </div>
+    )}
+  </div>
+</div>
+
                         {/* Add Booking Button */}
                         <button className="btn-add-booking" onClick={handleAddBooking}>
                             <i className="fas fa-plus"></i> Add Manual Booking

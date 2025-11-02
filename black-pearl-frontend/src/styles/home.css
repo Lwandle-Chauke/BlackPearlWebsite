@@ -75,6 +75,51 @@ main {
   background: var(--white);
   padding: 18px;
 }
+/* Add these styles to the end of your existing home.css file */
+
+/* Terms Section Styling */
+.terms-section {
+  margin-top: 40px;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.terms-section p {
+  margin-bottom: 20px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.terms-pdf-btn {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.terms-pdf-btn:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+/* Responsive adjustments for terms section */
+@media (max-width: 768px) {
+  .terms-section {
+    padding: 20px;
+    margin-top: 30px;
+  }
+}
 
 /* ABOUT SECTION */
 .about-section {
