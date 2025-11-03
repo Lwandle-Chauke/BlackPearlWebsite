@@ -31,7 +31,7 @@ const Contact = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     try {
       console.log('Sending message data:', formData); // Debug log
 
-      const res = await fetch("http://localhost:5000/api/messages", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

@@ -46,7 +46,7 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
 
       console.log('Sending change password request...');
       
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const ChangePasswordModal = ({ onClose, onPasswordChange }) => {
       
       // More specific error messages
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        setError('Cannot connect to server. Please check if the backend is running on http://localhost:5000');
+        setError('Cannot connect to server. Please check if the backend is running on ' + process.env.REACT_APP_API_URL);
       } else {
         setError(error.message || 'Failed to change password. Please try again.');
       }
