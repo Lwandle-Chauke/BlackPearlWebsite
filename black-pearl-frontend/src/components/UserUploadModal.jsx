@@ -43,13 +43,6 @@ const UserUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }
   const handleFileUpload = async (e) => {
     e.preventDefault();
     
-    // Check if user is logged in
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("⚠️ You must be logged in to upload images.");
-      return;
-    }
-    
     if (!selectedAlbum) {
       setMessage("Please select an album.");
       return;

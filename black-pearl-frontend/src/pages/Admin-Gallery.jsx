@@ -5,24 +5,35 @@ import galleryService from '../services/galleryService.js';
 import PendingImagesModal from '../components/PendingImagesModal';
 import AdminUploadModal from '../components/AdminUploadModal';
 import AddAlbumModal from '../components/AddAlbumModal';
-import AlbumManagementModal from '../components/AlbumManagementModal'; // NEW
+import AlbumManagementModal from '../components/AlbumManagementModal';
 import '../styles/admin-gallery.css';
 import '../styles/admin.css';
 
-// ✅ Reusable gallery item card - UPDATED
-const GalleryItem = ({ item, handleAction }) => (
+// ✅ FIXED: Reusable gallery item card - Shows ALL images
+const GalleryItem = ({ item, handleAction }) => {
+  // Show ALL images for admin, not just approved ones
+  const totalImages = item.images?.length || 0;
+  const approvedImages = (item.images || []).filter(img => img.approved !== false).length;
+  
+  // Use the first image as preview, regardless of approval status
+  const previewImage = item.images?.[0]?.url || '/placeholder.jpg';
+  
+  return (
     <div className="gallery-item">
         <div className="image-container">
             <img
-                src={(item.images?.[0]?.url) || item.imageUrl || '/placeholder.jpg'}
+                src={previewImage.startsWith('/uploads/') ? `http://localhost:5000${previewImage}` : previewImage}
                 alt={item.albumName}
+                onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/300x200/cccccc/969696?text=No+Image';
+                }}
             />
         </div>
 
         <div className="gallery-info">
             <h3>{item.albumName}</h3>
             <p className="total-images">
-                Total Images: {item.totalImages || item.images?.length || 0}
+                Total Images: {totalImages}
             </p>
 
             <div className="gallery-actions">
@@ -62,11 +73,13 @@ const GalleryItem = ({ item, handleAction }) => (
 
         <div className="current-stats">
             <h4>Album Stats</h4>
-            <p>Images: {item.totalImages || item.images?.length || 0}</p>
-            <p>Approved: {(item.images || []).filter(img => img.approved).length}</p>
+            <p>Total: {totalImages}</p>
+            <p>Approved: {approvedImages}</p>
+            <p>Pending: {totalImages - approvedImages}</p>
         </div>
     </div>
-);
+  );
+};
 
 const AdminGallery = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -222,6 +235,18 @@ const AdminGallery = () => {
                                     <h4>Total Images</h4>
                                     <span className="stat-number">
                                         {albums.reduce((total, album) => total + (album.images?.length || 0), 0)}
+                                    </span>
+                                </div>
+                                <div className="stat-card">
+                                    <h4>Approved Images</h4>
+                                    <span className="stat-number">
+                                        {albums.reduce((total, album) => total + (album.images?.filter(img => img.approved !== false).length || 0), 0)}
+                                    </span>
+                                </div>
+                                <div className="stat-card">
+                                    <h4>Pending Images</h4>
+                                    <span className="stat-number">
+                                        {albums.reduce((total, album) => total + (album.images?.filter(img => img.approved === false).length || 0), 0)}
                                     </span>
                                 </div>
                             </div>

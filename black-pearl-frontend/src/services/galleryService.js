@@ -1,108 +1,34 @@
-// src/services/galleryService.js
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || '[http://localhost:5000/api](http://localhost:5000/api)';
+const api = axios.create({ baseURL: API_URL });
 
-// Create axios instance with base configuration
-const api = axios.create({
-  baseURL: API_URL,
+// Attach token automatically
+api.interceptors.request.use(config => {
+const token = localStorage.getItem('token');
+if (token) config.headers.Authorization = `Bearer ${token}`;
+return config;
 });
 
-// Add auth token to requests automatically
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 const galleryService = {
-  // Get all albums (public - no auth needed)
-  getAlbums: async () => {
-    try {
-      console.log('Fetching albums from:', `${API_URL}/gallery`);
-      const response = await api.get('/gallery');
-      console.log('Albums response:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching albums:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch albums');
-    }
-  },
+// Approved albums
+getAlbums: async () => (await api.get('/gallery')).data,
+createAlbum: async (albumName) => (await api.post('/gallery', { albumName })).data,
+updateAlbum: async (albumId, albumName) => (await api.put(`/gallery/${albumId}`, { albumName })).data,
+deleteAlbum: async (albumId) => (await api.delete(`/gallery/${albumId}`)).data,
 
-  // Create new album (admin only)
-  createAlbum: async (albumName) => {
-    const response = await api.post('/gallery', { albumName });
-    return response.data;
-  },
+// Pending images
+getPendingImages: async () => (await api.get('/gallery/pending/all')).data,
+approveImage: async (albumId, pendingId) => (await api.post(`/gallery/${albumId}/images/${pendingId}/approve`)).data,
+deletePendingImage: async (pendingId) => (await api.delete(`/gallery/pending/${pendingId}`)).data,
 
-  // Update album name (admin only)
-  updateAlbum: async (albumId, albumName) => {
-    const response = await api.put(`/gallery/${albumId}`, { albumName });
-    return response.data;
-  },
+// Images
+deleteImage: async (albumId, imageId) => (await api.delete(`/gallery/${albumId}/images/${imageId}`)).data,
+updateImage: async (albumId, imageId, updates) => (await api.put(`/gallery/${albumId}/images/${imageId}`, updates)).data,
 
-  // Delete album (admin only)
-  deleteAlbum: async (albumId) => {
-    const response = await api.delete(`/gallery/${albumId}`);
-    return response.data;
-  },
-
-  // Get pending images (admin only)
-  getPendingImages: async () => {
-    const response = await api.get('/gallery/pending/all');
-    return response.data;
-  },
-
-  // Approve pending image (admin only)
-  approveImage: async (albumId, pendingId) => {
-    const response = await api.post(`/gallery/${albumId}/images/${pendingId}/approve`);
-    return response.data;
-  },
-
-  // Delete pending image (admin only) - ADDED THIS
-  deletePendingImage: async (albumId, pendingId) => {
-    const response = await api.delete(`/gallery/${albumId}/images/${pendingId}`);
-    return response.data;
-  },
-
-  // Delete image from album (admin only)
-  deleteImage: async (albumId, imageId) => {
-    const response = await api.delete(`/gallery/${albumId}/images/${imageId}`);
-    return response.data;
-  },
-
-  // Update image caption (admin only)
-  updateImage: async (albumId, imageId, updates) => {
-    const response = await api.put(`/gallery/${albumId}/images/${imageId}`, updates);
-    return response.data;
-  },
-
-  // ✅ ADMIN UPLOAD - ADDED THIS (was missing!)
-  adminUpload: async (albumId, formData) => {
-    const response = await api.post(`/gallery/${albumId}/images`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
-  // User upload to pending (regular users)
-  userUpload: async (albumId, formData) => {
-    const response = await api.post(`/gallery/${albumId}/images/user-upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
+// Uploads
+adminUpload: async (albumId, formData) => (await api.post(`/gallery/${albumId}/images`, formData)).data,
+userUpload: async (albumId, formData) => (await api.post(`/gallery/${albumId}/images/user-upload`, formData)).data,
 };
 
 export default galleryService;
