@@ -58,54 +58,19 @@ const connectDB = async () => {
 };
 
 // Import routes using dynamic imports
-let authRoutes, quoteRoutes, galleryRoutes, messageRoutes, feedbackRoutes, imageRoutes;
+let authRoutes, quoteRoutes, messageRoutes, feedbackRoutes;
 
 // Dynamic import for routes
 const importRoutes = async () => {
   try {
     authRoutes = (await import('./routes/auth.js')).default;
     quoteRoutes = (await import('./routes/quotes.js')).default;
-    galleryRoutes = (await import('./routes/gallery.js')).default;
     messageRoutes = (await import('./routes/messageRoutes.js')).default;
     feedbackRoutes = (await import('./routes/feedbackRoutes.js')).default;
-    imageRoutes = (await import('./routes/imageRoutes.js')).default;
     console.log('✅ All routes imported successfully');
   } catch (error) {
     console.error('❌ Route import error:', error);
     throw error;
-  }
-};
-
-// ===== Import models =====
-const importModels = async () => {
-  try {
-    const GalleryAlbum = (await import('./models/GalleryAlbum.js')).default;
-    return { GalleryAlbum };
-  } catch (error) {
-    console.error('❌ Model import error:', error);
-    throw error;
-  }
-};
-
-// ===== Ensure Default Albums Exist =====
-const ensureDefaultAlbums = async (GalleryAlbum) => {
-  try {
-    const defaults = [
-      'Events and Leisure',
-      'Sports Tour',
-      'Tourism and Sightseeing',
-      'Other',
-    ];
-
-    for (const name of defaults) {
-      const exists = await GalleryAlbum.findOne({ albumName: name }).lean();
-      if (!exists) {
-        await GalleryAlbum.create({ albumName: name, images: [] });
-        console.log(`✅ Created default album: ${name}`);
-      }
-    }
-  } catch (err) {
-    console.error('Error ensuring default albums:', err.message || err);
   }
 };
 
@@ -115,12 +80,8 @@ const initializeApp = async () => {
     // Connect to database first
     await connectDB();
     
-    // Import routes and models
+    // Import routes
     await importRoutes();
-    const models = await importModels();
-    
-    // Ensure default albums
-    await ensureDefaultAlbums(models.GalleryAlbum);
 
     // ===== Debug Routes =====
     app.get('/api/debug/routes', (req, res) => {
@@ -130,10 +91,8 @@ const initializeApp = async () => {
         routes: {
           auth: '/api/auth',
           quotes: '/api/quotes', 
-          gallery: '/api/gallery',
           messages: '/api/messages',
-          feedback: '/api/feedback',
-          images: '/api/images'
+          feedback: '/api/feedback'
         },
         timestamp: new Date().toISOString()
       });
@@ -169,17 +128,14 @@ const initializeApp = async () => {
       next();
     }, quoteRoutes);
 
-    app.use('/api/gallery', galleryRoutes);
     app.use('/api/messages', messageRoutes);
     app.use('/api/feedback', feedbackRoutes);
-    app.use('/api/images', imageRoutes);
 
     // ===== Static Folder for Uploads =====
     const uploadsPath = path.join(__dirname, 'uploads');
-    app.use('/uploads', express.static(uploadsPath));
-
-    // Serve gallery uploads
-    app.use('/uploads/gallery', express.static(path.join(__dirname, 'uploads', 'gallery')));
+    if (fs.existsSync(uploadsPath)) {
+      app.use('/uploads', express.static(uploadsPath));
+    }
 
     // ===== Basic API Info =====
     app.get('/api', (req, res) => {
@@ -190,10 +146,8 @@ const initializeApp = async () => {
         endpoints: {
           auth: '/api/auth',
           quotes: '/api/quotes',
-          gallery: '/api/gallery',
           messages: '/api/messages',
           feedback: '/api/feedback',
-          images: '/api/images',
           uploads: '/uploads',
           debug: '/api/debug'
         },
@@ -391,26 +345,57 @@ const initializeApp = async () => {
   }
 };
 
-// Start the application
-initializeApp().then(() => {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
-    
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔧 Production mode: React frontend should be served');
-    } else {
-      console.log('💻 Development mode: React runs on localhost:3000');
+// ===== Start Server with Port Retry Logic =====
+const startServer = async (port = process.env.PORT || 5000, maxAttempts = 5) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await initializeApp();
+      
+      return new Promise((resolve, reject) => {
+        const server = app.listen(port, () => {
+          const actualPort = server.address().port;
+          console.log(`🚀 Server running on port ${actualPort}`);
+          console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+          console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+          
+          if (process.env.NODE_ENV === 'production') {
+            console.log('🔧 Production mode: React frontend should be served');
+          } else {
+            console.log('💻 Development mode: React runs on localhost:3000');
+          }
+          
+          console.log('🔍 Debug endpoints available:');
+          console.log(`   - http://localhost:${actualPort}/api/debug/routes`);
+          console.log(`   - http://localhost:${actualPort}/api/debug/auth`); 
+          console.log(`   - http://localhost:${actualPort}/api/debug/test`);
+          console.log(`   - http://localhost:${actualPort}/debug/paths`);
+          
+          resolve(server);
+        }).on('error', (err) => {
+          if (err.code === 'EADDRINUSE') {
+            console.log(`⚠️ Port ${port} is busy, trying ${port + 1}... (Attempt ${attempt}/${maxAttempts})`);
+            port++;
+            reject(err);
+          } else {
+            console.error('❌ Server error:', err);
+            reject(err);
+          }
+        });
+      });
+    } catch (err) {
+      if (attempt === maxAttempts) {
+        console.error(`❌ Failed to start server after ${maxAttempts} attempts`);
+        process.exit(1);
+      }
+      // Continue to next attempt
     }
-    
-    console.log('🔍 Debug endpoints available:');
-    console.log('   - /api/debug/routes');
-    console.log('   - /api/debug/auth'); 
-    console.log('   - /api/debug/test');
-    console.log('   - /debug/paths');
-  });
+  }
+};
+
+// Start the server
+startServer().catch((error) => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });
 
 // ===== Process-level diagnostics =====

@@ -25,7 +25,7 @@ const AdminMessages = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await fetch("http://localhost:5000/api/messages", {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -51,7 +51,7 @@ const AdminMessages = () => {
     const markAsRead = async (messageId) => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/messages/${messageId}`, {
+            await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${messageId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -100,7 +100,7 @@ const AdminMessages = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:5000/api/messages/${selectedMessage._id}/reply`, {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${selectedMessage._id}/reply`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ const AdminMessages = () => {
 
             if (action === "Delete") {
                 if (window.confirm('Are you sure you want to delete this message?')) {
-                    await fetch(`http://localhost:5000/api/messages/${messageId}`, {
+                    await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${messageId}`, {
                         method: "DELETE",
                         headers: {
                             'Authorization': `Bearer ${token}`
