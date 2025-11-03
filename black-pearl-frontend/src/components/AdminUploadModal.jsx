@@ -1,10 +1,8 @@
 // src/components/AdminUploadModal.jsx
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import galleryService from "../services/galleryService";
 
-const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, onClose, onUploaded }) => {
-  const token = propToken || localStorage.getItem("token");
-
+const AdminUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }) => {
   const [availableAlbums, setAvailableAlbums] = useState(albums);
   const [selectedAlbum, setSelectedAlbum] = useState(initialAlbum || albums?.[0]?._id || "");
   const [files, setFiles] = useState([]);
@@ -16,11 +14,11 @@ const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, on
   // Fetch albums if none provided
   useEffect(() => {
     if (!availableAlbums || availableAlbums.length === 0) {
-      axios
-        .get(`${process.env.REACT_APP_API_URL}/api/gallery`)
-        .then((res) => {
-          setAvailableAlbums(res.data);
-          if (!selectedAlbum && res.data.length > 0) setSelectedAlbum(res.data[0]._id);
+      galleryService
+        .getAlbums()
+        .then((data) => {
+          setAvailableAlbums(data);
+          if (!selectedAlbum && data.length > 0) setSelectedAlbum(data[0]._id);
         })
         .catch((err) => console.error("Failed to load albums:", err));
     }
@@ -29,23 +27,24 @@ const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, on
   // Drag & Drop Handlers
   const handleDragOver = (e) => {
     e.preventDefault();
-    dropRef.current.classList.add("drag-over");
+    if (dropRef.current) dropRef.current.classList.add("drag-over");
   };
 
   const handleDragLeave = () => {
-    dropRef.current.classList.remove("drag-over");
+    if (dropRef.current) dropRef.current.classList.remove("drag-over");
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    dropRef.current.classList.remove("drag-over");
-    const droppedFiles = Array.from(e.dataTransfer.files || []).filter(file => file.type.startsWith("image/"));
-    if (droppedFiles.length) setFiles(prev => [...prev, ...droppedFiles]);
+    if (dropRef.current) dropRef.current.classList.remove("drag-over");
+    const droppedFiles = Array.from(e.dataTransfer.files || []).filter((file) =>
+      file.type.startsWith("image/")
+    );
+    if (droppedFiles.length) setFiles((prev) => [...prev, ...droppedFiles]);
   };
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (!token) return setMessage("⚠️ You must be logged in.");
     if (!selectedAlbum) return setMessage("Please select an album.");
     if (files.length === 0) return setMessage("Please select at least one image.");
 
@@ -57,25 +56,31 @@ const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, on
       files.forEach((file) => formData.append("images", file));
       formData.append("caption", caption);
 
-      // ✅ FIXED: Correct endpoint for admin uploads
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/gallery/${selectedAlbum}/images`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      console.log("🔄 Starting admin upload to album:", selectedAlbum);
 
-      setMessage("✅ Uploaded successfully!");
-      onUploaded && onUploaded(res.data);
+      const result = await galleryService.adminUpload(selectedAlbum, formData);
+
+      console.log("✅ Admin upload successful:", result);
+      setMessage("✅ Uploaded successfully! Images are now live in the gallery.");
+
+      // Trigger gallery refresh immediately
+      onUploaded &&
+        onUploaded({
+          ...result,
+          albumId: selectedAlbum,
+          action: "adminUpload",
+        });
+
       setFiles([]);
-      setTimeout(() => onClose && onClose(), 1500);
+      setCaption("");
+
+      // Close modal after successful upload
+      setTimeout(() => {
+        onClose && onClose();
+      }, 2000);
     } catch (err) {
-      console.error("Upload failed:", err);
-      setMessage(err.response?.data?.message || "❌ Upload failed. Please try again.");
+      console.error("❌ Upload failed:", err);
+      setMessage(err.response?.data?.message || err.message || "❌ Upload failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -106,7 +111,9 @@ const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, on
               >
                 <option value="">-- Choose an album --</option>
                 {availableAlbums.map((a) => (
-                  <option key={a._id} value={a._id}>{a.albumName}</option>
+                  <option key={a._id} value={a._id}>
+                    {a.albumName}
+                  </option>
                 ))}
               </select>
             </div>
@@ -143,7 +150,12 @@ const AdminUploadModal = ({ albums = [], initialAlbum = "", token: propToken, on
             </label>
 
             <div className="card-actions">
-              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+                disabled={loading}
+              >
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary" disabled={loading}>

@@ -17,8 +17,14 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
   const fetchAlbums = () => {
     setLoading(true);
     galleryService.getAlbums()
-      .then(data => setAlbums(data || []))
-      .catch(err => setError(err?.message || 'Failed to load gallery'))
+      .then(data => {
+        console.log('📸 Albums loaded:', data);
+        setAlbums(data || []);
+      })
+      .catch(err => {
+        console.error('Gallery load error:', err);
+        setError(err?.message || 'Failed to load gallery');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -26,7 +32,10 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
     fetchAlbums(); 
   }, []);
 
-  const handleUploaded = () => fetchAlbums();
+  const handleUploaded = () => {
+    console.log('🔄 Refreshing gallery after upload...');
+    fetchAlbums();
+  };
 
   return (
     <>
@@ -44,22 +53,43 @@ const Gallery = ({ onAuthClick, isLoggedIn, onSignOut, currentUser }) => {
         {error && <p className="status-text error">{error}</p>}
         {(!loading && albums.length === 0) && <div className="empty-message">No albums available yet.</div>}
 
+        {/* ✅ FIXED: Show ALL images without approval filtering */}
         {albums.map(album => {
-          const approvedImages = (album.images || []).filter(img => img.approved);
-          if (approvedImages.length === 0) return null;
+          const displayImages = album.images || [];
+          
+          if (displayImages.length === 0) return null;
+          
           return (
             <section key={album._id} className="album-section">
               <h2 className="album-title">{album.albumName}</h2>
               <div className="gallery-grid">
-                {approvedImages.map(item => (
-                  <div key={item._id || item.url} className="gallery-card">
-                    <div className="image-wrapper">
-                      {/* galleryService makes item.url absolute now */}
-                      <img src={item.url} alt={item.caption || album.albumName} className="gallery-image" />
+                {displayImages.map((item, index) => {
+                  // Build the correct image URL
+                  let imageUrl = item.url;
+                  
+                  // If it's a relative path, make it absolute
+                  if (imageUrl && imageUrl.startsWith('/uploads/')) {
+                    imageUrl = `http://localhost:5000${imageUrl}`;
+                  }
+                  
+                  return (
+                    <div key={item._id || `${album._id}-${index}`} className="gallery-card">
+                      <div className="image-wrapper">
+                        <img 
+                          src={imageUrl} 
+                          alt={item.caption || album.albumName} 
+                          className="gallery-image"
+                          onError={(e) => {
+                            console.log('❌ Image failed to load:', imageUrl);
+                            e.target.src = 'https://via.placeholder.com/300x200/cccccc/969696?text=Image+Not+Found';
+                          }}
+                          onLoad={() => console.log('✅ Image loaded:', imageUrl)}
+                        />
+                      </div>
+                      {item.caption && <p className="testimonial">"{item.caption}"</p>}
                     </div>
-                    {item.caption && <p className="testimonial">"{item.caption}"</p>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           );

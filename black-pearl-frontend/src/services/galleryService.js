@@ -66,6 +66,12 @@ const galleryService = {
     return response.data;
   },
 
+  // Delete pending image (admin only) - ADDED THIS
+  deletePendingImage: async (albumId, pendingId) => {
+    const response = await api.delete(`/gallery/${albumId}/images/${pendingId}`);
+    return response.data;
+  },
+
   // Delete image from album (admin only)
   deleteImage: async (albumId, imageId) => {
     const response = await api.delete(`/gallery/${albumId}/images/${imageId}`);
@@ -75,6 +81,16 @@ const galleryService = {
   // Update image caption (admin only)
   updateImage: async (albumId, imageId, updates) => {
     const response = await api.put(`/gallery/${albumId}/images/${imageId}`, updates);
+    return response.data;
+  },
+
+  // ✅ ADMIN UPLOAD - ADDED THIS (was missing!)
+  adminUpload: async (albumId, formData) => {
+    const response = await api.post(`/gallery/${albumId}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

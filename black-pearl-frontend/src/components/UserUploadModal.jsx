@@ -1,6 +1,6 @@
 // src/components/UserUploadModal.jsx
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import galleryService from '../services/galleryService'; // ✅ Use service instead of axios
 
 const UserUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }) => {
   const [availableAlbums, setAvailableAlbums] = useState(albums);
@@ -11,17 +11,13 @@ const UserUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }
   const [message, setMessage] = useState("");
   const dropRef = useRef(null);
 
-  // Get token from localStorage
-  const token = localStorage.getItem("token");
-
   // Fetch albums if none provided
   useEffect(() => {
     if (!availableAlbums || availableAlbums.length === 0) {
-      axios
-        .get(`${process.env.REACT_APP_API_URL}/api/gallery`)
-        .then((res) => {
-          setAvailableAlbums(res.data);
-          if (!selectedAlbum && res.data.length > 0) setSelectedAlbum(res.data[0]._id);
+      galleryService.getAlbums()
+        .then((data) => {
+          setAvailableAlbums(data);
+          if (!selectedAlbum && data.length > 0) setSelectedAlbum(data[0]._id);
         })
         .catch((err) => console.error("Failed to load albums:", err));
     }
@@ -48,6 +44,7 @@ const UserUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }
     e.preventDefault();
     
     // Check if user is logged in
+    const token = localStorage.getItem("token");
     if (!token) {
       setMessage("⚠️ You must be logged in to upload images.");
       return;
@@ -71,26 +68,17 @@ const UserUploadModal = ({ albums = [], initialAlbum = "", onClose, onUploaded }
       files.forEach((file) => formData.append("images", file));
       formData.append("caption", caption);
 
-      // ✅ FIXED: Added Authorization header with token
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/gallery/${selectedAlbum}/images/user-upload`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // ✅ FIXED: Use galleryService instead of direct axios
+      const result = await galleryService.userUpload(selectedAlbum, formData);
 
       setMessage("✅ Upload request submitted for admin approval!");
-      onUploaded && onUploaded(res.data);
+      onUploaded && onUploaded(result);
       setFiles([]);
       setCaption("");
       setTimeout(() => onClose && onClose(), 2000);
     } catch (err) {
       console.error("User upload failed:", err);
-      setMessage(err.response?.data?.message || "❌ Upload failed. Please try again.");
+      setMessage(err.message || "❌ Upload failed. Please try again.");
     } finally {
       setLoading(false);
     }
