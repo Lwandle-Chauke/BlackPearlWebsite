@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import fs from 'fs';
 
-// For ES6 modules, we need to create __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,18 +13,16 @@ dotenv.config();
 
 const app = express();
 
-// ===== Enhanced Debugging Middleware =====
+// ===== Debugging Middleware =====
 app.use((req, res, next) => {
   console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
   console.log(`   Headers:`, req.headers['content-type']);
-  console.log(`   Body:`, req.body ? JSON.stringify(req.body).substring(0, 200) + '...' : 'No body');
   next();
 });
 
 // ===== Middleware =====
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(
   cors({
     origin: [
@@ -40,14 +37,9 @@ app.use(
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Present' : 'Missing');
-    
     const conn = await mongoose.connect(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours',
-      {
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-      }
+      { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 45000 }
     );
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
@@ -57,10 +49,8 @@ const connectDB = async () => {
   }
 };
 
-// Import routes using dynamic imports
+// ===== Dynamic Route Imports =====
 let authRoutes, quoteRoutes, galleryRoutes, messageRoutes, feedbackRoutes, imageRoutes;
-
-// Dynamic import for routes
 const importRoutes = async () => {
   try {
     authRoutes = (await import('./routes/auth.js')).default;
@@ -76,7 +66,7 @@ const importRoutes = async () => {
   }
 };
 
-// ===== Import models =====
+// ===== Model Import =====
 const importModels = async () => {
   try {
     const GalleryAlbum = (await import('./models/GalleryAlbum.js')).default;
@@ -87,338 +77,152 @@ const importModels = async () => {
   }
 };
 
-// ===== Ensure Default Albums Exist =====
+// ===== Ensure Default Albums =====
 const ensureDefaultAlbums = async (GalleryAlbum) => {
-  try {
-    const defaults = [
-      'Events and Leisure',
-      'Sports Tour',
-      'Tourism and Sightseeing',
-      'Other',
-    ];
-
-    for (const name of defaults) {
-      const exists = await GalleryAlbum.findOne({ albumName: name }).lean();
-      if (!exists) {
-        await GalleryAlbum.create({ albumName: name, images: [] });
-        console.log(`✅ Created default album: ${name}`);
-      }
+  const defaults = ['Events and Leisure', 'Sports Tour', 'Tourism and Sightseeing', 'Other'];
+  for (const name of defaults) {
+    const exists = await GalleryAlbum.findOne({ albumName: name }).lean();
+    if (!exists) {
+      await GalleryAlbum.create({ albumName: name, images: [] });
+      console.log(`✅ Created default album: ${name}`);
     }
-  } catch (err) {
-    console.error('Error ensuring default albums:', err.message || err);
   }
 };
 
 // ===== Initialize App =====
 const initializeApp = async () => {
-  try {
-    // Connect to database first
-    await connectDB();
-    
-    // Import routes and models
-    await importRoutes();
-    const models = await importModels();
-    
-    // Ensure default albums
-    await ensureDefaultAlbums(models.GalleryAlbum);
+  await connectDB();
+  await importRoutes();
+  const models = await importModels();
+  await ensureDefaultAlbums(models.GalleryAlbum);
 
-    // ===== Debug Routes =====
-    app.get('/api/debug/routes', (req, res) => {
-      res.json({
-        success: true,
-        message: 'Debug route working',
-        routes: {
-          auth: '/api/auth',
-          quotes: '/api/quotes', 
-          gallery: '/api/gallery',
-          messages: '/api/messages',
-          feedback: '/api/feedback',
-          images: '/api/images'
-        },
-        timestamp: new Date().toISOString()
-      });
-    });
+  // ===== Debug Routes =====
+  app.get('/api/debug/routes', (req, res) => res.json({
+    success: true,
+    message: 'Debug route working',
+    routes: {
+      auth: '/api/auth',
+      quotes: '/api/quotes',
+      gallery: '/api/gallery',
+      messages: '/api/messages',
+      feedback: '/api/feedback',
+      images: '/api/images'
+    },
+    timestamp: new Date().toISOString()
+  }));
 
-    app.get('/api/debug/auth', (req, res) => {
-      res.json({
-        authStatus: 'Available',
-        environment: process.env.NODE_ENV,
-        jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Missing',
-        timestamp: new Date().toISOString()
-      });
-    });
+  app.get('/api/debug/auth', (req, res) => res.json({
+    authStatus: 'Available',
+    environment: process.env.NODE_ENV,
+    jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Missing',
+    timestamp: new Date().toISOString()
+  }));
 
-    app.post('/api/debug/test', (req, res) => {
-      console.log('🔧 Debug test received body:', req.body);
-      res.json({
-        success: true,
-        message: 'Debug POST route working',
-        received: req.body,
-        timestamp: new Date().toISOString()
-      });
-    });
+  // ===== Mount Routes =====
+  app.use('/api/auth', authRoutes);
+  app.use('/api/quotes', quoteRoutes);
+  app.use('/api/gallery', galleryRoutes);
+  app.use('/api/messages', messageRoutes);
+  app.use('/api/feedback', feedbackRoutes);
+  app.use('/api/images', imageRoutes);
 
-    // ===== Mount Routes =====
-    app.use('/api/auth', (req, res, next) => {
-      console.log('🔐 Auth route accessed:', req.method, req.path);
-      next();
-    }, authRoutes);
+  // ===== Static Folders =====
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  app.use('/uploads/gallery', express.static(path.join(__dirname, 'uploads', 'gallery')));
 
-    app.use('/api/quotes', (req, res, next) => {
-      console.log('💰 Quotes route accessed:', req.method, req.path);
-      next();
-    }, quoteRoutes);
+  // ===== API Info =====
+  app.get('/api', (req, res) =>
+    res.json({
+      success: true,
+      message: 'Black Pearl Tours API is running!',
+      version: '1.0.0',
+      endpoints: {
+        auth: '/api/auth',
+        quotes: '/api/quotes',
+        gallery: '/api/gallery',
+        messages: '/api/messages',
+        feedback: '/api/feedback',
+        images: '/api/images',
+      },
+      environment: process.env.NODE_ENV
+    })
+  );
 
-    app.use('/api/gallery', galleryRoutes);
-    app.use('/api/messages', messageRoutes);
-    app.use('/api/feedback', feedbackRoutes);
-    app.use('/api/images', imageRoutes);
+  // ===== Health Check =====
+  app.get('/api/health', (req, res) =>
+    res.json({
+      status: 'OK',
+      database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      uptime: process.uptime()
+    })
+  );
 
-    // ===== Static Folder for Uploads =====
-    const uploadsPath = path.join(__dirname, 'uploads');
-    app.use('/uploads', express.static(uploadsPath));
+  // ===== Serve React in Production =====
+  if (process.env.NODE_ENV === 'production') {
+    const possiblePaths = [
+      path.join(__dirname, '../../black-pearl-frontend/build'),
+      path.join(__dirname, '../black-pearl-frontend/build'),
+      path.join(__dirname, 'black-pearl-frontend/build')
+    ];
+    let frontendPath = possiblePaths.find(p => fs.existsSync(p));
 
-    // Serve gallery uploads
-    app.use('/uploads/gallery', express.static(path.join(__dirname, 'uploads', 'gallery')));
-
-    // ===== Basic API Info =====
-    app.get('/api', (req, res) => {
-      res.json({
-        success: true,
-        message: 'Black Pearl Tours API is running!',
-        version: '1.0.0',
-        endpoints: {
-          auth: '/api/auth',
-          quotes: '/api/quotes',
-          gallery: '/api/gallery',
-          messages: '/api/messages',
-          feedback: '/api/feedback',
-          images: '/api/images',
-          uploads: '/uploads',
-          debug: '/api/debug'
-        },
-        environment: process.env.NODE_ENV
-      });
-    });
-
-    // ===== Health Check =====
-    app.get('/api/health', (req, res) => {
-      res.json({
-        status: 'OK',
-        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        memory: process.memoryUsage(),
-        uptime: process.uptime()
-      });
-    });
-
-    // ===== Debug Route to Check File Structure =====
-    app.get('/debug/paths', (req, res) => {
-      const paths = {
-        __dirname: __dirname,
-        currentDir: process.cwd(),
-        frontendPath1: path.join(__dirname, '../../black-pearl-frontend/build'),
-        frontendPath2: path.join(__dirname, '../black-pearl-frontend/build'),
-        frontendPath3: path.join(__dirname, 'black-pearl-frontend/build')
-      };
-      
-      // Check if paths exist
-      for (const [key, value] of Object.entries(paths)) {
-        if (typeof value === 'string') {
-          paths[key + '_exists'] = fs.existsSync(value);
-        }
-      }
-      
-      res.json(paths);
-    });
-
-    // ===== Serve React Frontend in Production =====
-    if (process.env.NODE_ENV === 'production') {
-      // Try multiple possible paths for the React build
-      const possiblePaths = [
-        path.join(__dirname, '../../black-pearl-frontend/build'),
-        path.join(__dirname, '../black-pearl-frontend/build'),
-        path.join(__dirname, 'black-pearl-frontend/build')
-      ];
-      
-      let frontendPath = null;
-      for (const buildPath of possiblePaths) {
-        if (fs.existsSync(buildPath)) {
-          frontendPath = buildPath;
-          console.log('✅ Found React build at:', frontendPath);
-          break;
-        }
-      }
-      
-      if (frontendPath) {
-        app.use(express.static(frontendPath));
-        
-        // AFTER defining routes, catch all other requests and return the React app
-        app.get('*', (req, res) => {
-          res.sendFile(path.join(frontendPath, 'index.html'));
-        });
-        
-        console.log('✅ React frontend serving enabled');
-      } else {
-        console.log('❌ React build not found in any expected location');
-        
-        // Serve a basic HTML page as fallback for root route
-        app.get('/', (req, res) => {
-          res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Black Pearl Tours</title>
-              <style>
-                body { 
-                  font-family: Arial, sans-serif; 
-                  margin: 0;
-                  padding: 40px;
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                  color: white;
-                  min-height: 100vh;
-                }
-                .container { 
-                  max-width: 800px; 
-                  margin: 0 auto; 
-                  text-align: center;
-                  background: rgba(255,255,255,0.1);
-                  padding: 40px;
-                  border-radius: 10px;
-                  backdrop-filter: blur(10px);
-                }
-                h1 { font-size: 2.5em; margin-bottom: 20px; }
-                p { font-size: 1.2em; margin-bottom: 15px; }
-                a { 
-                  color: #fff; 
-                  text-decoration: underline;
-                  font-weight: bold;
-                }
-                .endpoints {
-                  text-align: left;
-                  background: rgba(255,255,255,0.2);
-                  padding: 20px;
-                  border-radius: 5px;
-                  margin: 20px 0;
-                }
-                .debug-info {
-                  background: rgba(0,0,0,0.3);
-                  padding: 15px;
-                  border-radius: 5px;
-                  margin: 15px 0;
-                  text-align: left;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <h1>🚀 Black Pearl Tours - Backend Running</h1>
-                <p>Backend API is running successfully!</p>
-                <p>React frontend build was not found.</p>
-                
-                <div class="debug-info">
-                  <h3>Debug Information:</h3>
-                  <p><strong>Environment:</strong> ${process.env.NODE_ENV}</p>
-                  <p><strong>Database:</strong> ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}</p>
-                  <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-                </div>
-                
-                <div class="endpoints">
-                  <h3>Available API Endpoints:</h3>
-                  <ul>
-                    <li><a href="/api">API Status</a></li>
-                    <li><a href="/api/health">Health Check</a></li>
-                    <li><a href="/api/debug/routes">Debug Routes</a></li>
-                    <li><a href="/api/debug/auth">Auth Debug</a></li>
-                    <li><a href="/api/quotes">Quotes API</a></li>
-                    <li><a href="/api/auth">Auth API</a></li>
-                    <li><a href="/debug/paths">Debug Paths</a></li>
-                  </ul>
-                </div>
-                
-                <p><strong>Note:</strong> The React frontend build folder was not found. Please check the build process.</p>
-              </div>
-            </body>
-            </html>
-          `);
-        });
-      }
+    if (frontendPath) {
+      app.use(express.static(frontendPath));
+      app.get('*', (req, res) => res.sendFile(path.join(frontendPath, 'index.html')));
+      console.log('✅ React frontend serving enabled');
     } else {
-      // Development mode - simple test routes
-      app.get('/', (req, res) => res.json({ 
-        msg: 'Black Pearl Tours API is running in development mode',
-        frontend: 'Run React app separately on localhost:3000',
-        endpoints: {
-          api: '/api',
-          health: '/api/health',
-          debug: '/debug/paths',
-          authDebug: '/api/debug/auth',
-          routesDebug: '/api/debug/routes'
-        }
-      }));
-      
-      app.get('/api/hello', (req, res) => res.json({ msg: 'hi from development' }));
+      console.log('❌ React build not found, serving fallback');
+      app.get('/', (req, res) => res.send('<h1>Backend running - frontend not found</h1>'));
     }
+  }
 
-    // ===== Error Handling =====
-    app.use((err, req, res, next) => {
-      console.error('❌ Server error:', err);
-      res.status(err.status || 500).json({
-        success: false,
-        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-        timestamp: new Date().toISOString()
-      });
+  // ===== Error Handling =====
+  app.use((err, req, res, next) => {
+    console.error('❌ Server error:', err);
+    res.status(err.status || 500).json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+      timestamp: new Date().toISOString()
     });
+  });
+};
 
-    // ===== 404 Fallback (only if not in production with React) =====
-    if (process.env.NODE_ENV !== 'production') {
-      app.use((req, res) => {
-        console.log('❌ 404 Route not found:', req.originalUrl);
-        res.status(404).json({
-          success: false,
-          error: `Route ${req.originalUrl} not found`,
-          note: 'In production, React handles routing'
+// ===== Start Server with Retry =====
+const startServer = async (port = process.env.PORT || 5000, maxAttempts = 5) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await initializeApp();
+      return new Promise((resolve, reject) => {
+        const server = app.listen(port, () => {
+          console.log(`🚀 Server running on port ${port}`);
+          console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+          resolve(server);
+        }).on('error', (err) => {
+          if (err.code === 'EADDRINUSE') {
+            console.log(`⚠️ Port ${port} busy, retrying ${port + 1}...`);
+            port++;
+            reject(err);
+          } else reject(err);
         });
       });
+    } catch (err) {
+      if (attempt === maxAttempts) {
+        console.error(`❌ Failed to start after ${maxAttempts} attempts`);
+        process.exit(1);
+      }
     }
-
-    console.log('🎯 All routes and middleware initialized successfully');
-
-  } catch (error) {
-    console.error('❌ Failed to initialize app:', error);
-    process.exit(1);
   }
 };
 
-// Start the application
-initializeApp().then(() => {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
-    
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔧 Production mode: React frontend should be served');
-    } else {
-      console.log('💻 Development mode: React runs on localhost:3000');
-    }
-    
-    console.log('🔍 Debug endpoints available:');
-    console.log('   - /api/debug/routes');
-    console.log('   - /api/debug/auth'); 
-    console.log('   - /api/debug/test');
-    console.log('   - /debug/paths');
-  });
+startServer().catch((error) => {
+  console.error('❌ Server failed:', error);
+  process.exit(1);
 });
 
-// ===== Process-level diagnostics =====
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
+process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception thrown:', err);
+  console.error('Uncaught Exception:', err);
   process.exit(1);
 });
