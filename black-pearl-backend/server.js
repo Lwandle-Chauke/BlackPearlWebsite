@@ -10,7 +10,6 @@ import csurf from 'csurf'; // Import csurf
 import cookieParser from 'cookie-parser'; // Import cookie-parser
 import rateLimit from 'express-rate-limit'; // Import express-rate-limit
 
-// For ES6 modules, we need to create __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -31,14 +30,12 @@ app.use(csurf({ cookie: true }));
 app.use((req, res, next) => {
   console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
   console.log(`   Headers:`, req.headers['content-type']);
-  console.log(`   Body:`, req.body ? JSON.stringify(req.body).substring(0, 200) + '...' : 'No body');
   next();
 });
 
 // ===== Middleware =====
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(
   cors({
     origin: [
@@ -57,10 +54,7 @@ const connectDB = async () => {
 
     const conn = await mongoose.connect(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours',
-      {
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-      }
+      { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 45000 }
     );
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
@@ -71,19 +65,44 @@ const connectDB = async () => {
 };
 
 // Import routes using dynamic imports
-let authRoutes, quoteRoutes, messageRoutes, feedbackRoutes;
+let authRoutes, quoteRoutes, galleryRoutes, messageRoutes, feedbackRoutes, imageRoutes;
 
 // Dynamic import for routes
 const importRoutes = async () => {
   try {
     authRoutes = (await import('./routes/auth.js')).default;
     quoteRoutes = (await import('./routes/quotes.js')).default;
+    galleryRoutes = (await import('./routes/galleryRoutes.js')).default; // Added galleryRoutes
     messageRoutes = (await import('./routes/messageRoutes.js')).default;
     feedbackRoutes = (await import('./routes/feedbackRoutes.js')).default;
+    imageRoutes = (await import('./routes/imageRoutes.js')).default; // Added imageRoutes
     console.log('✅ All routes imported successfully');
   } catch (error) {
     console.error('❌ Route import error:', error);
     throw error;
+  }
+};
+
+// ===== Model Import =====
+const importModels = async () => {
+  try {
+    const GalleryAlbum = (await import('./models/GalleryAlbum.js')).default;
+    return { GalleryAlbum };
+  } catch (error) {
+    console.error('❌ Model import error:', error);
+    throw error;
+  }
+};
+
+// ===== Ensure Default Albums =====
+const ensureDefaultAlbums = async (GalleryAlbum) => {
+  const defaults = ['Events and Leisure', 'Sports Tour', 'Tourism and Sightseeing', 'Other'];
+  for (const name of defaults) {
+    const exists = await GalleryAlbum.findOne({ albumName: name }).lean();
+    if (!exists) {
+      await GalleryAlbum.create({ albumName: name, images: [] });
+      console.log(`✅ Created default album: ${name}`);
+    }
   }
 };
 
@@ -96,6 +115,10 @@ const initializeApp = async () => {
     // Import routes
     await importRoutes();
 
+    // Import models and ensure default albums
+    const models = await importModels();
+    await ensureDefaultAlbums(models.GalleryAlbum);
+
     // ===== Debug Routes =====
     app.get('/api/debug/routes', (req, res) => {
       res.json({
@@ -104,37 +127,21 @@ const initializeApp = async () => {
         routes: {
           auth: '/api/auth',
           quotes: '/api/quotes',
+          gallery: '/api/gallery',
           messages: '/api/messages',
-          feedback: '/api/feedback'
+          feedback: '/api/feedback',
+          images: '/api/images'
         },
         timestamp: new Date().toISOString()
       });
     });
 
-    app.get('/api/debug/auth', (req, res) => {
-      res.json({
-        authStatus: 'Available',
-        environment: process.env.NODE_ENV,
-        jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Missing',
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    app.post('/api/debug/test', (req, res) => {
-      console.log('🔧 Debug test received body:', req.body);
-      res.json({
-        success: true,
-        message: 'Debug POST route working',
-        received: req.body,
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    // ===== Mount Routes =====
-    app.use('/api/auth', (req, res, next) => {
-      console.log('🔐 Auth route accessed:', req.method, req.path);
-      next();
-    }, authRoutes);
+    app.get('/api/debug/auth', (req, res) => res.json({
+      authStatus: 'Available',
+      environment: process.env.NODE_ENV,
+      jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Missing',
+      timestamp: new Date().toISOString()
+    }));
 
     // Rate limiting for login attempts
     const loginLimiter = rateLimit({
@@ -168,19 +175,21 @@ const initializeApp = async () => {
       next();
     });
 
-    app.use('/api/quotes', (req, res, next) => {
-      console.log('💰 Quotes route accessed:', req.method, req.path);
-      next();
-    }, quoteRoutes);
-
+    // ===== Mount Routes =====
+    app.use('/api/auth', authRoutes);
+    app.use('/api/quotes', quoteRoutes);
+    app.use('/api/gallery', galleryRoutes);
     app.use('/api/messages', messageRoutes);
     app.use('/api/feedback', feedbackRoutes);
+    app.use('/api/images', imageRoutes);
 
-    // ===== Static Folder for Uploads =====
+    // ===== Static Folders =====
     const uploadsPath = path.join(__dirname, 'uploads');
     if (fs.existsSync(uploadsPath)) {
       app.use('/uploads', express.static(uploadsPath));
     }
+    app.use('/uploads/gallery', express.static(path.join(__dirname, 'uploads', 'gallery')));
+
 
     // ===== Basic API Info =====
     app.get('/api', (req, res) => {
@@ -191,6 +200,7 @@ const initializeApp = async () => {
         endpoints: {
           auth: '/api/auth',
           quotes: '/api/quotes',
+          gallery: '/api/gallery',
           messages: '/api/messages',
           feedback: '/api/feedback',
           uploads: '/uploads',
@@ -359,35 +369,20 @@ const initializeApp = async () => {
 
       app.get('/api/hello', (req, res) => res.json({ msg: 'hi from development' }));
     }
-
-    // ===== Error Handling =====
-    app.use((err, req, res, next) => {
-      console.error('❌ Server error:', err);
-      res.status(err.status || 500).json({
-        success: false,
-        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    // ===== 404 Fallback (only if not in production with React) =====
-    if (process.env.NODE_ENV !== 'production') {
-      app.use((req, res) => {
-        console.log('❌ 404 Route not found:', req.originalUrl);
-        res.status(404).json({
-          success: false,
-          error: `Route ${req.originalUrl} not found`,
-          note: 'In production, React handles routing'
-        });
-      });
-    }
-
-    console.log('🎯 All routes and middleware initialized successfully');
-
   } catch (error) {
-    console.error('❌ Failed to initialize app:', error);
+    console.error('❌ Error during app initialization:', error);
     process.exit(1);
   }
+
+  // ===== Error Handling =====
+  app.use((err, req, res, next) => {
+    console.error('❌ Server error:', err);
+    res.status(err.status || 500).json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+      timestamp: new Date().toISOString()
+    });
+  });
 };
 
 // ===== Start Server with Port Retry Logic =====
