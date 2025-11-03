@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 // For ES6 modules, we need to create __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -156,17 +157,134 @@ const initializeApp = async () => {
       });
     });
 
+    // ===== Debug Route to Check File Structure =====
+    app.get('/debug/paths', (req, res) => {
+      const paths = {
+        __dirname: __dirname,
+        currentDir: process.cwd(),
+        frontendPath1: path.join(__dirname, '../../black-pearl-frontend/build'),
+        frontendPath2: path.join(__dirname, '../black-pearl-frontend/build'),
+        frontendPath3: path.join(__dirname, 'black-pearl-frontend/build')
+      };
+      
+      // Check if paths exist
+      for (const [key, value] of Object.entries(paths)) {
+        if (typeof value === 'string') {
+          paths[key + '_exists'] = fs.existsSync(value);
+        }
+      }
+      
+      res.json(paths);
+    });
+
     // ===== Serve React Frontend in Production =====
     if (process.env.NODE_ENV === 'production') {
-      // Serve static files from the React frontend app
-      app.use(express.static(path.join(__dirname, '../black-pearl-frontend/build')));
-
-      // AFTER defining routes, catch all other requests and return the React app
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../black-pearl-frontend/build', 'index.html'));
-      });
+      // Try multiple possible paths for the React build
+      const possiblePaths = [
+        path.join(__dirname, '../../black-pearl-frontend/build'),
+        path.join(__dirname, '../black-pearl-frontend/build'),
+        path.join(__dirname, 'black-pearl-frontend/build')
+      ];
+      
+      let frontendPath = null;
+      for (const buildPath of possiblePaths) {
+        if (fs.existsSync(buildPath)) {
+          frontendPath = buildPath;
+          console.log('✅ Found React build at:', frontendPath);
+          break;
+        }
+      }
+      
+      if (frontendPath) {
+        app.use(express.static(frontendPath));
+        
+        // AFTER defining routes, catch all other requests and return the React app
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(frontendPath, 'index.html'));
+        });
+        
+        console.log('✅ React frontend serving enabled');
+      } else {
+        console.log('❌ React build not found in any expected location');
+        
+        // Serve a basic HTML page as fallback for root route
+        app.get('/', (req, res) => {
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Black Pearl Tours</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  margin: 0;
+                  padding: 40px;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                  min-height: 100vh;
+                }
+                .container { 
+                  max-width: 800px; 
+                  margin: 0 auto; 
+                  text-align: center;
+                  background: rgba(255,255,255,0.1);
+                  padding: 40px;
+                  border-radius: 10px;
+                  backdrop-filter: blur(10px);
+                }
+                h1 { font-size: 2.5em; margin-bottom: 20px; }
+                p { font-size: 1.2em; margin-bottom: 15px; }
+                a { 
+                  color: #fff; 
+                  text-decoration: underline;
+                  font-weight: bold;
+                }
+                .endpoints {
+                  text-align: left;
+                  background: rgba(255,255,255,0.2);
+                  padding: 20px;
+                  border-radius: 5px;
+                  margin: 20px 0;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>🚀 Black Pearl Tours</h1>
+                <p>Backend API is running successfully!</p>
+                <p>Frontend is being built or deployed separately.</p>
+                
+                <div class="endpoints">
+                  <h3>Available API Endpoints:</h3>
+                  <ul>
+                    <li><a href="/api">API Status</a></li>
+                    <li><a href="/api/health">Health Check</a></li>
+                    <li><a href="/api/quotes">Quotes API</a></li>
+                    <li><a href="/api/auth">Auth API</a></li>
+                    <li><a href="/api/gallery">Gallery API</a></li>
+                    <li><a href="/debug/paths">Debug Paths</a></li>
+                  </ul>
+                </div>
+                
+                <p><strong>Note:</strong> The React frontend build folder was not found. Please check the build process.</p>
+              </div>
+            </body>
+            </html>
+          `);
+        });
+      }
     } else {
-      // Simple test route for development
+      // Development mode - simple test routes
+      app.get('/', (req, res) => res.json({ 
+        msg: 'Black Pearl Tours API is running in development mode',
+        frontend: 'Run React app separately on localhost:3000',
+        endpoints: {
+          api: '/api',
+          health: '/api/health',
+          debug: '/debug/paths'
+        }
+      }));
+      
       app.get('/api/hello', (req, res) => res.json({ msg: 'hi from development' }));
     }
 
@@ -179,13 +297,16 @@ const initializeApp = async () => {
       });
     });
 
-    // ===== 404 Fallback =====
-    app.use((req, res) => {
-      res.status(404).json({
-        success: false,
-        error: `Route ${req.originalUrl} not found`,
+    // ===== 404 Fallback (only if not in production with React) =====
+    if (process.env.NODE_ENV !== 'production') {
+      app.use((req, res) => {
+        res.status(404).json({
+          success: false,
+          error: `Route ${req.originalUrl} not found`,
+          note: 'In production, React handles routing'
+        });
       });
-    });
+    }
 
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
@@ -200,6 +321,12 @@ initializeApp().then(() => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+    
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔧 Production mode: React frontend should be served');
+    } else {
+      console.log('💻 Development mode: React runs on localhost:3000');
+    }
   });
 });
 
