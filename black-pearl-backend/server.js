@@ -5,6 +5,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import helmet from 'helmet'; // Import helmet
+import csurf from 'csurf'; // Import csurf
+import cookieParser from 'cookie-parser'; // Import cookie-parser
+import rateLimit from 'express-rate-limit'; // Import express-rate-limit
 
 // For ES6 modules, we need to create __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -13,6 +17,15 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
+
+// Use Helmet to secure HTTP headers
+app.use(helmet());
+
+// Use cookie-parser middleware
+app.use(cookieParser());
+
+// Use csurf middleware
+app.use(csurf({ cookie: true }));
 
 // ===== Enhanced Debugging Middleware =====
 app.use((req, res, next) => {
@@ -41,7 +54,7 @@ const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
     console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Present' : 'Missing');
-    
+
     const conn = await mongoose.connect(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/blackpearltours',
       {
@@ -79,7 +92,7 @@ const initializeApp = async () => {
   try {
     // Connect to database first
     await connectDB();
-    
+
     // Import routes
     await importRoutes();
 
@@ -90,7 +103,7 @@ const initializeApp = async () => {
         message: 'Debug route working',
         routes: {
           auth: '/api/auth',
-          quotes: '/api/quotes', 
+          quotes: '/api/quotes',
           messages: '/api/messages',
           feedback: '/api/feedback'
         },
@@ -122,6 +135,38 @@ const initializeApp = async () => {
       console.log('🔐 Auth route accessed:', req.method, req.path);
       next();
     }, authRoutes);
+
+    // Rate limiting for login attempts
+    const loginLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5, // Max 5 requests per 15 minutes
+      message: 'Too many login attempts from this IP, please try again after 15 minutes',
+      standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    });
+
+    // Apply rate limiting to the login route
+    app.use('/api/auth/login', loginLimiter);
+
+    // General API rate limiting for all other /api routes
+    const apiLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // Max 100 requests per 15 minutes for other APIs
+      message: 'Too many requests from this IP, please try again after 15 minutes',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
+    // Apply general API rate limiting to all /api routes except login
+    app.use('/api/', apiLimiter);
+
+    // CSRF token handling for forms/cookies-based login
+    app.use((req, res, next) => {
+      if (req.method === 'GET') {
+        res.cookie('XSRF-TOKEN', req.csrfToken());
+      }
+      next();
+    });
 
     app.use('/api/quotes', (req, res, next) => {
       console.log('💰 Quotes route accessed:', req.method, req.path);
@@ -176,14 +221,14 @@ const initializeApp = async () => {
         frontendPath2: path.join(__dirname, '../black-pearl-frontend/build'),
         frontendPath3: path.join(__dirname, 'black-pearl-frontend/build')
       };
-      
+
       // Check if paths exist
       for (const [key, value] of Object.entries(paths)) {
         if (typeof value === 'string') {
           paths[key + '_exists'] = fs.existsSync(value);
         }
       }
-      
+
       res.json(paths);
     });
 
@@ -195,7 +240,7 @@ const initializeApp = async () => {
         path.join(__dirname, '../black-pearl-frontend/build'),
         path.join(__dirname, 'black-pearl-frontend/build')
       ];
-      
+
       let frontendPath = null;
       for (const buildPath of possiblePaths) {
         if (fs.existsSync(buildPath)) {
@@ -204,19 +249,19 @@ const initializeApp = async () => {
           break;
         }
       }
-      
+
       if (frontendPath) {
         app.use(express.static(frontendPath));
-        
+
         // AFTER defining routes, catch all other requests and return the React app
         app.get('*', (req, res) => {
           res.sendFile(path.join(frontendPath, 'index.html'));
         });
-        
+
         console.log('✅ React frontend serving enabled');
       } else {
         console.log('❌ React build not found in any expected location');
-        
+
         // Serve a basic HTML page as fallback for root route
         app.get('/', (req, res) => {
           res.send(`
@@ -300,7 +345,7 @@ const initializeApp = async () => {
       }
     } else {
       // Development mode - simple test routes
-      app.get('/', (req, res) => res.json({ 
+      app.get('/', (req, res) => res.json({
         msg: 'Black Pearl Tours API is running in development mode',
         frontend: 'Run React app separately on localhost:3000',
         endpoints: {
@@ -311,7 +356,7 @@ const initializeApp = async () => {
           routesDebug: '/api/debug/routes'
         }
       }));
-      
+
       app.get('/api/hello', (req, res) => res.json({ msg: 'hi from development' }));
     }
 
@@ -350,26 +395,26 @@ const startServer = async (port = process.env.PORT || 5000, maxAttempts = 5) => 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       await initializeApp();
-      
+
       return new Promise((resolve, reject) => {
         const server = app.listen(port, () => {
           const actualPort = server.address().port;
           console.log(`🚀 Server running on port ${actualPort}`);
           console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
           console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
-          
+
           if (process.env.NODE_ENV === 'production') {
             console.log('🔧 Production mode: React frontend should be served');
           } else {
             console.log('💻 Development mode: React runs on localhost:3000');
           }
-          
+
           console.log('🔍 Debug endpoints available:');
           console.log(`   - http://localhost:${actualPort}/api/debug/routes`);
-          console.log(`   - http://localhost:${actualPort}/api/debug/auth`); 
+          console.log(`   - http://localhost:${actualPort}/api/debug/auth`);
           console.log(`   - http://localhost:${actualPort}/api/debug/test`);
           console.log(`   - http://localhost:${actualPort}/debug/paths`);
-          
+
           resolve(server);
         }).on('error', (err) => {
           if (err.code === 'EADDRINUSE') {
@@ -393,7 +438,7 @@ const startServer = async (port = process.env.PORT || 5000, maxAttempts = 5) => 
 };
 
 // Start the server
-startServer().catch((error) => {
+startServer(process.env.PORT || 5001).catch((error) => {
   console.error('❌ Failed to start server:', error);
   process.exit(1);
 });
