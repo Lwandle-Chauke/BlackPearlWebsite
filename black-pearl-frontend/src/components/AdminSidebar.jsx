@@ -9,6 +9,7 @@ const AdminSidebar = ({ isSidebarOpen, toggleSidebar, onSignOut }) => {
         { path: "/admin/dashboard", label: "Dashboard", icon: "fas fa-tachometer-alt" },
         { path: "/admin/messages", label: "Messages", icon: "fas fa-envelope" },
         { path: "/admin/bookings", label: "Bookings", icon: "fas fa-calendar-alt" },
+        { path: "/admin/settings", label: "Settings", icon: "fas fa-calendar-alt" },
     ];
 
     const handleLogout = async (e) => {
