@@ -14,6 +14,14 @@ dotenv.config();
 
 const app = express();
 
+// ===== Enhanced Debugging Middleware =====
+app.use((req, res, next) => {
+  console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  console.log(`   Headers:`, req.headers['content-type']);
+  console.log(`   Body:`, req.body ? JSON.stringify(req.body).substring(0, 200) + '...' : 'No body');
+  next();
+});
+
 // ===== Middleware =====
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -22,7 +30,7 @@ app.use(
   cors({
     origin: [
       process.env.CLIENT_URL || 'http://localhost:3000',
-      'https://your-frontend-app.onrender.com' // Add your actual frontend Render URL
+      'https://your-frontend-app.onrender.com'
     ],
     credentials: true,
   })
@@ -114,9 +122,53 @@ const initializeApp = async () => {
     // Ensure default albums
     await ensureDefaultAlbums(models.GalleryAlbum);
 
+    // ===== Debug Routes =====
+    app.get('/api/debug/routes', (req, res) => {
+      res.json({
+        success: true,
+        message: 'Debug route working',
+        routes: {
+          auth: '/api/auth',
+          quotes: '/api/quotes', 
+          gallery: '/api/gallery',
+          messages: '/api/messages',
+          feedback: '/api/feedback',
+          images: '/api/images'
+        },
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    app.get('/api/debug/auth', (req, res) => {
+      res.json({
+        authStatus: 'Available',
+        environment: process.env.NODE_ENV,
+        jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Missing',
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    app.post('/api/debug/test', (req, res) => {
+      console.log('🔧 Debug test received body:', req.body);
+      res.json({
+        success: true,
+        message: 'Debug POST route working',
+        received: req.body,
+        timestamp: new Date().toISOString()
+      });
+    });
+
     // ===== Mount Routes =====
-    app.use('/api/auth', authRoutes);
-    app.use('/api/quotes', quoteRoutes);
+    app.use('/api/auth', (req, res, next) => {
+      console.log('🔐 Auth route accessed:', req.method, req.path);
+      next();
+    }, authRoutes);
+
+    app.use('/api/quotes', (req, res, next) => {
+      console.log('💰 Quotes route accessed:', req.method, req.path);
+      next();
+    }, quoteRoutes);
+
     app.use('/api/gallery', galleryRoutes);
     app.use('/api/messages', messageRoutes);
     app.use('/api/feedback', feedbackRoutes);
@@ -143,7 +195,9 @@ const initializeApp = async () => {
           feedback: '/api/feedback',
           images: '/api/images',
           uploads: '/uploads',
+          debug: '/api/debug'
         },
+        environment: process.env.NODE_ENV
       });
     });
 
@@ -154,6 +208,8 @@ const initializeApp = async () => {
         database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
+        memory: process.memoryUsage(),
+        uptime: process.uptime()
       });
     });
 
@@ -246,22 +302,37 @@ const initializeApp = async () => {
                   border-radius: 5px;
                   margin: 20px 0;
                 }
+                .debug-info {
+                  background: rgba(0,0,0,0.3);
+                  padding: 15px;
+                  border-radius: 5px;
+                  margin: 15px 0;
+                  text-align: left;
+                }
               </style>
             </head>
             <body>
               <div class="container">
-                <h1>🚀 Black Pearl Tours</h1>
+                <h1>🚀 Black Pearl Tours - Backend Running</h1>
                 <p>Backend API is running successfully!</p>
-                <p>Frontend is being built or deployed separately.</p>
+                <p>React frontend build was not found.</p>
+                
+                <div class="debug-info">
+                  <h3>Debug Information:</h3>
+                  <p><strong>Environment:</strong> ${process.env.NODE_ENV}</p>
+                  <p><strong>Database:</strong> ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}</p>
+                  <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+                </div>
                 
                 <div class="endpoints">
                   <h3>Available API Endpoints:</h3>
                   <ul>
                     <li><a href="/api">API Status</a></li>
                     <li><a href="/api/health">Health Check</a></li>
+                    <li><a href="/api/debug/routes">Debug Routes</a></li>
+                    <li><a href="/api/debug/auth">Auth Debug</a></li>
                     <li><a href="/api/quotes">Quotes API</a></li>
                     <li><a href="/api/auth">Auth API</a></li>
-                    <li><a href="/api/gallery">Gallery API</a></li>
                     <li><a href="/debug/paths">Debug Paths</a></li>
                   </ul>
                 </div>
@@ -281,7 +352,9 @@ const initializeApp = async () => {
         endpoints: {
           api: '/api',
           health: '/api/health',
-          debug: '/debug/paths'
+          debug: '/debug/paths',
+          authDebug: '/api/debug/auth',
+          routesDebug: '/api/debug/routes'
         }
       }));
       
@@ -294,12 +367,14 @@ const initializeApp = async () => {
       res.status(err.status || 500).json({
         success: false,
         error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+        timestamp: new Date().toISOString()
       });
     });
 
     // ===== 404 Fallback (only if not in production with React) =====
     if (process.env.NODE_ENV !== 'production') {
       app.use((req, res) => {
+        console.log('❌ 404 Route not found:', req.originalUrl);
         res.status(404).json({
           success: false,
           error: `Route ${req.originalUrl} not found`,
@@ -307,6 +382,8 @@ const initializeApp = async () => {
         });
       });
     }
+
+    console.log('🎯 All routes and middleware initialized successfully');
 
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
@@ -327,6 +404,12 @@ initializeApp().then(() => {
     } else {
       console.log('💻 Development mode: React runs on localhost:3000');
     }
+    
+    console.log('🔍 Debug endpoints available:');
+    console.log('   - /api/debug/routes');
+    console.log('   - /api/debug/auth'); 
+    console.log('   - /api/debug/test');
+    console.log('   - /debug/paths');
   });
 });
 
