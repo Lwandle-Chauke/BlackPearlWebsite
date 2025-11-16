@@ -1,9 +1,11 @@
 # **Black Pearl Coach Charters & Tours Website**
 
 <p align="center">
-  <img src="![Uploading image.png…]()
-" alt="Black Pearl Project Banner" width="100%" />
+  <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1920&auto=format&fit=crop" 
+       alt="Black Pearl Project Banner" 
+       width="100%" />
 </p>
+
 
 <h1 align="center">Black Pearl Coach Charters & Tours  
 <br>Modern Booking Platform</h1>
