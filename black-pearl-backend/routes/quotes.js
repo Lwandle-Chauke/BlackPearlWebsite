@@ -280,10 +280,10 @@ router.post('/:id/send-to-customer', protect, authorize('admin'), async (req, re
 
       await sendQuoteEmail(quote.customerEmail, emailData);
       console.log('✅ Professional quote email sent successfully via Nodemailer');
-      
+
     } catch (emailError) {
       console.error('❌ Failed to send professional email, falling back to Formspree:', emailError);
-      
+
       // Fallback to Formspree
       try {
         await sendQuoteEmailFormspree(quote, finalPrice, adminNotes, approvalToken);
@@ -455,7 +455,7 @@ router.post('/:id/accept-with-registration', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: String(email).trim().toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -465,7 +465,7 @@ router.post('/:id/accept-with-registration', async (req, res) => {
 
     // Create new user
     const newUser = await User.create({
-      email,
+      email: String(email).trim().toLowerCase(),
       password,
       firstName: firstName || '',
       lastName: lastName || '',

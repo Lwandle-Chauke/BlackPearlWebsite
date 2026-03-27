@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -30,7 +29,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
   const fetchUserBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/my-quotes`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/my-quotes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -82,7 +81,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
           'Authorization': `Bearer ${token}`
         },
       };
-      const res = await axios.post('http://localhost:5000/api/images/upload', formData, config);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/images/upload`, formData, config);
       alert(res.data.msg);
       setSelectedFiles([]);
       setAltText('');
@@ -103,7 +102,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-accept`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${quoteId}/customer-accept`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -130,7 +129,7 @@ const Dashboard = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) =
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/customer-decline`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${quoteId}/customer-decline`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

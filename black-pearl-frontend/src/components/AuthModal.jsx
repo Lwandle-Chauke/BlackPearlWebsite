@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 const AuthModal = ({ onClose, onAuthSuccess }) => {
@@ -19,7 +18,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:5000/api';
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   // Manage body scroll lock
   useEffect(() => {
@@ -59,7 +58,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     try {
       console.log('Forgot password request for:', forgotPasswordEmail);
       
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +99,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
     try {
       console.log('Login attempt:', email);
       
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +161,7 @@ const AuthModal = ({ onClose, onAuthSuccess }) => {
         confirmPassword: '***' 
       });
       
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

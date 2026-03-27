@@ -54,7 +54,7 @@ const Profile = ({ user, onSignOut, isLoggedIn, currentUser, onUserUpdate }) => 
   const fetchUserQuotes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/quotes/my-quotes', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/my-quotes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();

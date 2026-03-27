@@ -3,11 +3,12 @@ import AdminSidebar from '../components/AdminSidebar';
 import AdminTopBar from '../components/AdminTopBar';
 import '../styles/admin.css';
 import '../styles/admin-messages.css';
+import DOMPurify from 'isomorphic-dompurify'; // Import DOMPurify
 
 // Import Recharts components
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 const AdminMessages = () => {
@@ -25,7 +26,7 @@ const AdminMessages = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await fetch("http://localhost:5000/api/messages", {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -51,7 +52,7 @@ const AdminMessages = () => {
     const markAsRead = async (messageId) => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:5000/api/messages/${messageId}`, {
+            await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${messageId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -100,7 +101,7 @@ const AdminMessages = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:5000/api/messages/${selectedMessage._id}/reply`, {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${selectedMessage._id}/reply`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ const AdminMessages = () => {
 
             if (action === "Delete") {
                 if (window.confirm('Are you sure you want to delete this message?')) {
-                    await fetch(`http://localhost:5000/api/messages/${messageId}`, {
+                    await fetch(`${process.env.REACT_APP_API_URL}/api/messages/${messageId}`, {
                         method: "DELETE",
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -159,8 +160,8 @@ const AdminMessages = () => {
     const getMessageTrendsData = () => {
         const now = new Date();
         let startDate = new Date();
-        
-        switch(timeFilter) {
+
+        switch (timeFilter) {
             case '7days':
                 startDate.setDate(now.getDate() - 7);
                 break;
@@ -173,16 +174,16 @@ const AdminMessages = () => {
             default:
                 startDate.setDate(now.getDate() - 30);
         }
-        
+
         const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
         const trends = {};
-        
+
         filteredMessages.forEach(message => {
             const date = new Date(message.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric'
             });
-            
+
             if (!trends[date]) {
                 trends[date] = {
                     date,
@@ -190,13 +191,13 @@ const AdminMessages = () => {
                     unread: 0
                 };
             }
-            
+
             trends[date].messages += 1;
             if (!message.read) {
                 trends[date].unread += 1;
             }
         });
-        
+
         return Object.values(trends).sort((a, b) => new Date(a.date) - new Date(b.date));
     };
 
@@ -204,8 +205,8 @@ const AdminMessages = () => {
     const getMessageStatusDistribution = () => {
         const now = new Date();
         let startDate = new Date();
-        
-        switch(timeFilter) {
+
+        switch (timeFilter) {
             case '7days':
                 startDate.setDate(now.getDate() - 7);
                 break;
@@ -218,18 +219,18 @@ const AdminMessages = () => {
             default:
                 startDate.setDate(now.getDate() - 30);
         }
-        
+
         const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
         const statusCounts = {
             UNREAD: 0,
             READ: 0
         };
-        
+
         filteredMessages.forEach(message => {
             const status = message.read ? 'READ' : 'UNREAD';
             statusCounts[status] = (statusCounts[status] || 0) + 1;
         });
-        
+
         return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
     };
 
@@ -237,8 +238,8 @@ const AdminMessages = () => {
     const getSubjectDistribution = () => {
         const now = new Date();
         let startDate = new Date();
-        
-        switch(timeFilter) {
+
+        switch (timeFilter) {
             case '7days':
                 startDate.setDate(now.getDate() - 7);
                 break;
@@ -251,15 +252,15 @@ const AdminMessages = () => {
             default:
                 startDate.setDate(now.getDate() - 30);
         }
-        
+
         const filteredMessages = messagesData.filter(message => new Date(message.createdAt) >= startDate);
         const subjectCounts = {};
-        
+
         filteredMessages.forEach(message => {
             // Group similar subjects
             const subject = message.subject?.toLowerCase() || 'no subject';
             let category = 'Other';
-            
+
             if (subject.includes('quote') || subject.includes('pricing') || subject.includes('price')) {
                 category = 'Pricing/Quotes';
             } else if (subject.includes('booking') || subject.includes('reservation')) {
@@ -271,10 +272,10 @@ const AdminMessages = () => {
             } else if (subject.includes('general') || subject.includes('inquiry') || subject.includes('info')) {
                 category = 'General Inquiry';
             }
-            
+
             subjectCounts[category] = (subjectCounts[category] || 0) + 1;
         });
-        
+
         return Object.entries(subjectCounts)
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count);
@@ -344,14 +345,14 @@ const AdminMessages = () => {
                             <div className="stat-card">
                                 <h3>Response Rate</h3>
                                 <span className="stat-number response-rate">
-                                    {messagesData.length > 0 ? 
+                                    {messagesData.length > 0 ?
                                         Math.round((messagesData.filter(m => m.read).length / messagesData.length) * 100) : 0}%
                                 </span>
                             </div>
                             <div className="stat-card">
                                 <h3>Avg. Daily</h3>
                                 <span className="stat-number daily">
-                                    {messageTrendsData.length > 0 ? 
+                                    {messageTrendsData.length > 0 ?
                                         Math.round(messagesData.length / messageTrendsData.length) : 0}
                                 </span>
                             </div>
@@ -557,9 +558,10 @@ const AdminMessages = () => {
                                 </div>
                                 <div className="message-field full-width">
                                     <label>Original Message:</label>
-                                    <div className="message-content">
-                                        {selectedMessage.message}
-                                    </div>
+                                    <div
+                                        className="message-content"
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedMessage.message) }}
+                                    ></div>
                                 </div>
                             </div>
 

@@ -24,7 +24,7 @@ const QuoteResponse = () => {
 
   const fetchQuoteDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${quoteId}`);
       const data = await response.json();
       
       if (data.success) {
@@ -48,7 +48,7 @@ const QuoteResponse = () => {
 
     setProcessing(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/accept-quote`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${quoteId}/accept-quote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -79,7 +79,7 @@ const QuoteResponse = () => {
 
     setProcessing(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${quoteId}/decline-quote`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${quoteId}/decline-quote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

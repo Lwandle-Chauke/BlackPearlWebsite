@@ -24,7 +24,6 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMessages from "./pages/Admin-Messages"; // Corresponds to Admin-Messages.jsx
 import AdminBookings from "./pages/Admin-Bookings"; // Corresponds to Admin-Bookings.jsx
-import AdminGallery from "./pages/Admin-Gallery"; // Corresponds to Admin-Gallery.jsx
 import AdminSettings from "./pages/Admin-Settings"; // Corresponds to Admin-Settings.jsx
 
 // =======================================================
@@ -211,16 +210,6 @@ function App() {
                         element={
                             <ProtectedRoute requiredRole="admin">
                                 <AdminBookings />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    {/* Admin Gallery */}
-                    <Route
-                        path="/admin/gallery"
-                        element={
-                            <ProtectedRoute requiredRole="admin">
-                                <AdminGallery />
                             </ProtectedRoute>
                         }
                     />

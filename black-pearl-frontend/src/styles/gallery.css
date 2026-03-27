@@ -28,7 +28,8 @@ body {
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 100px 5% 50px; /* Space from header */
+  padding: 100px 5% 50px;
+  /* Space from header */
   min-height: 100vh;
   box-sizing: border-box;
   background: var(--light-gray);
@@ -46,7 +47,7 @@ body {
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); 
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   padding: 2rem;
 }
@@ -59,13 +60,15 @@ body {
 
 @media (max-width: 900px) {
   .gallery-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 columns on tablets */
   }
 }
 
 @media (max-width: 600px) {
   .gallery-grid {
-    grid-template-columns: 1fr; /* 1 column on phones */
+    grid-template-columns: 1fr;
+    /* 1 column on phones */
   }
 }
 
@@ -78,19 +81,21 @@ body {
   align-items: center;
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   height: 360px;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  padding: 0; /* remove inner spacing */
+  padding: 0;
+  /* remove inner spacing */
 }
 
 .card img {
   width: 100%;
   height: 300px;
   object-fit: cover;
-  border-bottom: 0; /* ensure no visible gap */
+  border-bottom: 0;
+  /* ensure no visible gap */
   margin: 0;
   padding: 0;
   display: block;
@@ -98,13 +103,16 @@ body {
 
 .card p {
   flex-grow: 1;
-  margin: 0; /* remove all space between image and text */
-  padding: 0.8rem 1rem 1rem; /* light padding inside card */
+  margin: 0;
+  /* remove all space between image and text */
+  padding: 0.8rem 1rem 1rem;
+  /* light padding inside card */
   font-size: 1rem;
   color: #333;
   line-height: 1.4;
   display: flex;
-  align-items: flex-end; /* stick text to bottom if needed */
+  align-items: flex-end;
+  /* stick text to bottom if needed */
 }
 
 
@@ -115,7 +123,7 @@ body {
   }
 
   .gallery-section h1.gallery-title {
-     font-size: 26px;
+    font-size: 26px;
     margin-bottom: 20px;
   }
 

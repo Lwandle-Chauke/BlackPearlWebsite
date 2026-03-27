@@ -1,5 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import Joi from 'joi'; // Import Joi
 import User from '../models/User.js'; // Use ES module import
 import { protect } from '../middleware/auth.js'; // Use ES module import
 
@@ -17,53 +18,78 @@ const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = signToken(user._id, user.role);
 
-  res.status(statusCode).json({
-    success: true,
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      surname: user.surname,
-      email: user.email,
-      phone: user.phone,
-      role: user.role
-    }
-  });
+  const options = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Set to true in production
+    sameSite: 'strict'
+  };
+
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
 };
+
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
+// Joi schemas for validation
+const registerSchema = Joi.object({
+  name: Joi.string().trim().required(),
+  surname: Joi.string().trim().required(),
+  email: Joi.string().email().trim().lowercase().required(),
+  phone: Joi.string().trim().required(),
+  password: Joi.string().min(8).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
+    'any.only': 'Passwords do not match'
+  })
+});
+
+const loginSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required(),
+  password: Joi.string().required()
+});
+
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required(),
+  newPassword: Joi.string().min(8).required(),
+  confirmNewPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'New passwords do not match'
+  })
+});
+
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required()
+});
+
 
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-    const { name, surname, email, phone, password, confirmPassword } = req.body;
+    // Validate request body with Joi
+    await registerSchema.validateAsync(req.body);
+
+    const { name, surname, email, phone, password } = req.body;
 
     console.log('Registration attempt:', { name, surname, email, phone });
 
-    // Validation
-    if (!name || !surname || !email || !phone || !password || !confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide all required fields'
-      });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Passwords do not match'
-      });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 8 characters long'
-      });
-    }
-
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -86,20 +112,19 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error);
 
+    // Joi validation error
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
     // MongoDB duplicate key error
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
         error: 'User already exists with this email address'
-      });
-    }
-
-    // Mongoose validation error
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({
-        success: false,
-        error: messages.join(', ')
       });
     }
 
@@ -113,22 +138,20 @@ router.post('/register', async (req, res) => {
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
 router.post('/login', async (req, res) => {
   try {
+    // Validate request body with Joi
+    await loginSchema.validateAsync(req.body);
+
     const { email, password } = req.body;
 
     console.log('Login attempt:', email);
 
-    // Validate email & password
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide an email and password'
-      });
-    }
-
     // Check for user (include password for verification)
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: email }).select('+password');
 
     if (!user) {
       console.log('User not found:', email);
@@ -154,6 +177,15 @@ router.post('/login', async (req, res) => {
     sendTokenResponse(user, 200, res);
   } catch (error) {
     console.error('Login error:', error);
+
+    // Joi validation error
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Server error during login. Please try again.'
@@ -164,23 +196,11 @@ router.post('/login', async (req, res) => {
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
-router.get('/me', async (req, res) => {
+router.get('/me', protect, async (req, res) => {
   try {
-    // Get token from header
-    const token = req.headers.authorization?.split(' ')[1];
+    // The protect middleware already verifies the token and attaches the user to req.user
+    const user = await User.findById(req.user.id);
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'No token provided'
-      });
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Get user from database
-    const user = await User.findById(decoded.userId);
 
     if (!user) {
       return res.status(404).json({
@@ -217,32 +237,10 @@ router.put('/change-password', protect, async (req, res) => {
     console.log('🔐 Change password request received for user:', req.user.email);
     console.log('Request body:', { ...req.body, currentPassword: '***', newPassword: '***', confirmNewPassword: '***' });
 
-    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+    // Validate request body with Joi
+    await changePasswordSchema.validateAsync(req.body);
 
-    // Validation
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      console.log('❌ Missing required fields');
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide current password, new password, and confirmation'
-      });
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      console.log('❌ New passwords do not match');
-      return res.status(400).json({
-        success: false,
-        error: 'New passwords do not match'
-      });
-    }
-
-    if (newPassword.length < 8) {
-      console.log('❌ New password too short');
-      return res.status(400).json({
-        success: false,
-        error: 'New password must be at least 8 characters long'
-      });
-    }
+    const { currentPassword, newPassword } = req.body;
 
     if (currentPassword === newPassword) {
       console.log('❌ New password same as current');
@@ -288,6 +286,15 @@ router.put('/change-password', protect, async (req, res) => {
 
   } catch (error) {
     console.error('❌ Change password error:', error);
+
+    // Joi validation error
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Server error while changing password: ' + error.message
@@ -300,20 +307,15 @@ router.put('/change-password', protect, async (req, res) => {
 // @access  Public
 router.post('/forgot-password', async (req, res) => {
   try {
+    // Validate request body with Joi
+    await forgotPasswordSchema.validateAsync(req.body);
+
     const { email } = req.body;
 
     console.log('🔑 Forgot password request for:', email);
 
-    // Validation
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide an email address'
-      });
-    }
-
     // Check if user exists
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email });
 
     if (!user) {
       console.log('❌ User not found for email:', email);

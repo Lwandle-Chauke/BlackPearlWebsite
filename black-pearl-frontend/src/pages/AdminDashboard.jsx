@@ -38,14 +38,14 @@ const AdminDashboard = () => {
             const token = localStorage.getItem('token');
 
             // Fetch quotes data
-            const quotesResponse = await fetch('http://localhost:5000/api/quotes', {
+            const quotesResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
             // Fetch messages data
-            const messagesResponse = await fetch('http://localhost:5000/api/messages', {
+            const messagesResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/messages`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

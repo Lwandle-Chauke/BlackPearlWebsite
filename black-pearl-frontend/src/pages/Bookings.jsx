@@ -44,7 +44,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
   const fetchUserBookings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/my-quotes`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/my-quotes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -180,7 +180,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       // If we're editing an existing booking, call the edit endpoint
       let response;
       if (isEditing && editingBookingId) {
-        response = await fetch(`http://localhost:5000/api/quotes/${editingBookingId}/edit`, {
+        response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${editingBookingId}/edit`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
           body: JSON.stringify(submissionData)
         });
       } else {
-        response = await fetch('http://localhost:5000/api/quotes', {
+        response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       const token = localStorage.getItem('token');
       
       // Use quotes endpoint instead of bookings endpoint
-      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/cancel`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${bookingId}/cancel`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -319,7 +319,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
       const token = localStorage.getItem('token');
 
       // Since your bookings come from /api/quotes/my-quotes, use quotes endpoint
-      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${bookingId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -375,7 +375,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/customer-accept`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${bookingId}/customer-accept`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -416,7 +416,7 @@ const Bookings = ({ user, onSignOut, isLoggedIn, currentUser }) => {
     setActionLoading(bookingId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/quotes/${bookingId}/customer-decline`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/quotes/${bookingId}/customer-decline`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
